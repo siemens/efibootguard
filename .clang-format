@@ -1,0 +1,16 @@
+---
+## Kernel Style Formatting (http://clang.llvm.org/docs/ClangFormatStyleOptions.html)
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: true
+BasedOnStyle: LLVM
+BreakBeforeBraces: Linux
+ColumnLimit: 80
+DerivePointerAlignment: false
+IndentWidth: 8
+Language: Cpp
+PointerAlignment: Right
+ReflowComments: true
+SortIncludes: false
+UseTab: Always
