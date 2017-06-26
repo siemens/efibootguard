@@ -30,7 +30,7 @@ boot once flag: not set
 Used sw-description:
 
 ```
-software = 
+software =
 {
 	version = "0.1.0";
 	bootenv: (
@@ -153,7 +153,7 @@ revision: 16
 kernel: L:CONFIG1:vmlinuz-linux
 kernelargs: root=/dev/sda4 rw initrd=initramfs-linux.img nomodeset
 watchdog timeout: 30 seconds
-test flag: disabled 
+test flag: disabled
 boot once flag: not set
 ```
 
@@ -184,7 +184,7 @@ revision: 0
 kernel: L:CONFIG1:vmlinuz-linux
 kernelargs: root=/dev/sda4 rw initrd=initramfs-linux.img nomodeset
 watchdog timeout: 30 seconds
-test flag: enabled 
+test flag: enabled
 boot once flag: set
 ```
 
@@ -218,7 +218,7 @@ revision: 16
 kernel: L:CONFIG1:vmlinuz-linux
 kernelargs: root=/dev/sda4 rw initrd=initramfs-linux.img nomodeset
 watchdog timeout: 30 seconds
-test flag: disabled 
+test flag: disabled
 boot once flag: not set
 ```
 

@@ -45,7 +45,7 @@ LIBS = -L.. \
 	   -lebgenv \
 	   -lz
 
-# Test recipes shall run everytime independent of already built files. 
+# Test recipes shall run everytime independent of already built files.
 # A simple way to achieve this is to depend on files that don't exist
 # by changing their extension with Makefile's string functions.
 # All capital O's get replaced by lower-case o's within the target
@@ -71,7 +71,7 @@ TEST_TARGETS = test_partitions.target test_environment.target test_api.target
 
 define WEAKEN_SYMBOL =
 	objcopy --weaken-symbol $(1) $(2)
-	
+
 endef
 
 define WEAKEN_SYMBOLS =

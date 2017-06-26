@@ -108,7 +108,7 @@ configuration to `0`.
                   |                           | testing: 0   |    | testing: 1        |
                   |                           | boot_once: 0 |    | boot_once: 1      |
                   |                           +--------------+    +-------------------+
-                  |      boots                                               |         
+                  |      boots                                               |
                   +----- latest' = latest-1 +--------------------------------+
 
 
@@ -117,7 +117,11 @@ configuration to `0`.
 In the `tools` directory, there is a utility named `bg_setenv`/`bg_printenv`.
 With this, the user can display the configuration data or update as needed.
 
-**NOTE**: The environment tools only work, if the correct number of config partitions is detected. This also means that the stored configuration data has a valid checksum. If this is not the case, environments must be repaired first. To do so, follow the initial setup step explained below in the `Installation` section.
+**NOTE**: The environment tools only work, if the correct number of config
+partitions is detected. This also means that the stored configuration data has a
+valid checksum. If this is not the case, environments must be repaired first. To
+do so, follow the initial setup step explained below in the `Installation`
+section.
 
 To access configuration data on FAT partitions, the partition must either
 already be mounted, with access rights for the user using the tool, or the tool
@@ -125,7 +129,8 @@ can mount the partition by itself, provided that it has the `CAP_SYS_ADMIN`
 capability. This is the case if the user is granted `root` privileges or the
 corresponding capability is set in the filesystem.
 
-*NOTE*: `CHAR16` environment variables are limited to 255 characters as stated in `include/envdata.h`.
+*NOTE*: `CHAR16` environment variables are limited to 255 characters as stated
+in `include/envdata.h`.
 
 ### Creating a new configuration ###
 
@@ -156,13 +161,19 @@ make DEBUG=1
 
 #### Kernel Location ####
 
-To load the kernel from a different FAT partition than `efibootguard`, there are two possible mechanisms. One directly uses the label of the FAT partition, created with `dosfslabel`:
+To load the kernel from a different FAT partition than `efibootguard`, there are
+two possible mechanisms. One directly uses the label of the FAT partition,
+created with `dosfslabel`:
 
 ```
 ./bg_setenv -u --kernel="L:FATLABEL:kernelfile"
 ```
 
-where `FATLABEL` is the label of the FAT partition. On some older UEFI implementations, the label is not supported properly and a user defined label can be created instead, which is a file named `EFILABEL` in the root directory of the corresponding FAT partition. This file contains an UTF-16le encoded partition name and can be used as follows:
+where `FATLABEL` is the label of the FAT partition. On some older UEFI
+implementations, the label is not supported properly and a user defined label
+can be created instead, which is a file named `EFILABEL` in the root directory
+of the corresponding FAT partition. This file contains an UTF-16le encoded
+partition name and can be used as follows:
 
 ```
 ./bg_setenv -u --kernel="C:USERLABEL:kernelfile"
@@ -170,13 +181,16 @@ where `FATLABEL` is the label of the FAT partition. On some older UEFI implement
 
 ### Interface API ###
 
-The library `libebgenv.a` provides an API to access the environment from a user program.
+The library `libebgenv.a` provides an API to access the environment from a user
+program.
 
 The header file with the prototypes and a short description is `ebgenv.h`.
 
-Documentation and further examples can be found in `swupdate-adapter/swupdate.md`.
+Documentation and further examples can be found in
+`swupdate-adapter/swupdate.md`.
 
-The following example program opens the current environment and modifies the kernel file name:
+The following example program opens the current environment and modifies the
+kernel file name:
 
 ```c
 #include <stdbool.h>
@@ -191,8 +205,8 @@ int main(void)
 }
 ```
 
-The following example program creates a new environment with the latest revision and sets it to
-the testing state:
+The following example program creates a new environment with the latest revision
+and sets it to the testing state:
 
 ```c
 #include <stdbool.h>
@@ -209,7 +223,8 @@ int main(void)
 }
 ```
 
-*Note*: If no watchdog timeout value is specified, a default of 30 seconds is set.
+*Note*: If no watchdog timeout value is specified, a default of 30 seconds is
+set.
 
 ## Required libraries and headers for compilation ##
 
@@ -229,15 +244,21 @@ apt-get install gnu-efi libparted-dev libpci-dev
 
 ### Environment setup ###
 
-Create the needed number of FAT16 partitions as defined by `CONFIG_PARTITION_COUNT` in `include/envdata.h`. Create a new `BGENV.DAT` configuration file with the `bg_setenv` tool and the `-f` option and copy the files to the FAT16 partitions.
+Create the needed number of FAT16 partitions as defined by
+`CONFIG_PARTITION_COUNT` in `include/envdata.h`. Create a new `BGENV.DAT`
+configuration file with the `bg_setenv` tool and the `-f` option and copy the
+files to the FAT16 partitions.
 
-*NOTE*: Currently, FAT partitions must neither be `FAT12`, `FAT32` nor `FAT32e`. During detection of config partitions, all non-FAT16 partitions are ignored and do not count to the valid number of config partitions. 
+*NOTE*: Currently, FAT partitions must neither be `FAT12`, `FAT32` nor `FAT32e`.
+During detection of config partitions, all non-FAT16 partitions are ignored and
+do not count to the valid number of config partitions.
 
 ### Bootloader installation ###
 
 Copy `efibootguard.efi` to `EFI/boot/` and rename it to bootx64.efi.
 
-If the system does not select this file for booting automatically, boot into `UEFI shell` and use the `bcfg` command:
+If the system does not select this file for booting automatically, boot into
+`UEFI shell` and use the `bcfg` command.
 
 Issue the following command to list the currently configured boot sequence:
 ```
@@ -259,4 +280,6 @@ Exit efi shell with the `reset` command.
 
 ## Future work ##
 
-* The number of valid config partitions expected by the bootloader and the tools is currently fixed to the number defined by `CONFIG_PARTITION_COUNT` in `include/envdata.h`. This value should be made configurable by a config flag.
+* The number of valid config partitions expected by the bootloader and the tools
+  is currently fixed to the number defined by `CONFIG_PARTITION_COUNT` in
+  `include/envdata.h`. This value should be made configurable by a config flag.

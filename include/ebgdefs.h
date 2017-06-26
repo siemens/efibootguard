@@ -1,5 +1,5 @@
 /** @file
-
+ *
  * EFI Boot Guard
  *
  * Copyright (c) Siemens AG, 2017
@@ -10,7 +10,7 @@
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
  *
-*/
+ */
 
 #ifndef __EFI_BOOT_GUARD_DEFS_H__
 #define __EFI_BOOT_GUARD_DEFS_H__

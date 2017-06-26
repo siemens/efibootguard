@@ -450,7 +450,7 @@ bool bgenv_write(BGENV *env)
 		part = (CONFIG_PART *)env->desc;
 		if (!part) {
 			VERBOSE(stderr, "Invalid config partition to store environment.\n");
-			return false;	
+			return false;
 		}
 		if (!write_env(part, env->data)) {
 			VERBOSE(stderr, "Could not write to %s\n", part->devpath);
