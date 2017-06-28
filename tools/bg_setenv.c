@@ -13,7 +13,7 @@
 #include "bg_utils.h"
 
 static char doc[] =
-    "bg_setenv/bg_printenv - Environment tool for the EFI bootguard";
+    "bg_setenv/bg_printenv - Environment tool for the EFI Boot Guard";
 
 static struct argp_option options_setenv[] = {
     {"kernel", 'k', "KERNEL", 0, "Set kernel to load"},
