@@ -187,3 +187,4 @@ bg_printenvdir = $(top_srcdir)
 bg_printenv: $(bg_setenv)
 	$(LN_S) bg_setenv bg_printenv
 
+CLEANFILES += bg_printenv
