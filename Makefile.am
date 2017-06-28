@@ -125,7 +125,8 @@ efi_cflags = \
 	-fno-stack-protector \
 	-Wsign-compare \
 	-mno-sse \
-	-mno-mmx
+	-mno-mmx \
+	$(CFLAGS)
 
 if ARCH_X86_64
 efi_cflags += \
