@@ -38,10 +38,9 @@ endif
 CFLAGS += \
 	-fshort-wchar
 
-LIBS = -L.. \
+LIBS = -L../.. \
 	   -L../../swupdate-adapter \
 	   -lcmocka \
-	   -lparted \
 	   -lebgenv \
 	   -lz
 
@@ -52,11 +51,11 @@ LIBS = -L.. \
 # dependency recipes.
 # All targets' '.target' extensions get removed within the target recipes.
 #
-OBJS_test_partitions = test_partitions.O bg_utils.O
-OBJS_test_environment = test_environment.O bg_utils.O
+OBJS_test_partitions = test_partitions.O bg_utils.O ebgpart.O
+OBJS_test_environment = test_environment.O bg_utils.O ebgpart.O
 OBJS_test_api = test_api.O bg_utils.O ebgenv.O
 
-MOCKOBJS_test_partitions = bg_utils
+MOCKOBJS_test_partitions = bg_utils ebgpart
 MOCKOBJS_test_environment = bg_utils
 MOCKOBJS_test_api = bg_utils
 
@@ -66,12 +65,13 @@ MOCKOBJS_test_api = bg_utils
 MOCKOBJS_SYMBOLS_bg_utils-test_partitions = probe_config_file
 MOCKOBJS_SYMBOLS_bg_utils-test_environment = oldenvs configparts fopen fclose fread fwrite feof mount_partition
 MOCKOBJS_SYMBOLS_bg_utils-test_api = bgenv_init bgenv_write bgenv_close bgenv_get_latest bgenv_get_by_index bgenv_get_oldest
+MOCKOBJS_SYMBOLS_ebgpart-test_partitions = ped_device_probe_all ped_device_get_next ped_disk_next_partition
 
 TEST_TARGETS = test_partitions.target test_environment.target test_api.target
 
 define WEAKEN_SYMBOL =
 	objcopy --weaken-symbol $(1) $(2)
-
+	
 endef
 
 define WEAKEN_SYMBOLS =

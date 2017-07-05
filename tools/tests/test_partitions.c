@@ -16,13 +16,9 @@
 #include <stdbool.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include <parted/device.h>
-#include <parted/disk.h>
 #include "bg_utils.h"
 
 static PedDevice ped_devices[32] = {0};
-static PedDisk ped_disks[32] = {0};
-static PedDiskType ped_disktypes[32] = {0};
 static int num_simulated_devices = 2;
 static int curr_ped_device = 0;
 static PedPartition ped_parts[32] = {0};
@@ -30,7 +26,6 @@ static int num_simulated_partitions_per_disk = 2;
 static PedFileSystemType ped_fstypes[32] = {0};
 
 static const char *const fsname = "fat16";
-static const char *const disktypename = "gpt";
 
 static char *fakemodel = "Mocked Disk Drive";
 static char *fakedevice = "/dev/nobrain";
@@ -44,9 +39,7 @@ void ped_device_probe_all()
 	for (int i = 0; i < 32; i++) {
 		ped_devices[i].model = fakemodel;
 		ped_devices[i].path = fakedevice;
-		ped_disktypes[i].name = disktypename;
-		ped_disks[i].type = &ped_disktypes[i];
-		ped_disks[i].part_list = &ped_parts[0];
+		ped_devices[i].part_list = &ped_parts[0];
 	}
 
 	for (int i = 0; i < 32; i++) {
@@ -70,19 +63,6 @@ PedDevice *ped_device_get_next(const PedDevice *dev)
 	for (int i = 0; i < num_simulated_devices - 1; i++) {
 		if (dev == &ped_devices[i]) {
 			return &ped_devices[i + 1];
-		}
-	}
-	return NULL;
-}
-
-PedDisk *ped_disk_new(PedDevice *dev)
-{
-	if (dev == NULL) {
-		return NULL;
-	}
-	for (int i = 0; i < 32; i++) {
-		if (dev == &ped_devices[i]) {
-			return &ped_disks[i];
 		}
 	}
 	return NULL;

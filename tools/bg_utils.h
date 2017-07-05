@@ -27,7 +27,7 @@
 #include <sys/file.h>
 #include <sys/mount.h>
 
-#include <parted/parted.h>
+#include "ebgpart.h"
 
 #include <zlib.h>
 #include "envdata.h"

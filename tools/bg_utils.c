@@ -19,6 +19,7 @@ static bool verbosity = false;
 void be_verbose(bool v)
 {
 	verbosity = v;
+	ebgpart_beverbose(v);
 }
 
 /* UEFI uses 16-bit wide unicode strings.

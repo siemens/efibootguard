@@ -42,6 +42,7 @@ lib_LIBRARIES = libebgenv.a libbg_utils.a
 
 libebgenv_a_SOURCES = \
 	tools/bg_utils.c \
+	tools/ebgpart.c \
 	swupdate-adapter/ebgenv.c
 
 libebgenv_a_CPPFLAGS = \
@@ -52,6 +53,7 @@ libebgenv_a_CFLAGS = \
 	$(AM_CFLAGS)
 
 libbg_utils_a_SOURCES = \
+	tools/ebgpart.c \
 	tools/bg_utils.c
 
 libbg_utils_a_CFLAGS = \
@@ -67,6 +69,7 @@ pkginclude_HEADERS = \
 bin_PROGRAMS = bg_setenv
 
 bg_setenv_SOURCES = \
+	tools/ebgpart.c \
 	tools/bg_setenv.c
 
 bg_setenv_CFLAGS = \
@@ -74,7 +77,6 @@ bg_setenv_CFLAGS = \
 
 bg_setenv_LDADD = \
 	-lbg_utils \
-	-lparted \
 	-lz
 
 bg_setenv_DEPENDENCIES = \
