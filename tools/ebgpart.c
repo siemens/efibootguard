@@ -54,24 +54,18 @@ char *type_to_name(char t)
 	switch (t) {
 	case MBR_TYPE_FAT12:
 		return "fat12";
-		break;
 	case MBR_TYPE_FAT16A:
 	case MBR_TYPE_FAT16:
 	case MBR_TYPE_FAT16_LBA:
 		return "fat16";
-		break;
 	case MBR_TYPE_FAT32:
 	case MBR_TYPE_FAT32_LBA:
 		return "fat32";
-		break;
 	case MBR_TYPE_EXTENDED_LBA:
 	case MBR_TYPE_EXTENDED:
 		return "extended";
-		break;
-	default:
-		return "not supported";
-		break;
 	}
+	return "not supported";
 }
 
 bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
@@ -140,7 +134,7 @@ void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num, PedDevice *dev)
 {
 	off64_t offset;
 	struct EFIpartitionentry e;
-	PedPartition *partition = NULL, *tmpp;
+	PedPartition *tmpp;
 	PedFileSystemType *pfst = NULL;
 
 	offset = LB_SIZE * table_LBA;
@@ -181,9 +175,7 @@ void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num, PedDevice *dev)
 			if (pfst->name) free(pfst->name);
 			free(pfst);
 			free(tmpp);
-			if (!partition) {
-				dev->part_list = NULL;
-			}
+			dev->part_list = NULL;
 			continue;
 		}
 
@@ -203,13 +195,13 @@ void scanLogicalVolumes(int fd, off64_t extended_start_LBA,
 	if (extended_start_LBA == 0) {
 		extended_start_LBA = offset;
 	}
-	VERBOSE(stdout, "Seeking to LBA %lld\n", offset);
+	VERBOSE(stdout, "Seeking to LBA %ld\n", offset);
 	off64_t res = lseek64(fd, offset * LB_SIZE, SEEK_SET);
 	if (res == -1) {
 		VERBOSE(stderr, "(%s)\n", strerror(errno));
 		return;
 	}
-	VERBOSE(stdout, "Seek returned %lld\n", res);
+	VERBOSE(stdout, "Seek returned %ld\n", res);
 	if (read(fd, &next_ebr, sizeof(next_ebr)) != sizeof(next_ebr)) {
 		VERBOSE(stderr, "Error reading next EBR (%s)\n",
 			strerror(errno));
@@ -307,7 +299,7 @@ bool check_partition_table(PedDevice *dev)
 				efihdr.signature[6], efihdr.signature[7]);
 			VERBOSE(stdout, "Number of partition entries: %u\n",
 				efihdr.partitions);
-			VERBOSE(stdout, "Partition Table @ LBA %llu\n",
+			VERBOSE(stdout, "Partition Table @ LBA %lu\n",
 				efihdr.partitiontable_LBA);
 			read_GPT_entries(fd, efihdr.partitiontable_LBA,
 					 efihdr.partitions, dev);
@@ -406,9 +398,9 @@ void ped_device_destroy(PedDevice *d)
 	if (d->model) free(d->model);
 	if (d->path) free(d->path);
 	PedPartition *p = d->part_list;
-	PedPartition *tmpp;
 	while (p) {
-		tmpp = p;
+		PedPartition *tmpp = p;
+
 		p = p->next;
 		ped_partition_destroy(tmpp);
 	}
@@ -425,10 +417,10 @@ PedDevice *ped_device_get_next(const PedDevice *dev)
 	}
 	/* free all memory */
 	PedDevice *d = first_device;
-	PedDevice *tmpd;
 
 	while (d) {
-		tmpd = d;
+		PedDevice *tmpd = d;
+
 		d = d->next;
 		ped_device_destroy(tmpd);
 	}
@@ -442,7 +434,7 @@ PedDisk *ped_disk_new(const PedDevice *dev)
 	return &g_ped_dummy_disk;
 }
 
-PedPartition *ped_disk_next_partition(const PedDisk *pd,
+PedPartition *ped_disk_next_partition(const PedDisk *__unused pd,
 				      const PedPartition *part)
 {
 	return part->next;

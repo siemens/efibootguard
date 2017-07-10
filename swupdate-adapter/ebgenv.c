@@ -110,31 +110,33 @@ int ebg_env_create_new(void)
 
 	env_current = bgenv_get_latest(BGENVTYPE_FAT);
 
-	if (!ebg_new_env_created) {
-		if (!env_current) {
-			return EIO;
-		}
-		/* first time env is opened, a new one is created for update
-		 * purpose */
-		int new_rev = env_current->data->revision + 1;
+	if (ebg_new_env_created)
+		return env_current == NULL ? EIO : 0;
 
-		if (!bgenv_close(env_current)) {
-			return EIO;
-		}
-		env_current = bgenv_get_oldest(BGENVTYPE_FAT);
-		if (!env_current) {
-			return EIO;
-		}
-		/* zero fields */
-		memset(env_current->data, 0, sizeof(BG_ENVDATA));
-		/* update revision field and testing mode */
-		env_current->data->revision = new_rev;
-		env_current->data->testing = 1;
-		/* set default watchdog timeout */
-		env_current->data->watchdog_timeout_sec = 30;
-		ebg_new_env_created = true;
+	if (!env_current) {
+		return EIO;
 	}
-	return env_current != NULL ? 0 : EIO;
+	/* first time env is opened, a new one is created for update
+	 * purpose */
+	int new_rev = env_current->data->revision + 1;
+
+	if (!bgenv_close(env_current)) {
+		return EIO;
+	}
+	env_current = bgenv_get_oldest(BGENVTYPE_FAT);
+	if (!env_current) {
+		return EIO;
+	}
+	/* zero fields */
+	memset(env_current->data, 0, sizeof(BG_ENVDATA));
+	/* update revision field and testing mode */
+	env_current->data->revision = new_rev;
+	env_current->data->testing = 1;
+	/* set default watchdog timeout */
+	env_current->data->watchdog_timeout_sec = 30;
+	ebg_new_env_created = true;
+
+	return env_current == NULL ? EIO : 0;
 }
 
 int ebg_env_open_current(void)
@@ -149,7 +151,7 @@ int ebg_env_open_current(void)
 
 	env_current = bgenv_get_latest(BGENVTYPE_FAT);
 
-	return env_current != NULL ? 0 : EIO;
+	return env_current == NULL ? EIO : 0;
 }
 
 char *ebg_env_get(char *key)
@@ -183,7 +185,6 @@ char *ebg_env_get(char *key)
 		};
 		str16to8(buffer, env_current->data->kernelfile);
 		return buffer;
-		break;
 	case EBGENV_KERNELPARAMS:
 		buffer = (char *)malloc(ENV_STRING_LENGTH);
 		if (!buffer) {
@@ -196,7 +197,6 @@ char *ebg_env_get(char *key)
 		}
 		str16to8(buffer, env_current->data->kernelparams);
 		return buffer;
-		break;
 	case EBGENV_WATCHDOG_TIMEOUT_SEC:
 		if (asprintf(&buffer, "%lu",
 			     env_current->data->watchdog_timeout_sec) < 0) {
@@ -208,7 +208,6 @@ char *ebg_env_get(char *key)
 			return NULL;
 		}
 		return buffer;
-		break;
 	case EBGENV_REVISION:
 		if (asprintf(&buffer, "%lu", env_current->data->revision) < 0) {
 			errno = ENOMEM;
@@ -219,7 +218,6 @@ char *ebg_env_get(char *key)
 			return NULL;
 		}
 		return buffer;
-		break;
 	case EBGENV_BOOT_ONCE:
 		if (asprintf(&buffer, "%lu", env_current->data->boot_once) <
 		    0) {
@@ -231,7 +229,6 @@ char *ebg_env_get(char *key)
 			return NULL;
 		}
 		return buffer;
-		break;
 	case EBGENV_TESTING:
 		if (asprintf(&buffer, "%lu", env_current->data->testing) < 0) {
 			errno = ENOMEM;
@@ -242,7 +239,6 @@ char *ebg_env_get(char *key)
 			return NULL;
 		}
 		return buffer;
-		break;
 	default:
 		errno = EINVAL;
 		return NULL;
@@ -324,18 +320,16 @@ int ebg_env_set(char *key, char *value)
 		break;
 	default:
 		return EINVAL;
-		break;
 	}
 	return 0;
 }
 
 bool ebg_env_isupdatesuccessful(void)
 {
-	BGENV *env;
-
 	/* find all environments with revision 0 */
 	for (int i = 0; i < CONFIG_PARTITION_COUNT; i++) {
-		env = bgenv_get_by_index(BGENVTYPE_FAT, i);
+		BGENV *env = bgenv_get_by_index(BGENVTYPE_FAT, i);
+
 		if (!env) {
 			continue;
 		}
@@ -354,10 +348,9 @@ bool ebg_env_isupdatesuccessful(void)
 
 int ebg_env_clearerrorstate(void)
 {
-	BGENV *env;
-
 	for (int i = 0; i < CONFIG_PARTITION_COUNT; i++) {
-		env = bgenv_get_by_index(BGENVTYPE_FAT, i);
+		BGENV *env = bgenv_get_by_index(BGENVTYPE_FAT, i);
+
 		if (!env) {
 			continue;
 		}

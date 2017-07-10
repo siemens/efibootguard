@@ -54,10 +54,9 @@ static EFI_STATUS unlock_timer_regs(EFI_PCI_IO *pci_io, UINT32 wdt_base)
 static EFI_STATUS write_timer_regs(EFI_PCI_IO *pci_io, UINT32 wdt_base,
 				   UINT32 timer, UINT32 value)
 {
-	EFI_STATUS status;
-	unsigned int n;
+	for (unsigned int n = 0; n < 3; n++) {
+		EFI_STATUS status;
 
-	for (n = 0; n < 3; n++) {
 		status = unlock_timer_regs(pci_io, wdt_base);
 		if (EFI_ERROR(status))
 			return status;

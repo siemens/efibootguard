@@ -26,10 +26,11 @@ static EFI_STATUS probe_watchdog(EFI_LOADED_IMAGE *loaded_image,
 				 EFI_PCI_IO *pci_io, UINT16 pci_vendor_id,
 				 UINT16 pci_device_id, UINTN timeout)
 {
-	EFI_STATUS (*probe)(EFI_PCI_IO *, UINT16, UINT16, UINTN);
 	const unsigned long *entry;
 
 	for (entry = init_array_start; entry < init_array_end; entry++) {
+		EFI_STATUS (*probe)(EFI_PCI_IO *, UINT16, UINT16, UINTN);
+
 		probe = loaded_image->ImageBase + *entry;
 		if (probe(pci_io, pci_vendor_id, pci_device_id, timeout) ==
 		    EFI_SUCCESS)
@@ -41,7 +42,7 @@ static EFI_STATUS probe_watchdog(EFI_LOADED_IMAGE *loaded_image,
 
 static EFI_STATUS scan_devices(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 {
-	EFI_HANDLE device, devices[1000];
+	EFI_HANDLE devices[1000];
 	UINTN count, size = sizeof(devices);
 	EFI_PCI_IO *pci_io;
 	EFI_STATUS status;
@@ -58,7 +59,8 @@ static EFI_STATUS scan_devices(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 		return probe_watchdog(loaded_image, NULL, 0, 0, timeout);
 
 	do {
-		device = devices[count - 1];
+		EFI_HANDLE device = devices[count - 1];
+
 		count--;
 
 		status = uefi_call_wrapper(BS->OpenProtocol, 6, device,

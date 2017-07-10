@@ -64,25 +64,28 @@ wchar_t *str8to16(wchar_t *buffer, char *src)
 
 static char *get_mountpoint(char *devpath)
 {
-	FILE *mtab = NULL;
 	struct mntent *part = NULL;
-	char *mntpoint;
+	FILE *mtab = NULL;
 
-	if ((mtab = setmntent("/proc/mounts", "r")) != NULL) {
-		while ((part = getmntent(mtab)) != NULL) {
-			if ((part->mnt_fsname != NULL) &&
-			    (strcmp(part->mnt_fsname, devpath)) == 0) {
-				if (!(mntpoint =
-					  malloc(strlen(part->mnt_dir) + 1))) {
-					break;
-				};
-				strncpy(mntpoint, part->mnt_dir,
-					strlen(part->mnt_dir) + 1);
-				return mntpoint;
-			}
+	if ((mtab = setmntent("/proc/mounts", "r")) == NULL)
+		return NULL;
+
+	while ((part = getmntent(mtab)) != NULL) {
+		if ((part->mnt_fsname != NULL) &&
+		    (strcmp(part->mnt_fsname, devpath)) == 0) {
+			char *mntpoint;
+
+			if (!(mntpoint =
+				  malloc(strlen(part->mnt_dir) + 1))) {
+				break;
+			};
+			strncpy(mntpoint, part->mnt_dir,
+				strlen(part->mnt_dir) + 1);
+			return mntpoint;
 		}
-		endmntent(mtab);
 	}
+	endmntent(mtab);
+
 	return NULL;
 }
 
@@ -229,10 +232,10 @@ bool probe_config_partitions(CONFIG_PART *cfgpart)
 				continue;
 			}
 			if (strncmp("/dev/mmcblk", dev->path, 11) == 0) {
-				snprintf(devpath, 4096, "%sp%d", dev->path,
+				snprintf(devpath, 4096, "%sp%u", dev->path,
 					 part->num);
 			} else {
-				snprintf(devpath, 4096, "%s%d", dev->path,
+				snprintf(devpath, 4096, "%s%u", dev->path,
 					 part->num);
 			}
 			if (!cfgpart[count].devpath) {
@@ -365,10 +368,6 @@ bool bgenv_init(BGENVTYPE type)
 			}
 		}
 		return true;
-		break;
-	default:
-		return false;
-		break;
 	}
 	return false;
 }
@@ -390,9 +389,6 @@ BGENV *bgenv_get_by_index(BGENVTYPE type, uint32_t index)
 		handle->data = &oldenvs[index];
 		handle->type = type;
 		return handle;
-		break;
-	default:
-		return NULL;
 	}
 	return NULL;
 }
@@ -411,9 +407,6 @@ BGENV *bgenv_get_oldest(BGENVTYPE type)
 			}
 		}
 		return bgenv_get_by_index(type, min_idx);
-		break;
-	default:
-		return NULL;
 	}
 	return NULL;
 }
@@ -432,9 +425,6 @@ BGENV *bgenv_get_latest(BGENVTYPE type)
 			}
 		}
 		return bgenv_get_by_index(type, max_idx);
-		break;
-	default:
-		return NULL;
 	}
 	return NULL;
 }
@@ -458,7 +448,6 @@ bool bgenv_write(BGENV *env)
 			return false;
 		}
 		return true;
-		break;
 	}
 	return false;
 }

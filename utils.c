@@ -163,14 +163,16 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 
 EFI_STATUS close_volumes(VOLUME_DESC *volumes, UINTN count)
 {
+	EFI_STATUS result = EFI_SUCCESS;
 	UINTN i;
-	EFI_STATUS status, result = EFI_SUCCESS;
 
 	if (!volumes) {
 		Print(L"Invalid parameter for closing volumes.\n");
 		return EFI_INVALID_PARAMETER;
 	}
 	for (i = 0; i < count; i++) {
+		EFI_STATUS status;
+
 		if (!volumes[i].root) {
 			Print(L"Error, invalid handle for volume %d.\n", i);
 			result = EFI_INVALID_PARAMETER;

@@ -299,7 +299,7 @@ int main(int argc, char **argv)
 				}
 				if (verbosity) {
 					printf("Updating environment with "
-					       "revision %d\n",
+					       "revision %u\n",
 					       env_new->data->revision);
 				}
 				/* if auto-updating, copy data from current
