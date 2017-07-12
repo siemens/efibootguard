@@ -32,7 +32,9 @@ static struct argp_option options_setenv[] = {
     {"bootonce", 'b', 0, 0, "Simulate boot with update installed"},
     {0}};
 
-static struct argp_option options_printenv[] = {{0}};
+static struct argp_option options_printenv[] = {
+    {"verbose", 'v', 0, 0, "Be verbose"},
+    {0}};
 
 struct arguments {
 	bool output_to_file;
