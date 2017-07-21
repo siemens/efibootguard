@@ -11,6 +11,7 @@
  */
 
 #include "bg_utils.h"
+#include "test-interface.h"
 
 const char *tmp_mnt_dir = "/tmp/mnt-XXXXXX";
 
@@ -89,7 +90,7 @@ static char *get_mountpoint(char *devpath)
 	return NULL;
 }
 
-bool mount_partition(CONFIG_PART *cfgpart)
+static bool mount_partition(CONFIG_PART *cfgpart)
 {
 	char tmpdir_template[256];
 	char *mountpoint;
@@ -121,7 +122,7 @@ bool mount_partition(CONFIG_PART *cfgpart)
 	return true;
 }
 
-void unmount_partition(CONFIG_PART *cfgpart)
+static void unmount_partition(CONFIG_PART *cfgpart)
 {
 	if (!cfgpart) {
 		return;

@@ -17,6 +17,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include "bg_utils.h"
+#include "test-interface.h"
 
 static PedDevice ped_devices[32] = {0};
 static int num_simulated_devices = 2;
@@ -29,8 +30,6 @@ static const char *const fsname = "fat16";
 
 static char *fakemodel = "Mocked Disk Drive";
 static char *fakedevice = "/dev/nobrain";
-
-extern bool probe_config_partitions(CONFIG_PART *cfgparts);
 
 /* Mock functions from libparted */
 void ped_device_probe_all()

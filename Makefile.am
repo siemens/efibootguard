@@ -24,6 +24,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir) -include config.h
 
 AM_CFLAGS = \
 	-Wno-unused-parameter \
+	-Wmissing-prototypes \
 	-fshort-wchar \
 	-DHAVE_ENDIAN_H \
 	-D_GNU_SOURCE

@@ -28,7 +28,7 @@ void ebgpart_beverbose(bool v)
 	verbosity = v;
 }
 
-void add_block_dev(PedDevice *dev)
+static void add_block_dev(PedDevice *dev)
 {
 	if (!first_device) {
 		first_device = dev;
@@ -41,7 +41,7 @@ void add_block_dev(PedDevice *dev)
 	d->next = dev;
 }
 
-char *GUID_to_str(uint8_t *g)
+static char *GUID_to_str(uint8_t *g)
 {
 	snprintf(buffer, 37, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%"
 			     "02X%02X%02X%02X%02X",
@@ -50,7 +50,7 @@ char *GUID_to_str(uint8_t *g)
 	return buffer;
 }
 
-char *type_to_name(char t)
+static char *type_to_name(char t)
 {
 	switch (t) {
 	case MBR_TYPE_FAT12:
@@ -69,8 +69,8 @@ char *type_to_name(char t)
 	return "not supported";
 }
 
-bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
-			 PedFileSystemType *pfst, uint32_t i)
+static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
+				PedFileSystemType *pfst, uint32_t i)
 {
 	if (strcmp(GPT_PARTITION_GUID_FAT_NTFS, GUID_to_str(e->type_GUID)) !=
 		0 &&
@@ -131,7 +131,8 @@ bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
 	return true;
 }
 
-void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num, PedDevice *dev)
+static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
+			     PedDevice *dev)
 {
 	off64_t offset;
 	struct EFIpartitionentry e;
@@ -185,9 +186,9 @@ void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num, PedDevice *dev)
 	}
 }
 
-void scanLogicalVolumes(int fd, off64_t extended_start_LBA,
-			struct Masterbootrecord *ebr, int i,
-			PedPartition *partition, int lognum)
+static void scanLogicalVolumes(int fd, off64_t extended_start_LBA,
+			       struct Masterbootrecord *ebr, int i,
+			       PedPartition *partition, int lognum)
 {
 	struct Masterbootrecord next_ebr;
 	PedFileSystemType *pfst;
@@ -246,7 +247,7 @@ scl_out_of_mem:
 	if (partition->next) free(partition->next);
 }
 
-bool check_partition_table(PedDevice *dev)
+static bool check_partition_table(PedDevice *dev)
 {
 	int fd;
 	struct Masterbootrecord mbr;
@@ -346,8 +347,8 @@ bool check_partition_table(PedDevice *dev)
 	return true;
 }
 
-int scan_devdir(unsigned int fmajor, unsigned int fminor, char *fullname,
-		 unsigned int maxlen)
+static int scan_devdir(unsigned int fmajor, unsigned int fminor, char *fullname,
+		       unsigned int maxlen)
 {
 	int result = -1;
 
@@ -398,7 +399,7 @@ static int get_major_minor(char *filename, unsigned int *major, unsigned int *mi
 	return 0;
 }
 
-void ped_device_probe_all()
+void ped_device_probe_all(void)
 {
 	struct dirent *sysblockfile;
 	char fullname[DEV_FILENAME_LEN];
@@ -457,7 +458,7 @@ void ped_device_probe_all()
 	closedir(sysblockdir);
 }
 
-void ped_partition_destroy(PedPartition *p)
+static void ped_partition_destroy(PedPartition *p)
 {
 	if (!p) return;
 	if (!p->fs_type) goto fs_type_Null;
@@ -467,7 +468,7 @@ fs_type_Null:
 	free(p);
 }
 
-void ped_device_destroy(PedDevice *d)
+static void ped_device_destroy(PedDevice *d)
 {
 	if (!d) return;
 	if (d->model) free(d->model);

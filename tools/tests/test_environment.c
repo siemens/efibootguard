@@ -18,6 +18,7 @@
 #include <cmocka.h>
 #include <string.h>
 #include "bg_utils.h"
+#include "test-interface.h"
 
 /* Mock functions from libparted */
 
@@ -58,9 +59,6 @@ size_t fwrite(const void *ptr, size_t size, size_t count, FILE *stream)
 {
 	return mock_type(size_t);
 }
-
-extern bool read_env(CONFIG_PART *part, BG_ENVDATA *env);
-extern bool write_env(CONFIG_PART *part, BG_ENVDATA *env);
 
 static void test_configfile_read(void **state)
 {
