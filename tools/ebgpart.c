@@ -15,6 +15,7 @@
  */
 
 #include "ebgpart.h"
+#include <sys/sysmacros.h>
 
 static PedDevice *first_device = NULL;
 static PedDisk g_ped_dummy_disk;
@@ -345,27 +346,101 @@ bool check_partition_table(PedDevice *dev)
 	return true;
 }
 
+int scan_devdir(unsigned int fmajor, unsigned int fminor, char *fullname,
+		 unsigned int maxlen)
+{
+	int result = -1;
+
+	DIR *devdir = opendir(DEVDIR);
+	if (!devdir) {
+		VERBOSE(stderr, "Failed to open %s\n", DEVDIR);
+		return result;
+	}
+	struct dirent *devfile;
+	do {
+		devfile = readdir(devdir);
+		if (!devfile) {
+			break;
+		}
+		snprintf(fullname, maxlen, "%s/%s", DEVDIR, devfile->d_name);
+		struct stat fstat;
+		if (stat(fullname, &fstat) == -1) {
+			VERBOSE(stderr, "stat failed on %s\n", fullname);
+			break;
+		}
+		if (major(fstat.st_rdev) == fmajor &&
+		    minor(fstat.st_rdev) == fminor) {
+			VERBOSE(stdout, "Node found: %s\n", fullname);
+			result = 0;
+			break;
+		}
+	} while (devfile);
+	closedir(devdir);
+
+	return result;
+}
+
+static int get_major_minor(char *filename, unsigned int *major, unsigned int *minor)
+{
+	FILE *fh = fopen(filename, "r");
+	if (fh == 0) {
+		VERBOSE(stderr, "Error opening %s for read", filename);
+		return -1;
+	}
+	int res = fscanf(fh, "%u:%u", major, minor);
+	fclose(fh);
+	if (res < 2) {
+		VERBOSE(stderr,
+			"Error reading major/minor of device entry. (%s)\n",
+			strerror(errno));
+		return -1;
+	};
+	return 0;
+}
+
 void ped_device_probe_all()
 {
-	struct dirent *devfile;
-	char fullname[256];
+	struct dirent *sysblockfile;
+	char fullname[DEV_FILENAME_LEN];
 
-	DIR *devdir = opendir(DEVDIRNAME);
-	if (!devdir) {
-		VERBOSE(stderr, "Could not open %s\n", DEVDIRNAME);
+	DIR *sysblockdir = opendir(SYSBLOCKDIR);
+	if (!sysblockdir) {
+		VERBOSE(stderr, "Could not open %s\n", SYSBLOCKDIR);
 		return;
 	}
 
-	/* get all files from devdir */
+	/* get all files from sysblockdir */
 	do {
-		devfile = readdir(devdir);
-		if (!devfile)
+		sysblockfile = readdir(sysblockdir);
+		if (!sysblockfile) {
 			break;
-		if (strcmp(devfile->d_name, ".") == 0 ||
-		    strcmp(devfile->d_name, "..") == 0)
+		}
+		if (strcmp(sysblockfile->d_name, ".") == 0 ||
+		    strcmp(sysblockfile->d_name, "..") == 0) {
 			continue;
-
-		snprintf(fullname, 255, "/dev/%s", devfile->d_name);
+		}
+		snprintf(fullname, sizeof(fullname), "/sys/block/%s/dev",
+			 sysblockfile->d_name);
+		/* Get major and minor revision from /sys/block/sdX/dev */
+		unsigned int fmajor, fminor;
+		if (get_major_minor(fullname, &fmajor, &fminor) < 0) {
+			continue;
+		}
+		VERBOSE(stdout,
+			"Trying device with: Major = %d, Minor = %d, (%s)\n",
+			fmajor, fminor, fullname);
+		/* Check if this file is really in the dev directory */
+		snprintf(fullname, sizeof(fullname), "%s/%s", DEVDIR,
+			 sysblockfile->d_name);
+		struct stat fstat;
+		if (stat(fullname, &fstat) == -1) {
+			/* Node with same name not found in /dev, thus search
+			* for node with identical Major and Minor revision */
+			if (scan_devdir(fmajor, fminor, fullname,
+					sizeof(fullname)) != 0) {
+				continue;
+			}
+		}
 		/* This is a block device, so add it to the list*/
 		PedDevice *dev = calloc(sizeof(PedDevice), 1);
 		asprintf(&dev->model, "N/A");
@@ -377,9 +452,9 @@ void ped_device_probe_all()
 			free(dev->path);
 			free(dev);
 		}
-	} while (devfile);
+	} while (sysblockfile);
 
-	closedir(devdir);
+	closedir(sysblockdir);
 }
 
 void ped_partition_destroy(PedPartition *p)

@@ -25,6 +25,8 @@
 #define _GNU_SOURCE
 #endif
 
+#define DEV_FILENAME_LEN 256
+
 #ifndef VERBOSE
 #define VERBOSE(o, ...)                                                        \
 	if (verbosity) fprintf(o, __VA_ARGS__)
@@ -45,7 +47,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define DEVDIRNAME "/sys/block"
+#define SYSBLOCKDIR "/sys/block"
+#define DEVDIR "/dev"
 
 #define LB_SIZE 512
 
