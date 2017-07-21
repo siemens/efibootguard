@@ -227,7 +227,9 @@ bool probe_config_partitions(CONFIG_PART *cfgpart)
 		PedPartition *part = pd->part_list;
 		while (part) {
 			if (!part->fs_type || !part->fs_type->name ||
-			    strcmp(part->fs_type->name, "fat12") != 0) {
+			    (strcmp(part->fs_type->name, "fat12") != 0 &&
+			     strcmp(part->fs_type->name, "fat16") != 0 &&
+			     strcmp(part->fs_type->name, "fat32") != 0)) {
 				part = ped_disk_next_partition(pd, part);
 				continue;
 			}
