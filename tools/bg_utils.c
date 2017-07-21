@@ -154,7 +154,7 @@ static FILE *open_config_file(CONFIG_PART *cfgpart, char *mode)
 	strncat(configfilepath, "/", 1);
 	strncat(configfilepath, FAT_ENV_FILENAME, strlen(FAT_ENV_FILENAME));
 	VERBOSE(stdout, "Probing config file at %s.\n", configfilepath);
-	FILE* config = fopen(configfilepath, mode);
+	FILE *config = fopen(configfilepath, mode);
 	free(configfilepath);
 	return config;
 }
@@ -227,7 +227,7 @@ bool probe_config_partitions(CONFIG_PART *cfgpart)
 		PedPartition *part = pd->part_list;
 		while (part) {
 			if (!part->fs_type || !part->fs_type->name ||
-			    strcmp(part->fs_type->name, "fat16") != 0) {
+			    strcmp(part->fs_type->name, "fat12") != 0) {
 				part = ped_disk_next_partition(pd, part);
 				continue;
 			}
@@ -440,11 +440,14 @@ bool bgenv_write(BGENV *env)
 	case BGENVTYPE_FAT:
 		part = (CONFIG_PART *)env->desc;
 		if (!part) {
-			VERBOSE(stderr, "Invalid config partition to store environment.\n");
+			VERBOSE(
+			    stderr,
+			    "Invalid config partition to store environment.\n");
 			return false;
 		}
 		if (!write_env(part, env->data)) {
-			VERBOSE(stderr, "Could not write to %s\n", part->devpath);
+			VERBOSE(stderr, "Could not write to %s\n",
+				part->devpath);
 			return false;
 		}
 		return true;
