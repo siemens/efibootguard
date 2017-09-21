@@ -84,7 +84,7 @@ bg_setenv_DEPENDENCIES = \
 	libbg_utils.a
 
 install-exec-hook:
-	$(LN_S) bg_setenv$(EXEEXT) \
+	$(LN_S) -f bg_setenv$(EXEEXT) \
 		$(DESTDIR)$(bindir)/bg_printenv$(EXEEXT)
 
 #
@@ -185,10 +185,11 @@ $(efi_loadername): $(efi_solib)
 	  -j .dynsym -j .rel -j .rela -j .reloc -j .init_array \
 	  --target=efi-app-$(ARCH) $< $@
 
-bg_printenv_DATA = bg_printenv
 bg_printenvdir = $(top_srcdir)
 
 bg_printenv: $(bg_setenv)
-	$(LN_S) bg_setenv bg_printenv
+	$(LN_S) -f bg_setenv bg_printenv
+
+all-local: bg_printenv
 
 CLEANFILES += bg_printenv
