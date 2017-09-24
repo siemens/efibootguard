@@ -31,6 +31,13 @@
 bg_printenv
 bg_setenv
 
+# Test results
+tools/tests/test_partitions
+tools/tests/test_environment
+tools/tests/test_api
+tools/tests/*.log
+tools/tests/*.trs
+
 # Debug files
 *.dSYM/
 *.su
@@ -69,5 +76,5 @@ Makefile.in
 /missing
 /stamp-h1
 /Makefile
-
-tools/.*
+/tools/tests/Makefile
+.deps/

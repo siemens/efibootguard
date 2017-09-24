@@ -137,6 +137,7 @@ AC_TYPE_UINT8_T
 # ------------------------------------------------------------------------------
 AC_CONFIG_FILES([
         Makefile
+        tools/tests/Makefile
 ])
 
 AC_OUTPUT
@@ -154,4 +155,3 @@ AC_MSG_RESULT([
         efi libs:                ${GNUEFI_LIBS}
         efi lds:                 ${GNUEFI_LDS_DIR}
 ])
-

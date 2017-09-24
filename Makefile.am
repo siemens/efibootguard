@@ -193,3 +193,6 @@ bg_printenv: $(bg_setenv)
 all-local: bg_printenv
 
 CLEANFILES += bg_printenv
+
+# Tests depend on libraries being built - start with "."
+SUBDIRS = . tools/tests
