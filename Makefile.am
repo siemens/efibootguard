@@ -177,7 +177,7 @@ $(top_builddir)/drivers/watchdog/%.o: $(top_srcdir)/drivers/watchdog/%.S
 
 $(efi_solib): $(efi_objects)
 	$(AM_V_CCLD)$(LD) $(efi_ldflags) $(efi_objects) \
-		-o $@ -lefi -lgnuefi $(shell $(CC) -print-libgcc-file-name); \
+		-o $@ -lefi -lgnuefi $(shell $(CC) $(CFLAGS) -print-libgcc-file-name); \
 	nm -D -u $@ | grep ' U ' && exit 1 || :
 
 $(efi_loadername): $(efi_solib)
