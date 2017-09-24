@@ -138,7 +138,7 @@ efi_cflags += \
 endif
 
 efi_ldflags = \
-	-T $(GNUEFI_LDS_DIR)/elf_$(ARCH)_efi.lds \
+	-T $(GNUEFI_LIB_DIR)/elf_$(ARCH)_efi.lds \
 	-shared \
 	-Bsymbolic \
 	-nostdlib \

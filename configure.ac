@@ -63,25 +63,16 @@ AC_ARG_WITH([gnuefi-include-dir],
 AC_SUBST(GNUEFI_INC_DIR)
 AC_DEFINE_UNQUOTED(GNUEFI_INC_DIR, ["$GNUEFI_INC_DIR"], [The include directory for gnuefi])
 
+efiroot=$(echo $(cd $GNUEFI_SYS_DIR/usr/lib/$($CC -print-multi-os-directory); pwd))
+
 AC_ARG_WITH([gnuefi-lib-dir],
 	    AS_HELP_STRING([--with-gnuefi-lib-dir=DIRECTORY],
-			   [specify the lib directory of gnuefi, defaults to "$GNUEFI_SYS_DIR/usr/lib"]),
+			   [specify the lib directory of gnuefi, defaults to "$efiroot"]),
 	    [GNUEFI_LIB_DIR="$withval"],
-	    [GNUEFI_LIB_DIR="$GNUEFI_SYS_DIR/usr/lib"])
+	    [GNUEFI_LIB_DIR="$efiroot"])
 
 AC_SUBST(GNUEFI_LIB_DIR)
 AC_DEFINE_UNQUOTED(GNUEFI_LIB_DIR, ["$GNUEFI_LIB_DIR"], [The lib directory for gnuefi])
-
-efiroot=$(echo $(cd ${GNUEFI_LIB_DIR}/$($CC -print-multi-os-directory); pwd))
-
-AC_ARG_WITH([gnuefi-lds-dir],
-	    AS_HELP_STRING([--with-gnuefi-lds-dir=DIRECTORY],
-			   [specify the lds directory of gnuefi, defaults to "$GNUEFI_LIB_DIR/$($CC -print-multi-os-directory)"]),
-	    [GNUEFI_LDS_DIR="$withval"],
-	    [GNUEFI_LDS_DIR="$efiroot"])
-
-AC_SUBST(GNUEFI_LDS_DIR)
-AC_DEFINE_UNQUOTED(GNUEFI_LDS_DIR, ["$GNUEFI_LDS_DIR"], [The lds directory for gnuefi])
 
 dnl Define ARCH_<NAME> conditionals
 SET_ARCH(I586, i586*)
@@ -148,10 +139,9 @@ AC_MSG_RESULT([
         machine type:            $MACHINE_TYPE_NAME
 
         prefix:                  ${prefix}
-	exec_prefix:             ${exec_prefix}
+        exec_prefix:             ${exec_prefix}
         libexecdir:              ${libexecdir}
         libdir:                  ${libdir}
 
-        efi libs:                ${GNUEFI_LIBS}
-        efi lds:                 ${GNUEFI_LDS_DIR}
+        efi libs:                ${GNUEFI_LIB_DIR}
 ])

@@ -40,7 +40,6 @@ autoreconf -fi ..
 ../configure --host=i586 --build=x86_64-unknown-linux-gnu \
  --with-gnuefi-sys-dir=<sys-root-dir> \
  --with-gnuefi-include-dir=<sys-root-dir>/usr/include/efi \
- --with-gnuefi-lds-dir=<sys-root-dir>/usr/lib \
  --with-gnuefi-lib-dir=<sys-root-dir>/usr/lib
 make
 ```
