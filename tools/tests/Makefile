@@ -63,7 +63,7 @@ MOCKOBJS_test_api = bg_utils
 # MOCKOBJS_SYMBOLS_objectname-targetname = symbolname1 symbolname2 ...
 
 MOCKOBJS_SYMBOLS_bg_utils-test_partitions = probe_config_file
-MOCKOBJS_SYMBOLS_bg_utils-test_environment = oldenvs configparts fopen fclose fread fwrite feof mount_partition
+MOCKOBJS_SYMBOLS_bg_utils-test_environment = oldenvs configparts fopen fclose fread fwrite feof
 MOCKOBJS_SYMBOLS_bg_utils-test_api = bgenv_init bgenv_write bgenv_close bgenv_get_latest bgenv_get_by_index bgenv_get_oldest
 MOCKOBJS_SYMBOLS_ebgpart-test_partitions = ped_device_probe_all ped_device_get_next ped_disk_next_partition
 

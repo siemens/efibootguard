@@ -27,11 +27,6 @@ BG_ENVDATA oldenvs[CONFIG_PARTITION_COUNT];
 
 FILE test_file;
 
-bool mount_partition(CONFIG_PART *cfgpart)
-{
-	return true;
-}
-
 int feof(FILE *f)
 {
 	return 0;
