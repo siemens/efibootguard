@@ -42,8 +42,8 @@ test_environment_LDADD = \
 	-lcmocka
 
 libebgenv-test_environment.a: $(top_builddir)/libebgenv.a
-	$(AM_V_GEN) $(OBJCOPY) -W oldenvs -W configparts -W fopen -W fclose \
-	  -W fread -W fwrite -W feof $< $@
+	$(AM_V_GEN) $(OBJCOPY) -W oldenvs -W configparts -W fopen -W fopen64 \
+	  -W fclose -W fread -W fwrite -W feof $< $@
 
 CLEANFILES += libebgenv-test_environment.a
 

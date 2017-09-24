@@ -40,6 +40,11 @@ FILE *fopen(const char *filename, const char *mode)
 	return NULL;
 }
 
+FILE *fopen64(const char *filename, const char *mode)
+{
+	return fopen(filename, mode);
+}
+
 int fclose(FILE *handle)
 {
 	return mock_type(int);
