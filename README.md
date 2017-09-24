@@ -17,6 +17,12 @@ Archive:
 For sending patches, please refer to the mailing list and `CONTRIBUTING.md` in
 the source tree.
 
+Continuous integration:
+* [Travis CI](https://travis-ci.org/siemens/efibootguard)
+* Status:
+  * ![](https://travis-ci.org/siemens/efibootguard.svg?branch=master) on master
+  * ![](https://travis-ci.org/siemens/efibootguard.svg?branch=next) on next
+
 ## Watchdog support ##
 
 The following watchdog drivers are implemented:
@@ -43,4 +49,3 @@ See `Installation And Usage` for further information.
 * [Compilation Instructions](docs/COMPILE.md)
 * [Installation And Usage](docs/USAGE.md)
 * [Future Work](docs/TODO.md)
-
