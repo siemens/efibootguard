@@ -27,6 +27,10 @@
 # EFI
 *.efi
 
+# Executables
+bg_printenv
+bg_setenv
+
 # Debug files
 *.dSYM/
 *.su
@@ -42,6 +46,7 @@ Makefile.in
 /py-compile
 /test-driver
 /ylwrap
+.dirstamp
 
 # http://www.gnu.org/software/autoconf
 
@@ -53,7 +58,7 @@ Makefile.in
 /compile
 /config.guess
 /config.h
-/config.h.in
+/config.h.in*
 /config.log
 /config.status
 /config.sub
