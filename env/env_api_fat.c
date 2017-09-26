@@ -18,6 +18,27 @@ const char *tmp_mnt_dir = "/tmp/mnt-XXXXXX";
 
 static bool verbosity = false;
 
+static EBGENVKEY bgenv_str2enum(char *key)
+{
+	if (strncmp(key, "kernelfile", strlen("kernelfile") + 1) == 0) {
+		return EBGENV_KERNELFILE;
+	}
+	if (strncmp(key, "kernelparams", strlen("kernelparams") + 1) == 0) {
+		return EBGENV_KERNELPARAMS;
+	}
+	if (strncmp(key, "watchdog_timeout_sec",
+		    strlen("watchdog_timeout_sec") + 1) == 0) {
+		return EBGENV_WATCHDOG_TIMEOUT_SEC;
+	}
+	if (strncmp(key, "revision", strlen("revision") + 1) == 0) {
+		return EBGENV_REVISION;
+	}
+	if (strncmp(key, "ustate", strlen("ustate") + 1) == 0) {
+		return EBGENV_USTATE;
+	}
+	return EBGENV_UNKNOWN;
+}
+
 void be_verbose(bool v)
 {
 	verbosity = v;
@@ -350,89 +371,72 @@ bool write_env(CONFIG_PART *part, BG_ENVDATA *env)
 	return result;
 }
 
-CONFIG_PART config_parts[ENV_NUM_CONFIG_PARTS];
-BG_ENVDATA oldenvs[ENV_NUM_CONFIG_PARTS];
+static CONFIG_PART config_parts[ENV_NUM_CONFIG_PARTS];
+static BG_ENVDATA oldenvs[ENV_NUM_CONFIG_PARTS];
 
-bool bgenv_init(BGENVTYPE type)
+bool bgenv_init()
 {
-	switch (type) {
-	case BGENVTYPE_FAT:
-		memset((void *)&config_parts, 0,
-		       sizeof(CONFIG_PART) * ENV_NUM_CONFIG_PARTS);
-		/* enumerate all config partitions */
-		if (!probe_config_partitions(config_parts)) {
-			VERBOSE(stderr, "Error finding config partitions.\n");
-			return false;
-		}
-		for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-			read_env(&config_parts[i], &oldenvs[i]);
-			uint32_t sum = crc32(0, (Bytef *)&oldenvs[i],
-			    sizeof(BG_ENVDATA) - sizeof(oldenvs[i].crc32));
-			if (oldenvs[i].crc32 != sum) {
-				VERBOSE(stderr, "Invalid CRC32!\n");
-				continue;
-			}
-		}
-		return true;
+	memset((void *)&config_parts, 0,
+	       sizeof(CONFIG_PART) * ENV_NUM_CONFIG_PARTS);
+	/* enumerate all config partitions */
+	if (!probe_config_partitions(config_parts)) {
+		VERBOSE(stderr, "Error finding config partitions.\n");
+		return false;
 	}
-	return false;
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		read_env(&config_parts[i], &oldenvs[i]);
+		uint32_t sum = crc32(0, (Bytef *)&oldenvs[i],
+		    sizeof(BG_ENVDATA) - sizeof(oldenvs[i].crc32));
+		if (oldenvs[i].crc32 != sum) {
+			VERBOSE(stderr, "Invalid CRC32!\n");
+			continue;
+		}
+	}
+	return true;
 }
 
-BGENV *bgenv_get_by_index(BGENVTYPE type, uint32_t index)
+BGENV *bgenv_open_by_index(uint32_t index)
 {
 	BGENV *handle;
 
-	switch (type) {
-	case BGENVTYPE_FAT:
-		/* get config partition by index and allocate handle */
-		if (index >= ENV_NUM_CONFIG_PARTS) {
-			return NULL;
-		}
-		if (!(handle = calloc(1, sizeof(BGENV)))) {
-			return NULL;
-		}
-		handle->desc = (void *)&config_parts[index];
-		handle->data = &oldenvs[index];
-		handle->type = type;
-		return handle;
+	/* get config partition by index and allocate handle */
+	if (index >= ENV_NUM_CONFIG_PARTS) {
+		return NULL;
 	}
-	return NULL;
+	if (!(handle = calloc(1, sizeof(BGENV)))) {
+		return NULL;
+	}
+	handle->desc = (void *)&config_parts[index];
+	handle->data = &oldenvs[index];
+	return handle;
 }
 
-BGENV *bgenv_get_oldest(BGENVTYPE type)
+BGENV *bgenv_open_oldest()
 {
 	uint32_t minrev = 0xFFFFFFFF;
 	uint32_t min_idx = 0;
 
-	switch (type) {
-	case BGENVTYPE_FAT:
-		for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-			if (oldenvs[i].revision < minrev) {
-				minrev = oldenvs[i].revision;
-				min_idx = i;
-			}
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		if (oldenvs[i].revision < minrev) {
+			minrev = oldenvs[i].revision;
+			min_idx = i;
 		}
-		return bgenv_get_by_index(type, min_idx);
 	}
-	return NULL;
+	return bgenv_open_by_index(min_idx);
 }
 
-BGENV *bgenv_get_latest(BGENVTYPE type)
+BGENV *bgenv_open_latest()
 {
 	uint32_t maxrev = 0;
 	uint32_t max_idx = 0;
 
-	switch (type) {
-	case BGENVTYPE_FAT:
-		for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-			if (oldenvs[i].revision > maxrev) {
-				maxrev = oldenvs[i].revision;
-				max_idx = i;
-			}
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		if (oldenvs[i].revision > maxrev) {
+			maxrev = oldenvs[i].revision;
+			max_idx = i;
 		}
-		return bgenv_get_by_index(type, max_idx);
 	}
-	return NULL;
+	return bgenv_open_by_index(max_idx);
 }
 
 bool bgenv_write(BGENV *env)
@@ -442,23 +446,19 @@ bool bgenv_write(BGENV *env)
 	if (!env) {
 		return false;
 	}
-	switch (env->type) {
-	case BGENVTYPE_FAT:
-		part = (CONFIG_PART *)env->desc;
-		if (!part) {
-			VERBOSE(
-			    stderr,
-			    "Invalid config partition to store environment.\n");
-			return false;
-		}
-		if (!write_env(part, env->data)) {
-			VERBOSE(stderr, "Could not write to %s\n",
-				part->devpath);
-			return false;
-		}
-		return true;
+	part = (CONFIG_PART *)env->desc;
+	if (!part) {
+		VERBOSE(
+		    stderr,
+		    "Invalid config partition to store environment.\n");
+		return false;
 	}
-	return false;
+	if (!write_env(part, env->data)) {
+		VERBOSE(stderr, "Could not write to %s\n",
+			part->devpath);
+		return false;
+	}
+	return true;
 }
 
 BG_ENVDATA *bgenv_read(BGENV *env)
@@ -469,6 +469,12 @@ BG_ENVDATA *bgenv_read(BGENV *env)
 	return env->data;
 }
 
+/* TODO: Refactored API has tests with static struct, that cannot be freed. If
+ * gcc inlines this function within this translation unit, tests cannot
+ * overload the function by weakening. Thus, define it as noinline until tests
+ * are redesigned.
+ */
+__attribute((noinline))
 bool bgenv_close(BGENV *env)
 {
 	if (env) {
@@ -476,4 +482,152 @@ bool bgenv_close(BGENV *env)
 		return true;
 	}
 	return false;
+}
+
+int bgenv_get(BGENV *env, char *key, char **type, void *data, size_t maxlen)
+{
+	EBGENVKEY e;
+
+	if (!key || !data || maxlen == 0) {
+		return EINVAL;
+	}
+	e = bgenv_str2enum(key);
+	if (e == EBGENV_UNKNOWN) {
+		return EINVAL;
+	}
+	if (!env) {
+		return EPERM;
+	}
+	switch (e) {
+	case EBGENV_KERNELFILE:
+		str16to8(data, env->data->kernelfile);
+		if (type) {
+			sprintf(*type, "char*");
+		}
+		break;
+	case EBGENV_KERNELPARAMS:
+		str16to8(data, env->data->kernelparams);
+		if (type) {
+			sprintf(*type, "char*");
+		}
+		break;
+	case EBGENV_WATCHDOG_TIMEOUT_SEC:
+		sprintf(data, "%lu", env->data->watchdog_timeout_sec);
+		if (type) {
+			sprintf(*type, "uint16_t");
+		}
+		break;
+	case EBGENV_REVISION:
+		sprintf(data, "%lu", env->data->revision);
+		if (type) {
+			sprintf(*type, "uint32_t");
+		}
+		break;
+	case EBGENV_USTATE:
+		sprintf(data, "%u", env->data->ustate);
+		if (type) {
+			sprintf(*type, "uint16_t");
+		}
+		break;
+	default:
+		return EINVAL;
+	}
+	return 0;
+}
+
+int bgenv_set(BGENV *env, char *key, char *type, void *data, size_t datalen)
+{
+	EBGENVKEY e;
+	int val;
+	char *p;
+	char *value = (char *)data;
+
+	if (!key || !data || datalen == 0) {
+		return EINVAL;
+	}
+
+	e = bgenv_str2enum(key);
+	if (e == EBGENV_UNKNOWN) {
+		return EINVAL;
+	}
+	if (!env) {
+		return EPERM;
+	}
+	switch (e) {
+	case EBGENV_REVISION:
+		val = strtol(value, &p, 10);
+		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
+		    (errno != 0 && val == 0)) {
+			return errno;
+		}
+		if (p == value) {
+			return EINVAL;
+		}
+		env->data->revision = val;
+		break;
+	case EBGENV_KERNELFILE:
+		str8to16(env->data->kernelfile, value);
+		break;
+	case EBGENV_KERNELPARAMS:
+		str8to16(env->data->kernelparams, value);
+		break;
+	case EBGENV_WATCHDOG_TIMEOUT_SEC:
+		val = strtol(value, &p, 10);
+		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
+		    (errno != 0 && val == 0)) {
+			return errno;
+		}
+		if (p == value) {
+			return EINVAL;
+		}
+		env->data->watchdog_timeout_sec = val;
+		break;
+	case EBGENV_USTATE:
+		val = strtol(value, &p, 10);
+		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
+		    (errno != 0 && val == 0)) {
+			return errno;
+		}
+		if (p == value) {
+			return EINVAL;
+		}
+		env->data->ustate = val;
+		break;
+	default:
+		return EINVAL;
+	}
+	return 0;
+}
+
+BGENV *bgenv_create_new()
+{
+	BGENV *env_latest;
+	BGENV *env_new;
+
+	env_latest = bgenv_open_latest();
+	if (!env_latest)
+		goto create_new_io_error;
+
+	int new_rev = env_latest->data->revision + 1;
+
+	if (!bgenv_close(env_latest))
+		goto create_new_io_error;
+
+	env_new = bgenv_open_oldest();
+	if (!env_new)
+		goto create_new_io_error;
+
+	/* zero fields */
+	memset(env_new->data, 0, sizeof(BG_ENVDATA));
+	/* update revision field and testing mode */
+	env_new->data->revision = new_rev;
+	env_new->data->ustate = 1;
+	/* set default watchdog timeout */
+	env_new->data->watchdog_timeout_sec = 30;
+
+	return env_new;
+
+create_new_io_error:
+	errno = EIO;
+	return NULL;
 }

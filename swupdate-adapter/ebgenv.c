@@ -11,329 +11,115 @@
  */
 
 #include "env_api.h"
-#include "ebgdefs.h"
 #include "ebgenv.h"
 
-typedef enum {
-	EBGENV_KERNELFILE,
-	EBGENV_KERNELPARAMS,
-	EBGENV_WATCHDOG_TIMEOUT_SEC,
-	EBGENV_REVISION,
-	EBGENV_USTATE,
-	EBGENV_UNKNOWN
-} EBGENVKEY;
-
-static BGENV *env_current = NULL;
-
-typedef struct _PCOLLECTOR {
-	void *p;
-	struct _PCOLLECTOR *next;
-} PCOLLECTOR;
-
-static PCOLLECTOR ebg_gc;
-
-static bool ebg_new_env_created = false;
-
-static bool ebg_gc_addpointer(void *pnew)
-{
-	PCOLLECTOR *pc = &ebg_gc;
-
-	while (pc->next) {
-		pc = pc->next;
-	}
-	pc->next = calloc(sizeof(PCOLLECTOR), 1);
-	if (!pc->next) {
-		return false;
-	}
-	pc = pc->next;
-	pc->p = pnew;
-	return true;
-}
-
-static void ebg_gc_cleanup()
-{
-	PCOLLECTOR *pc = &ebg_gc;
-
-	while (pc) {
-		if (pc->p) {
-			free(pc->p);
-		}
-		PCOLLECTOR *tmp = pc;
-		pc = pc->next;
-		if (tmp != &ebg_gc) {
-			free(tmp);
-		}
-	}
-	ebg_gc.p = NULL;
-	ebg_gc.next = NULL;
-}
-
-static EBGENVKEY ebg_env_str2enum(char *key)
-{
-	if (strncmp(key, "kernelfile", strlen("kernelfile") + 1) == 0) {
-		return EBGENV_KERNELFILE;
-	}
-	if (strncmp(key, "kernelparams", strlen("kernelparams") + 1) == 0) {
-		return EBGENV_KERNELPARAMS;
-	}
-	if (strncmp(key, "watchdog_timeout_sec",
-		    strlen("watchdog_timeout_sec") + 1) == 0) {
-		return EBGENV_WATCHDOG_TIMEOUT_SEC;
-	}
-	if (strncmp(key, "revision", strlen("revision") + 1) == 0) {
-		return EBGENV_REVISION;
-	}
-	if (strncmp(key, "ustate", strlen("ustate") + 1) == 0) {
-		return EBGENV_USTATE;
-	}
-	return EBGENV_UNKNOWN;
-}
-
-void ebg_beverbose(bool v)
+void ebg_beverbose(ebgenv_t *e, bool v)
 {
 	be_verbose(v);
 }
 
-int ebg_env_create_new(void)
+int ebg_env_create_new(ebgenv_t *e)
 {
-	/* initialize garbage collector */
-	ebg_gc.p = NULL;
-	ebg_gc.next = NULL;
-
-	if (!bgenv_init(BGENVTYPE_FAT)) {
+	if (!bgenv_init()) {
 		return EIO;
 	}
 
-	env_current = bgenv_get_latest(BGENVTYPE_FAT);
-
-	if (ebg_new_env_created)
-		return env_current == NULL ? EIO : 0;
-
-	if (!env_current) {
-		return EIO;
+	if (!e->ebg_new_env_created) {
+		e->bgenv = (void *)bgenv_create_new();
 	}
-	/* first time env is opened, a new one is created for update
-	 * purpose */
-	int new_rev = env_current->data->revision + 1;
 
-	if (!bgenv_close(env_current)) {
-		return EIO;
-	}
-	env_current = bgenv_get_oldest(BGENVTYPE_FAT);
-	if (!env_current) {
-		return EIO;
-	}
-	/* zero fields */
-	memset(env_current->data, 0, sizeof(BG_ENVDATA));
-	/* update revision field and testing mode */
-	env_current->data->revision = new_rev;
-	env_current->data->ustate = USTATE_INSTALLED;
-	/* set default watchdog timeout */
-	env_current->data->watchdog_timeout_sec = 30;
-	ebg_new_env_created = true;
+	e->ebg_new_env_created = e->bgenv != NULL;
 
-	return env_current == NULL ? EIO : 0;
+	return e->bgenv == NULL ? errno : 0;
 }
 
-int ebg_env_open_current(void)
+int ebg_env_open_current(ebgenv_t *e)
 {
-	/* initialize garbage collector */
-	ebg_gc.p = NULL;
-	ebg_gc.next = NULL;
-
-	if (!bgenv_init(BGENVTYPE_FAT)) {
+	if (!bgenv_init()) {
 		return EIO;
 	}
 
-	env_current = bgenv_get_latest(BGENVTYPE_FAT);
+	e->bgenv = (void *)bgenv_open_latest();
 
-	return env_current == NULL ? EIO : 0;
+	return e->bgenv == NULL ? EIO : 0;
 }
 
-char *ebg_env_get(char *key)
+int ebg_env_get(ebgenv_t *e, char *key, char *buffer)
 {
-	EBGENVKEY e;
-	char *buffer;
-
-	if (!key) {
-		errno = EINVAL;
-		return NULL;
-	}
-	e = ebg_env_str2enum(key);
-	if (e == EBGENV_UNKNOWN) {
-		errno = EINVAL;
-		return NULL;
-	}
-	if (!env_current) {
-		errno = EPERM;
-		return NULL;
-	}
-	switch (e) {
-	case EBGENV_KERNELFILE:
-		buffer = (char *)malloc(ENV_STRING_LENGTH);
-		if (!buffer) {
-			errno = ENOMEM;
-			return NULL;
-		}
-		if (!ebg_gc_addpointer(buffer)) {
-			errno = ENOMEM;
-			return NULL;
-		};
-		str16to8(buffer, env_current->data->kernelfile);
-		return buffer;
-	case EBGENV_KERNELPARAMS:
-		buffer = (char *)malloc(ENV_STRING_LENGTH);
-		if (!buffer) {
-			errno = ENOMEM;
-			return NULL;
-		}
-		if (!ebg_gc_addpointer(buffer)) {
-			errno = ENOMEM;
-			return NULL;
-		}
-		str16to8(buffer, env_current->data->kernelparams);
-		return buffer;
-	case EBGENV_WATCHDOG_TIMEOUT_SEC:
-		if (asprintf(&buffer, "%lu",
-			     env_current->data->watchdog_timeout_sec) < 0) {
-			errno = ENOMEM;
-			return NULL;
-		}
-		if (!ebg_gc_addpointer(buffer)) {
-			errno = ENOMEM;
-			return NULL;
-		}
-		return buffer;
-	case EBGENV_REVISION:
-		if (asprintf(&buffer, "%lu", env_current->data->revision) < 0) {
-			errno = ENOMEM;
-			return NULL;
-		}
-		if (!ebg_gc_addpointer(buffer)) {
-			errno = ENOMEM;
-			return NULL;
-		}
-		return buffer;
-	case EBGENV_USTATE:
-		if (asprintf(&buffer, "%u", env_current->data->ustate) < 0) {
-			errno = ENOMEM;
-			return NULL;
-		}
-		if (!ebg_gc_addpointer(buffer)) {
-			errno = ENOMEM;
-			return NULL;
-		}
-		return buffer;
-	default:
-		errno = EINVAL;
-		return NULL;
-	}
-	errno = EINVAL;
-	return NULL;
+	return bgenv_get((BGENV *)e->bgenv, key, NULL, buffer,
+			 ENV_STRING_LENGTH);
 }
 
-int ebg_env_set(char *key, char *value)
+int ebg_env_set(ebgenv_t *e, char *key, char *value)
 {
-	EBGENVKEY e;
-	int val;
-	char *p;
+	return bgenv_set((BGENV *)e->bgenv, key, "String", value,
+			 strlen(value)); }
 
-	if (!key || !value) {
-		return EINVAL;
-	}
-	e = ebg_env_str2enum(key);
-	if (e == EBGENV_UNKNOWN) {
-		return EINVAL;
-	}
-	if (!env_current) {
-		return EPERM;
-	}
-	switch (e) {
-	case EBGENV_REVISION:
-		errno = 0;
-		val = strtol(value, &p, 10);
-		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
-		    (errno != 0 && val == 0)) {
-			return errno;
-		}
-		if (p == value) {
-			return EINVAL;
-		}
-		env_current->data->revision = val;
-		break;
-	case EBGENV_KERNELFILE:
-		str8to16(env_current->data->kernelfile, value);
-		break;
-	case EBGENV_KERNELPARAMS:
-		str8to16(env_current->data->kernelparams, value);
-		break;
-	case EBGENV_WATCHDOG_TIMEOUT_SEC:
-		errno = 0;
-		val = strtol(value, &p, 10);
-		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
-		    (errno != 0 && val == 0)) {
-			return errno;
-		}
-		if (p == value) {
-			return EINVAL;
-		}
-		env_current->data->watchdog_timeout_sec = val;
-		break;
-	case EBGENV_USTATE:
-		errno = 0;
-		val = strtol(value, &p, 10);
-		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
-		    (errno != 0 && val == 0)) {
-			return errno;
-		}
-		if (p == value) {
-			return EINVAL;
-		}
-		env_current->data->ustate = val;
-		break;
-	default:
-		return EINVAL;
-	}
-	return 0;
-}
-
-bool ebg_env_isupdatesuccessful(void)
+uint16_t ebg_env_getglobalstate(ebgenv_t *e)
 {
+	BGENV *env;
+	int res = 4;
+
 	/* find all environments with revision 0 */
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-		BGENV *env = bgenv_get_by_index(BGENVTYPE_FAT, i);
+		BGENV *env = bgenv_open_by_index(i);
 
 		if (!env) {
 			continue;
 		}
-		/* update was unsuccessful if there is a revision 0 config,
-		 * with
-		 * testing and boot_once set */
+		/* update was unsuccessful if there is a config,
+		 * with revision == REVISION_FAILED and
+		 * with ustate == USTATE_FAILED */
 		if (env->data->revision == REVISION_FAILED &&
 		    env->data->ustate == USTATE_FAILED) {
 			(void)bgenv_close(env);
-			return false;
+			res = 3;
 		}
 		(void)bgenv_close(env);
+		if (res == 3) {
+			return res;
+		}
 	}
-	return true;
+
+	env = bgenv_open_latest();
+	if (!env) {
+		errno = EIO;
+		return res;
+	}
+
+	res = env->data->ustate;
+	bgenv_close(env);
+
+	return res;
 }
 
-int ebg_env_clearerrorstate(void)
+int ebg_env_setglobalstate(ebgenv_t *e, uint16_t ustate)
 {
+	char buffer[2];
+	int res;
+
+	if (ustate > USTATE_FAILED) {
+		return EINVAL;
+	}
+	snprintf(buffer, sizeof(buffer), "%d", ustate);
+	res =
+	    bgenv_set((BGENV *)e->bgenv, "ustate", "String", buffer,
+		      strlen(buffer));
+
+	if (ustate != USTATE_OK) {
+		return res;
+	}
+
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-		BGENV *env = bgenv_get_by_index(BGENVTYPE_FAT, i);
+		BGENV *env = bgenv_open_by_index(i);
 
 		if (!env) {
 			continue;
 		}
-		if (env->data->revision == REVISION_FAILED &&
-		    env->data->ustate == USTATE_FAILED) {
-			env->data->ustate = USTATE_OK;
-			if (!bgenv_write(env)) {
-				(void)bgenv_close(env);
-				return EIO;
-			}
+		env->data->ustate = ustate;
+		if (!bgenv_write(env)) {
+			(void)bgenv_close(env);
+			return EIO;
 		}
 		if (!bgenv_close(env)) {
 			return EIO;
@@ -342,71 +128,15 @@ int ebg_env_clearerrorstate(void)
 	return 0;
 }
 
-int ebg_env_confirmupdate(void)
+int ebg_env_close(ebgenv_t *e)
 {
-	return ebg_env_set("ustate", "0");
-}
-
-bool ebg_env_isokay(void)
-{
-	BGENV *env;
-	bool res = false;
-
-	env = bgenv_get_latest(BGENVTYPE_FAT);
-	if (!env) {
-		errno = EIO;
-		return res;
-	}
-	if (env->data->ustate == USTATE_OK) {
-		res = true;
-	}
-	bgenv_close(env);
-	return res;
-}
-
-bool ebg_env_isinstalled(void)
-{
-	BGENV *env;
-	bool res = false;
-
-	env = bgenv_get_latest(BGENVTYPE_FAT);
-	if (!env) {
-		errno = EIO;
-		return res;
-	}
-	if (env->data->ustate == USTATE_INSTALLED) {
-		res = true;
-	}
-	bgenv_close(env);
-	return res;
-}
-
-bool ebg_env_istesting(void)
-{
-	BGENV *env;
-	bool res = false;
-
-	env = bgenv_get_latest(BGENVTYPE_FAT);
-	if (!env) {
-		errno = EIO;
-		return res;
-	}
-	if (env->data->ustate == USTATE_TESTING) {
-		res = true;
-	}
-	bgenv_close(env);
-	return res;
-}
-
-int ebg_env_close(void)
-{
-	/* free all allocated memory */
-	ebg_gc_cleanup();
-
 	/* if no environment is open, just return EIO */
-	if (!env_current) {
+	if (!e->bgenv) {
 		return EIO;
 	}
+
+	BGENV *env_current;
+	env_current = (BGENV *)e->bgenv;
 
 	/* recalculate checksum */
 	env_current->data->crc32 =
@@ -420,6 +150,6 @@ int ebg_env_close(void)
 	if (!bgenv_close(env_current)) {
 		return EIO;
 	}
-	env_current = NULL;
+	e->bgenv = NULL;
 	return 0;
 }

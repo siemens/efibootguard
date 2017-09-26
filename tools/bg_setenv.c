@@ -281,7 +281,7 @@ int main(int argc, char **argv)
 	}
 	int result = 0;
 	if (!arguments.output_to_file) {
-		if (!bgenv_init(BGENVTYPE_FAT)) {
+		if (!bgenv_init()) {
 			fprintf(stderr,
 				"Error initializing FAT environment.\n");
 			return 1;
@@ -291,7 +291,7 @@ int main(int argc, char **argv)
 				printf("\n----------------------------\n");
 				printf(" Config Partition #%d ", i);
 			}
-			BGENV *env = bgenv_get_by_index(BGENVTYPE_FAT, i);
+			BGENV *env = bgenv_open_by_index(i);
 			if (env) {
 				if (verbosity) {
 					dump_env(env->data);
@@ -309,7 +309,7 @@ int main(int argc, char **argv)
 			BGENV *env_current;
 			if (auto_update) {
 				/* search latest and oldest revision */
-				env_current = bgenv_get_latest(BGENVTYPE_FAT);
+				env_current = bgenv_open_latest();
 				if (!env_current) {
 					fprintf(stderr, "Failed to retrieve "
 							"latest "
@@ -319,7 +319,7 @@ int main(int argc, char **argv)
 				arguments.tmpdata.revision =
 				    env_current->data->revision + 1;
 
-				env_new = bgenv_get_oldest(BGENVTYPE_FAT);
+				env_new = bgenv_open_oldest();
 				if (!env_new) {
 					fprintf(stderr, "Failed to retrieve "
 							"oldest "
@@ -353,12 +353,10 @@ int main(int argc, char **argv)
 				}
 			} else {
 				if (part_specified) {
-					env_new = bgenv_get_by_index(
-					    BGENVTYPE_FAT,
+					env_new = bgenv_open_by_index(
 					    arguments.which_part);
 				} else {
-					env_new =
-					    bgenv_get_latest(BGENVTYPE_FAT);
+					env_new = bgenv_open_latest();
 				}
 				if (!env_new) {
 					fprintf(stderr, "Failed to retrieve "

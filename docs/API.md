@@ -42,11 +42,13 @@ and sets it to the testing state:
 
 int main(void)
 {
-    ebg_env_create_new();
-    ebg_env_set("kernelfile", "vmlinux-new");
-    ebg_env_set("kernelparams", "root=/dev/bootdevice");
-    ebg_env_set("watchdog_timeout_sec", "30");
-    ebg_env_close();
+    ebgenv_t e;
+
+    ebg_env_create_new(&e);
+    ebg_env_set(&e, "kernelfile", "vmlinux-new");
+    ebg_env_set(&e, "kernelparams", "root=/dev/bootdevice");
+    ebg_env_set(&e, "watchdog_timeout_sec", "30");
+    ebg_env_close(&e);
     return 0;
 }
 ```
@@ -66,9 +68,11 @@ modifies the kernel file name:
 
 int main(void)
 {
-    ebg_env_open_current();
-    ebg_env_set("kernelfile", "vmlinux-new");
-    ebg_env_close();
+    ebgenv_t e;
+
+    ebg_env_open_current(&e);
+    ebg_env_set(&e, "kernelfile", "vmlinux-new");
+    ebg_env_close(&e);
     return 0;
 }
 ```

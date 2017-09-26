@@ -17,74 +17,68 @@
 
 #include <errno.h>
 
+typedef struct {
+	void *bgenv;
+	bool ebg_new_env_created;
+} ebgenv_t;
+
 /** @brief Tell the library to output information for the user.
+ *  @param e A pointer to an ebgenv_t context.
+ *  @param v A boolean to set verbosity.
  */
-void ebg_beverbose(bool v);
+void ebg_beverbose(ebgenv_t *e, bool v);
 
 /** @brief Initialize environment library and open environment. The first
- * time this function is called, it will create a new environment with the
- * highest revision number for update purposes. Every next time it will
- * just open the environment with the highest revision number.
+ *         time this function is called, it will create a new environment with
+ *         the highest revision number for update purposes. Every next time it
+ *         will just open the environment with the highest revision number.
+ *  @param e A pointer to an ebgenv_t context.
  *  @return 0 on success, errno on failure
  */
-int ebg_env_create_new(void);
+int ebg_env_create_new(ebgenv_t *e);
 
 /** @brief Initialize environment library and open current environment.
+ *  @param e A pointer to an ebgenv_t context.
  *  @return 0 on success, errno on failure
  */
-int ebg_env_open_current(void);
+int ebg_env_open_current(ebgenv_t *e);
 
 /** @brief Retrieve variable content
+ *  @param e A pointer to an ebgenv_t context.
  *  @param key an enum constant to specify the variable
- *  @return a pointer to the buffer with the variable content on success,
- * NULL on failure. The returned pointer must not be freed and is freed
- * automatically on closing the environment. If NULL is returned, errno is
- * set.
+ *  @param buffer pointer to buffer containing requested value
+ *  @return 0 on success, errno on failure
  */
-char *ebg_env_get(char *key);
+int ebg_env_get(ebgenv_t *e, char *key, char* buffer);
 
 /** @brief Store new content into variable
+ *  @param e A pointer to an ebgenv_t context.
  *  @param key name of the environment variable to set
  *  @param value a string to be stored into the variable
  *  @return 0 on success, errno on failure
  */
-int ebg_env_set(char *key, char *value);
+int ebg_env_set(ebgenv_t *e, char *key, char *value);
 
-/** @brief Check if last update was successful
- *  @return true if successful, false if not
+/** @brief Get global ustate value, accounting for all environments
+ *  @param e A pointer to an ebgenv_t context.
+ *  @return ustate value
  */
-bool ebg_env_isupdatesuccessful(void);
+uint16_t ebg_env_getglobalstate(ebgenv_t *e);
 
-/** @brief Reset all stored failure states
- *  @return 0 if successful, errno on failure
+/** @brief Set global ustate value, accounting for all environments
+ *         if state is set to zero and updating only current environment if
+ *         state is set to a non-zero value.
+ *  @param e A pointer to an ebgenv_t context.
+ *  @param ustate The global ustate value to set.
+ *  @return errno on error, 0 if okay.
  */
-int ebg_env_clearerrorstate(void);
+int ebg_env_setglobalstate(ebgenv_t *e, uint16_t ustate);
 
-/** @brief Check if active env is clean
- *  @return true if yes, errno set on failure
- */
-bool ebg_env_isokay(void);
-
-/** @brief Check if active env has state 'installed'
- *  @return true if yes, errno set on failure
- */
-bool ebg_env_isinstalled(void);
-
-/** @brief Check if active env is in testing state
- *  @return true if yes, errno set on failure
- */
-bool ebg_env_istesting(void);
-
-/** @brief Confirm environment after update - sets testing and boot_once
- * both to 0
- * @return 0 if successful, errno on failure
- */
-int ebg_env_confirmupdate(void);
-
-/** @brief Closes environment and finalize library. Changes are written
- * before closing.
+/** @brief Closes environment and finalize library. Changes are written before
+ *         closing.
+ *  @param e A pointer to an ebgenv_t context.
  *  @return 0 on success, errno on failure
  */
-int ebg_env_close(void);
+int ebg_env_close(ebgenv_t *e);
 
 #endif //__EBGENV_H__

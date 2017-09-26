@@ -27,6 +27,8 @@
 #define USTATE_MIN 0
 #define USTATE_MAX 4
 
+#define REVISION_FAILED 0
+
 #pragma pack(push)
 #pragma pack(1)
 struct _BG_ENVDATA {

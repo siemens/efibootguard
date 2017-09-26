@@ -29,12 +29,10 @@ static BG_ENVDATA dataupdate = {0};
 #define DEFAULT_WATCHDOG_TIMEOUT_SEC 30
 static int test_env_revision = 42;
 static char *test_env_revision_str = "42";
+static ebgenv_t e;
 
-bool bgenv_init(BGENVTYPE type)
+bool bgenv_init()
 {
-	if (type != BGENVTYPE_FAT) {
-		return false;
-	}
 	return true;
 }
 
@@ -48,17 +46,20 @@ bool bgenv_close(BGENV *env_current)
 	return true;
 }
 
-BGENV *bgenv_get_by_index(BGENVTYPE type, uint32_t index)
+BGENV *bgenv_open_by_index(uint32_t index)
 {
-	return &envupdate;
+	if (index == 1) {
+		return &envupdate;
+	}
+	return &env;
 }
 
-BGENV *bgenv_get_latest(BGENVTYPE type)
+BGENV *bgenv_open_latest()
 {
 	return mock_ptr_type(BGENV *);
 }
 
-BGENV *bgenv_get_oldest(BGENVTYPE type)
+BGENV *bgenv_open_oldest()
 {
 	return mock_ptr_type(BGENV *);
 }
@@ -67,24 +68,24 @@ static void test_api_openclose(void **state)
 {
 	int ret;
 
-	will_return(bgenv_get_latest, &env);
-	ret = ebg_env_open_current();
+	will_return(bgenv_open_latest, &env);
+	ret = ebg_env_open_current(&e);
 	assert_int_equal(ret, 0);
 	will_return(bgenv_write, true);
-	ret = ebg_env_close();
+	ret = ebg_env_close(&e);
 	assert_int_equal(ret, 0);
 
-	will_return(bgenv_get_latest, &env);
-	ret = ebg_env_open_current();
+	will_return(bgenv_open_latest, &env);
+	ret = ebg_env_open_current(&e);
 	assert_int_equal(ret, 0);
 	will_return(bgenv_write, false);
-	ret = ebg_env_close();
+	ret = ebg_env_close(&e);
 	assert_int_equal(ret, EIO);
 
-	will_return(bgenv_get_latest, NULL);
-	ret = ebg_env_open_current();
+	will_return(bgenv_open_latest, NULL);
+	ret = ebg_env_open_current(&e);
 	assert_int_equal(ret, EIO);
-	ret = ebg_env_close();
+	ret = ebg_env_close(&e);
 	assert_int_equal(ret, EIO);
 
 	(void)state;
@@ -93,51 +94,55 @@ static void test_api_openclose(void **state)
 static void test_api_accesscurrent(void **state)
 {
 	int ret;
+	char buffer[4096];
 
-	will_return(bgenv_get_latest, &env);
-	ret = ebg_env_open_current();
+	will_return(bgenv_open_latest, &env);
+	ret = ebg_env_open_current(&e);
 	assert_int_equal(ret, 0);
 	will_return(bgenv_write, true);
-	ret = ebg_env_close();
+	ret = ebg_env_close(&e);
 	assert_int_equal(ret, 0);
 
-	ret = ebg_env_set("NonsenseKey", "AnyValue");
+	ret = ebg_env_set(&e, "NonsenseKey", "AnyValue");
 	assert_int_equal(ret, EINVAL);
 
-	ret = ebg_env_set("kernelfile", "vmlinuz");
+	ret = ebg_env_set(&e, "kernelfile", "vmlinuz");
 	assert_int_equal(ret, EPERM);
 
-	will_return(bgenv_get_latest, &env);
-	ret = ebg_env_open_current();
+	will_return(bgenv_open_latest, &env);
+	ret = ebg_env_open_current(&e);
 	assert_int_equal(ret, 0);
 
-	assert_int_equal(ebg_env_set("kernelfile", "vmlinuz"), 0);
-	assert_int_equal(ebg_env_set("kernelparams", "root=/dev/sda"), 0);
-	assert_int_equal(ebg_env_set("watchdog_timeout_sec", "abc"), EINVAL);
-	assert_int_equal(ebg_env_set("watchdog_timeout_sec", "0013"), 0);
-	assert_int_equal(ebg_env_set("ustate", "1"), 0);
+	assert_int_equal(ebg_env_set(&e, "kernelfile", "vmlinuz"), 0);
+	assert_int_equal(ebg_env_set(&e, "kernelparams", "root=/dev/sda"), 0);
+	assert_int_equal(ebg_env_set(&e, "watchdog_timeout_sec", "abc"), EINVAL);
+	assert_int_equal(ebg_env_set(&e, "watchdog_timeout_sec", "0013"), 0);
+	assert_int_equal(ebg_env_set(&e, "ustate", "1"), 0);
 
 	will_return(bgenv_write, true);
-	ret = ebg_env_close();
+	ret = ebg_env_close(&e);
 	assert_int_equal(ret, 0);
 
-	char *value;
-	value = ebg_env_get("kernelfile");
-	assert_null(value);
-	assert_int_equal(errno, EPERM);
+	ret = ebg_env_get(&e, "kernelfile", buffer);
+	assert_int_equal(ret, EPERM);
 
-	will_return(bgenv_get_latest, &env);
-	ret = ebg_env_open_current();
+	will_return(bgenv_open_latest, &env);
+	ret = ebg_env_open_current(&e);
 	assert_int_equal(ret, 0);
 
-	assert_string_equal(ebg_env_get("kernelfile"), "vmlinuz");
-	assert_string_equal(ebg_env_get("kernelparams"), "root=/dev/sda");
-	assert_string_equal(ebg_env_get("watchdog_timeout_sec"), "13");
-	assert_string_equal(ebg_env_get("ustate"), "1");
-	assert_string_equal(ebg_env_get("revision"), test_env_revision_str);
+	assert_int_equal(ebg_env_get(&e, "kernelfile", buffer), 0);
+	assert_string_equal(buffer, "vmlinuz");
+	assert_int_equal(ebg_env_get(&e, "kernelparams", buffer), 0);
+	assert_string_equal(buffer, "root=/dev/sda");
+	assert_int_equal(ebg_env_get(&e, "watchdog_timeout_sec", buffer), 0);
+	assert_string_equal(buffer, "13");
+	assert_int_equal(ebg_env_get(&e, "ustate", buffer), 0);
+	assert_string_equal(buffer, "1");
+	assert_int_equal(ebg_env_get(&e, "revision", buffer), 0);
+	assert_string_equal(buffer, test_env_revision_str);
 
 	will_return(bgenv_write, true);
-	ret = ebg_env_close();
+	ret = ebg_env_close(&e);
 	assert_int_equal(ret, 0);
 
 	(void)state;
@@ -145,34 +150,37 @@ static void test_api_accesscurrent(void **state)
 
 static void test_api_update(void **state)
 {
-	will_return(bgenv_get_latest, &env);
-	will_return(bgenv_get_oldest, &envupdate);
-	assert_int_equal(ebg_env_create_new(), 0);
+	will_return(bgenv_open_latest, &env);
+	will_return(bgenv_open_oldest, &envupdate);
+	assert_int_equal(ebg_env_create_new(&e), 0);
 
 	assert_int_equal(envupdate.data->revision, test_env_revision + 1);
 	assert_int_equal(envupdate.data->watchdog_timeout_sec,
 			 DEFAULT_WATCHDOG_TIMEOUT_SEC);
 	assert_int_equal(envupdate.data->ustate, 1);
 
-	assert_int_equal(ebg_env_set("ustate", "2"), 0);
-	assert_int_equal(ebg_env_confirmupdate(), 0);
+	assert_int_equal(ebg_env_set(&e, "ustate", "2"), 0);
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		will_return(bgenv_write, true);
+	}
+	assert_int_equal(ebg_env_setglobalstate(&e, 0), 0);
 
-	assert_int_equal(ebg_env_set("revision", "0"), 0);
-	assert_int_equal(ebg_env_set("ustate", "3"), 0);
-	assert_false(ebg_env_isupdatesuccessful());
+	if (ENV_NUM_CONFIG_PARTS == 1) {
+		will_return(bgenv_open_latest, &envupdate);
+	}
+	assert_int_equal(ebg_env_set(&e, "revision", "0"), 0);
+	assert_int_equal(ebg_env_set(&e, "ustate", "3"), 0);
+	assert_int_equal(ebg_env_getglobalstate(&e), 3);
 
-	assert_int_equal(ebg_env_set("revision", "0"), 0);
-	assert_int_equal(ebg_env_set("ustate", "0"), 0);
-	assert_true(ebg_env_isupdatesuccessful());
+	will_return(bgenv_open_latest, &env);
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		will_return(bgenv_write, true);
+	}
+	assert_int_equal(ebg_env_setglobalstate(&e, 0), 0);
+	assert_int_equal(ebg_env_getglobalstate(&e), 0);
 
-	assert_int_equal(ebg_env_set("revision", "0"), 0);
-	assert_int_equal(ebg_env_set("ustate", "3"), 0);
 	will_return(bgenv_write, true);
-	assert_int_equal(ebg_env_clearerrorstate(), 0);
-	assert_true(ebg_env_isupdatesuccessful());
-
-	will_return(bgenv_write, true);
-	assert_int_equal(ebg_env_close(), 0);
+	assert_int_equal(ebg_env_close(&e), 0);
 
 	(void)state;
 }

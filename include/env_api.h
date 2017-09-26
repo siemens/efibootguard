@@ -10,8 +10,8 @@
  * the COPYING file in the top-level directory.
  */
 
-#ifndef __BG_UTILS_H__
-#define __BG_UTILS_H__
+#ifndef __ENV_API_H__
+#define __ENV_API_H__
 
 #include <stddef.h>
 #include <stdint.h>
@@ -42,7 +42,14 @@
 	if (verbosity)                                                        \
 	fprintf(o, __VA_ARGS__)
 
-typedef enum { BGENVTYPE_FAT } BGENVTYPE;
+typedef enum {
+	EBGENV_KERNELFILE,
+	EBGENV_KERNELPARAMS,
+	EBGENV_WATCHDOG_TIMEOUT_SEC,
+	EBGENV_REVISION,
+	EBGENV_USTATE,
+	EBGENV_UNKNOWN
+} EBGENVKEY;
 
 typedef struct {
 	char *devpath;
@@ -51,7 +58,6 @@ typedef struct {
 } CONFIG_PART;
 
 typedef struct {
-	BGENVTYPE type;
 	void *desc;
 	BG_ENVDATA *data;
 } BGENV;
@@ -61,12 +67,18 @@ extern void be_verbose(bool v);
 extern char *str16to8(char *buffer, wchar_t *src);
 extern wchar_t *str8to16(wchar_t *buffer, char *src);
 
-extern bool bgenv_init(BGENVTYPE type);
-extern BGENV *bgenv_get_by_index(BGENVTYPE type, uint32_t index);
-extern BGENV *bgenv_get_oldest(BGENVTYPE type);
-extern BGENV *bgenv_get_latest(BGENVTYPE type);
+extern bool bgenv_init(void);
+extern BGENV *bgenv_open_by_index(uint32_t index);
+extern BGENV *bgenv_open_oldest(void);
+extern BGENV *bgenv_open_latest(void);
 extern bool bgenv_write(BGENV *env);
 extern BG_ENVDATA *bgenv_read(BGENV *env);
 extern bool bgenv_close(BGENV *env);
 
-#endif // __BG_UTILS_H__
+extern BGENV *bgenv_create_new(void);
+extern int bgenv_get(BGENV *env, char *key, char **type, void *data,
+		     size_t maxlen);
+extern int bgenv_set(BGENV *env, char *key, char *type, void *data,
+		     size_t datalen);
+
+#endif // __ENV_API_H__

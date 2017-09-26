@@ -11,7 +11,6 @@
  */
 
 #include <bootguard.h>
-#include <ebgdefs.h>
 #include <syspart.h>
 #include <envdata.h>
 
