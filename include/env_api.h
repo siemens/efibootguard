@@ -26,9 +26,7 @@
 #include <fcntl.h>
 #include <sys/file.h>
 #include <sys/mount.h>
-
-#include "ebgpart.h"
-
+#include "config.h"
 #include <zlib.h>
 #include "envdata.h"
 

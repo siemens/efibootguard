@@ -5,6 +5,7 @@
 #
 # Authors:
 #  Claudius Heine <ch@denx.de>
+#  Andreas Reichel <andreas.reichel.ext@siemens.com>
 #
 # This work is licensed under the terms of the GNU GPL, version 2.  See
 # the COPYING file in the top-level directory.
@@ -125,6 +126,13 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
 
+AC_ARG_WITH([env-backend],
+	    AS_HELP_STRING([--with-env-backend=STRING],
+			   [define the environment backend, defaults to "env_api_fat"]),
+	    [ ENV_API_FILE="$withval" ],
+	    [ ENV_API_FILE="env_api_fat" ])
+
+AC_SUBST([env_api_file], [${ENV_API_FILE}])
 # ------------------------------------------------------------------------------
 AC_CONFIG_FILES([
 	Makefile
@@ -144,4 +152,6 @@ AC_MSG_RESULT([
 	libdir:                  ${libdir}
 
 	efi libs:                ${GNUEFI_LIB_DIR}
+
+	environment backend:     ${ENV_API_FILE}.c
 ])

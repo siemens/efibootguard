@@ -11,6 +11,7 @@
  */
 
 #include "env_api.h"
+#include "ebgpart.h"
 #include "test-interface.h"
 
 const char *tmp_mnt_dir = "/tmp/mnt-XXXXXX";

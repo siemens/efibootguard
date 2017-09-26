@@ -42,7 +42,7 @@ CLEANFILES =
 lib_LIBRARIES = libebgenv.a libenv_api.a
 
 libebgenv_a_SOURCES = \
-	env/env_api_fat.c \
+	env/@env_api_file@.c \
 	tools/ebgpart.c \
 	swupdate-adapter/ebgenv.c
 
@@ -55,7 +55,7 @@ libebgenv_a_CFLAGS = \
 
 libenv_api_a_SOURCES = \
 	tools/ebgpart.c \
-	env/env_api_fat.c
+	env/@env_api_file@.c
 
 libenv_api_a_CFLAGS = \
 	$(AM_CFLAGS)
