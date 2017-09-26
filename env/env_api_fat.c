@@ -332,7 +332,7 @@ bool write_env(CONFIG_PART *part, BG_ENVDATA *env)
 }
 
 static CONFIG_PART config_parts[ENV_NUM_CONFIG_PARTS];
-static BG_ENVDATA oldenvs[ENV_NUM_CONFIG_PARTS];
+static BG_ENVDATA envdata[ENV_NUM_CONFIG_PARTS];
 
 bool bgenv_init()
 {
@@ -344,12 +344,15 @@ bool bgenv_init()
 		return false;
 	}
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-		read_env(&config_parts[i], &oldenvs[i]);
-		uint32_t sum = crc32(0, (Bytef *)&oldenvs[i],
-		    sizeof(BG_ENVDATA) - sizeof(oldenvs[i].crc32));
-		if (oldenvs[i].crc32 != sum) {
+		read_env(&config_parts[i], &envdata[i]);
+		uint32_t sum = crc32(0, (Bytef *)&envdata[i],
+		    sizeof(BG_ENVDATA) - sizeof(envdata[i].crc32));
+		if (envdata[i].crc32 != sum) {
 			VERBOSE(stderr, "Invalid CRC32!\n");
-			continue;
+			/* clear invalid environment */
+			memset(&envdata[i], 0, sizeof(BG_ENVDATA));
+			envdata[i].crc32 = crc32(0, (Bytef *)&envdata[i],
+			    sizeof(BG_ENVDATA) - sizeof(envdata[i].crc32));
 		}
 	}
 	return true;
@@ -367,7 +370,7 @@ BGENV *bgenv_open_by_index(uint32_t index)
 		return NULL;
 	}
 	handle->desc = (void *)&config_parts[index];
-	handle->data = &oldenvs[index];
+	handle->data = &envdata[index];
 	return handle;
 }
 
@@ -377,8 +380,8 @@ BGENV *bgenv_open_oldest()
 	uint32_t min_idx = 0;
 
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-		if (oldenvs[i].revision < minrev) {
-			minrev = oldenvs[i].revision;
+		if (envdata[i].revision < minrev) {
+			minrev = envdata[i].revision;
 			min_idx = i;
 		}
 	}
@@ -391,8 +394,8 @@ BGENV *bgenv_open_latest()
 	uint32_t max_idx = 0;
 
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-		if (oldenvs[i].revision > maxrev) {
-			maxrev = oldenvs[i].revision;
+		if (envdata[i].revision > maxrev) {
+			maxrev = envdata[i].revision;
 			max_idx = i;
 		}
 	}
