@@ -147,6 +147,22 @@ AC_ARG_WITH([num-config-parts],
 	    [ ENV_NUM_CONFIG_PARTS=2 ])
 
 AC_DEFINE_UNQUOTED([ENV_NUM_CONFIG_PARTS], [${ENV_NUM_CONFIG_PARTS}], [Number of config partitions])
+
+AC_ARG_WITH([mem-uservars],
+	    AS_HELP_STRING([--with-mem-uservars=INT],
+			   [specify amount of memory reserved for user variables in bytes]),
+	    [
+		ENV_MEM_USERVARS=${withval:-0}
+		AS_IF([test "${ENV_MEM_USERVARS}" -lt "96"],
+		      [
+			AC_MSG_ERROR([Minimum space allowed for uservars is 96 bytes])
+		      ])
+	    ],
+	    [
+		ENV_MEM_USERVARS=131072
+	    ])
+
+AC_DEFINE_UNQUOTED([ENV_MEM_USERVARS], [${ENV_MEM_USERVARS}], [Reserved memory for user variables])
 # ------------------------------------------------------------------------------
 AC_CONFIG_FILES([
 	Makefile
@@ -169,4 +185,5 @@ AC_MSG_RESULT([
 
 	environment backend:     ${ENV_API_FILE}.c
 	number of config parts:  ${ENV_NUM_CONFIG_PARTS}
+	reserved for uservars:   ${ENV_MEM_USERVARS} bytes
 ])

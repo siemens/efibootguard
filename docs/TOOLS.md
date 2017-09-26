@@ -83,3 +83,13 @@ issue:
 ```
 bg_setenv --partition=1 --ustate=TESTING
 ```
+
+### Setting user variables ###
+
+`bg_setenv` has support for default user variables, meaning of type "String". To set a user variable, specify the `-x` flag:
+
+```
+bg_setenv -x key=value
+```
+
+This will set the variable named `key` to `value` in the current environment.

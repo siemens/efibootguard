@@ -12,6 +12,7 @@
 
 #include "env_api.h"
 #include "ebgenv.h"
+#include "uservars.h"
 
 /* UEFI uses 16-bit wide unicode strings.
  * However, wchar_t support functions are fixed to 32-bit wide
@@ -90,10 +91,34 @@ int ebg_env_get(ebgenv_t *e, char *key, char *buffer)
 			 ENV_STRING_LENGTH);
 }
 
+int ebg_env_get_ex(ebgenv_t *e, char *key, char *usertype, uint8_t *buffer,
+		   uint32_t maxlen)
+{
+	return bgenv_get((BGENV *)e->bgenv, key, usertype, buffer, maxlen);
+}
+
 int ebg_env_set(ebgenv_t *e, char *key, char *value)
 {
-	return bgenv_set((BGENV *)e->bgenv, key, "String", value,
-			 strlen(value)); }
+	return bgenv_set((BGENV *)e->bgenv, key, USERVAR_TYPE_DEFAULT, value,
+		         strlen(value) + 1);
+}
+
+int ebg_env_set_ex(ebgenv_t *e, char *key, char *usertype, uint8_t *value,
+		   uint32_t datalen)
+{
+	return bgenv_set((BGENV *)e->bgenv, key, usertype, value, datalen);
+}
+
+uint32_t ebg_env_user_free(ebgenv_t *e)
+{
+	if (!e->bgenv) {
+		return 0;
+	}
+	if (!((BGENV *)e->bgenv)->data) {
+		return 0;
+	}
+	return bgenv_user_free(((BGENV *)e->bgenv)->data->userdata);
+}
 
 uint16_t ebg_env_getglobalstate(ebgenv_t *e)
 {

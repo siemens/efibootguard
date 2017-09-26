@@ -103,9 +103,6 @@ static void test_api_accesscurrent(void **state)
 	ret = ebg_env_close(&e);
 	assert_int_equal(ret, 0);
 
-	ret = ebg_env_set(&e, "NonsenseKey", "AnyValue");
-	assert_int_equal(ret, EINVAL);
-
 	ret = ebg_env_set(&e, "kernelfile", "vmlinuz");
 	assert_int_equal(ret, EPERM);
 
@@ -185,12 +182,131 @@ static void test_api_update(void **state)
 	(void)state;
 }
 
+static void test_api_uservars(void **state)
+{
+	int ret;
+	char *test_key = "NonsenseKey";
+	char *test_key2 = "TestKey2";
+
+	char *test_val = "AnyValue";
+	char *test_val2 = "BnyVbluf";
+	char *test_val3 = "TESTTESTTESTTEST";
+	char *test_val4 = "abc";
+	char buffer[ENV_MEM_USERVARS];
+	uint32_t space_left;
+
+	will_return(bgenv_open_latest, &env);
+	ret = ebg_env_open_current(&e);
+	assert_int_equal(ret, 0);
+
+	assert_int_equal(ebg_env_user_free(&e), ENV_MEM_USERVARS);
+
+	ret = ebg_env_set(&e, test_key, test_val);
+	assert_int_equal(ret, 0);
+
+	space_left = ENV_MEM_USERVARS - strlen(test_key) - 1
+			- strlen(test_val) - 1 - sizeof(uint32_t)
+			- strlen(USERVAR_TYPE_DEFAULT) - 1;
+
+	assert_int_equal(ebg_env_user_free(&e), space_left);
+
+	ret = ebg_env_get(&e, test_key, buffer);
+	assert_int_equal(ret, 0);
+	assert_string_equal(buffer, test_val);
+
+	// replace value with same length value
+	ret = ebg_env_set(&e, test_key, test_val2);
+	assert_int_equal(ret, 0);
+	assert_int_equal(ebg_env_user_free(&e), space_left);
+
+	ret = ebg_env_get(&e, test_key, buffer);
+	assert_int_equal(ret, 0);
+	assert_string_equal(buffer, test_val2);
+
+	// replace value with larger value
+	ret = ebg_env_set(&e, test_key, test_val3);
+	assert_int_equal(ret, 0);
+
+	space_left = ENV_MEM_USERVARS - strlen(test_key) - 1
+			- strlen(test_val3) - 1 - sizeof(uint32_t)
+			- strlen(USERVAR_TYPE_DEFAULT) - 1;
+
+	assert_int_equal(ebg_env_user_free(&e), space_left);
+
+	// replace value with smaller value
+	ret = ebg_env_set(&e, test_key, test_val4);
+	assert_int_equal(ret, 0);
+
+	space_left = ENV_MEM_USERVARS - strlen(test_key) - 1
+			- strlen(test_val4) - 1 - sizeof(uint32_t)
+			- strlen(USERVAR_TYPE_DEFAULT) - 1;
+
+	assert_int_equal(ebg_env_user_free(&e), space_left);
+
+	// add 2nd variable
+	ret = ebg_env_set(&e, test_key2, test_val2);
+	assert_int_equal(ret, 0);
+
+	space_left = space_left - strlen(test_key2) - 1
+			- strlen(test_val2) - 1 - sizeof(uint32_t)
+			- strlen(USERVAR_TYPE_DEFAULT) - 1;
+
+	assert_int_equal(ebg_env_user_free(&e), space_left);
+
+	// retrieve both variables
+	ret = ebg_env_get(&e, test_key2, buffer);
+	assert_int_equal(ret, 0);
+	assert_string_equal(buffer, test_val2);
+	ret = ebg_env_get(&e, test_key, buffer);
+	assert_int_equal(ret, 0);
+	assert_string_equal(buffer, test_val4);
+
+	// overwrite first variable
+	ret = ebg_env_set(&e, test_key, test_val3);
+	assert_int_equal(ret, 0);
+
+	space_left = space_left + strlen(test_val4)
+				- strlen(test_val3);
+	assert_int_equal(ebg_env_user_free(&e), space_left);
+
+	// retrieve both variables
+	ret = ebg_env_get(&e, test_key2, buffer);
+	assert_int_equal(ret, 0);
+	assert_string_equal(buffer, test_val2);
+	ret = ebg_env_get(&e, test_key, buffer);
+	assert_int_equal(ret, 0);
+	assert_string_equal(buffer, test_val3);
+
+	void *dummymem = malloc(space_left);
+
+	// test out of memory
+	ret = ebg_env_set_ex(&e, "A", "B", dummymem, space_left);
+	free(dummymem);
+
+	assert_int_equal(ret, ENOMEM);
+
+	// test user data type
+	ret = ebg_env_set_ex(&e, "A", "B", "C", 2);
+	assert_int_equal(ret, 0);
+
+	char type[2];
+	char data[2];
+
+	ret = ebg_env_get_ex(&e, "A", type, data, sizeof(data));
+	assert_int_equal(ret, 0);
+	assert_string_equal("B", type);
+	assert_string_equal("C", data);
+
+	(void)state;
+}
+
 int main(void)
 {
 	const struct CMUnitTest tests[] = {
 	    cmocka_unit_test(test_api_openclose),
 	    cmocka_unit_test(test_api_accesscurrent),
-	    cmocka_unit_test(test_api_update)};
+	    cmocka_unit_test(test_api_update),
+	    cmocka_unit_test(test_api_uservars)};
 
 	env.data = &data;
 	data.revision = test_env_revision;

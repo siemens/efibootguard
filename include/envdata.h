@@ -38,6 +38,7 @@ struct _BG_ENVDATA {
 	uint8_t ustate;
 	uint16_t watchdog_timeout_sec;
 	uint32_t revision;
+	uint8_t userdata[ENV_MEM_USERVARS];
 	uint32_t crc32;
 };
 #pragma pack(pop)

@@ -12,11 +12,12 @@
 
 #include "env_api.h"
 #include "ebgpart.h"
+#include "uservars.h"
 #include "test-interface.h"
 
 const char *tmp_mnt_dir = "/tmp/mnt-XXXXXX";
 
-static bool verbosity = false;
+bool bgenv_verbosity = false;
 
 static EBGENVKEY bgenv_str2enum(char *key)
 {
@@ -41,7 +42,7 @@ static EBGENVKEY bgenv_str2enum(char *key)
 
 void bgenv_be_verbose(bool v)
 {
-	verbosity = v;
+	bgenv_verbosity = v;
 	ebgpart_beverbose(v);
 }
 
@@ -447,58 +448,90 @@ bool bgenv_close(BGENV *env)
 	return false;
 }
 
-int bgenv_get(BGENV *env, char *key, char **type, void *data, size_t maxlen)
+int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 {
 	EBGENVKEY e;
+	char buffer[ENV_STRING_LENGTH];
 
-	if (!key || !data || maxlen == 0) {
+	if (!key || maxlen == 0) {
 		return EINVAL;
 	}
 	e = bgenv_str2enum(key);
-	if (e == EBGENV_UNKNOWN) {
-		return EINVAL;
-	}
 	if (!env) {
 		return EPERM;
 	}
+	if (e == EBGENV_UNKNOWN) {
+		if (!data) {
+			uint8_t *u;
+			uint32_t size;
+			u = bgenv_find_uservar(env->data->userdata, key);
+			bgenv_map_uservar(u, NULL, NULL, NULL, NULL, &size);
+			return size;
+		}
+		return bgenv_get_uservar(env->data->userdata, key, type, data,
+					 maxlen);
+	}
 	switch (e) {
 	case EBGENV_KERNELFILE:
-		str16to8(data, env->data->kernelfile);
+		str16to8(buffer, env->data->kernelfile);
+		if (!data) {
+			return strlen(buffer);
+		}
+		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
-			sprintf(*type, "char*");
+			sprintf(type, "char*");
 		}
 		break;
 	case EBGENV_KERNELPARAMS:
-		str16to8(data, env->data->kernelparams);
+		str16to8(buffer, env->data->kernelparams);
+		if (!data) {
+			return strlen(buffer);
+		}
+		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
-			sprintf(*type, "char*");
+			sprintf(type, "char*");
 		}
 		break;
 	case EBGENV_WATCHDOG_TIMEOUT_SEC:
-		sprintf(data, "%lu", env->data->watchdog_timeout_sec);
+		sprintf(buffer, "%lu", env->data->watchdog_timeout_sec);
+		if (!data) {
+			return strlen(buffer);
+		}
+		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
-			sprintf(*type, "uint16_t");
+			sprintf(type, "uint16_t");
 		}
 		break;
 	case EBGENV_REVISION:
-		sprintf(data, "%lu", env->data->revision);
+		sprintf(buffer, "%lu", env->data->revision);
+		if (!data) {
+			return strlen(buffer);
+		}
+		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
-			sprintf(*type, "uint32_t");
+			sprintf(type, "uint32_t");
 		}
 		break;
 	case EBGENV_USTATE:
-		sprintf(data, "%u", env->data->ustate);
+		sprintf(buffer, "%u", env->data->ustate);
+		if (!data) {
+			return strlen(buffer);
+		}
+		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
-			sprintf(*type, "uint16_t");
+			sprintf(type, "uint16_t");
 		}
 		break;
 	default:
+		if (!data) {
+			return 0;
+		}
 		return EINVAL;
 	}
 	return 0;
 }
 
-int bgenv_set(BGENV *env, char *key, char *type, void *data, size_t datalen)
+int bgenv_set(BGENV *env, char *key, char *type, void *data, uint32_t datalen)
 {
 	EBGENVKEY e;
 	int val;
@@ -510,11 +543,12 @@ int bgenv_set(BGENV *env, char *key, char *type, void *data, size_t datalen)
 	}
 
 	e = bgenv_str2enum(key);
-	if (e == EBGENV_UNKNOWN) {
-		return EINVAL;
-	}
 	if (!env) {
 		return EPERM;
+	}
+	if (e == EBGENV_UNKNOWN) {
+		return bgenv_set_uservar(env->data->userdata, key, type, data,
+					 datalen);
 	}
 	switch (e) {
 	case EBGENV_REVISION:

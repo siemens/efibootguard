@@ -44,6 +44,7 @@ lib_LIBRARIES = libebgenv.a
 libebgenv_a_SOURCES = \
 	env/@env_api_file@.c \
 	env/env_api.c \
+	env/uservars.c \
 	tools/ebgpart.c
 
 libebgenv_a_CPPFLAGS = \

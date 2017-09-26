@@ -46,8 +46,11 @@ int ebg_env_open_current(ebgenv_t *e);
 /** @brief Retrieve variable content
  *  @param e A pointer to an ebgenv_t context.
  *  @param key an enum constant to specify the variable
- *  @param buffer pointer to buffer containing requested value
- *  @return 0 on success, errno on failure
+ *  @param buffer pointer to buffer containing requested value.
+ *         If buffer is NULL, return needed buffer size.
+ *  @return If buffer != NULL: 0 on success, errno on failure
+ *          If buffer == NULL: needed buffer size, 0 if variable
+ *                             is not found.
  */
 int ebg_env_get(ebgenv_t *e, char *key, char* buffer);
 
@@ -58,6 +61,35 @@ int ebg_env_get(ebgenv_t *e, char *key, char* buffer);
  *  @return 0 on success, errno on failure
  */
 int ebg_env_set(ebgenv_t *e, char *key, char *value);
+
+/** @brief Store new content into variable
+ *  @param e A pointer to an ebgenv_t context.
+ *  @param key name of the environment variable to set
+ *  @param datatype user specific string to identify the datatype of the value
+ *  @param value arbitrary data to be stored into the variable
+ *  @param datalen length of the data to be stored into the variable
+ *  @return 0 on success, errno on failure
+ */
+int ebg_env_set_ex(ebgenv_t *e, char *key, char *datatype, uint8_t *value,
+		   uint32_t datalen);
+
+/** @brief Get content of user variable
+ *  @param e A pointer to an ebgenv_t context.
+ *  @param key name of the environment variable to retrieve
+ *  @param datatype buffer for user specific string to identify the
+ *         datatype of the value
+ *  @param buffer destination for data to be stored into the variable
+ *  @param maxlen size of provided buffer
+ *  @return 0 on success, errno on failure
+ */
+int ebg_env_get_ex(ebgenv_t *e, char *key, char *datatype, uint8_t *buffer,
+		   uint32_t maxlen);
+
+/** @brief Get available space for user variables
+ *  @param e A pointer to an ebgenv_t context.
+ *  @return Free space in bytes
+ */
+uint32_t ebg_env_user_free(ebgenv_t *e);
 
 /** @brief Get global ustate value, accounting for all environments
  *  @param e A pointer to an ebgenv_t context.

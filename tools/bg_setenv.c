@@ -11,6 +11,7 @@
  */
 
 #include "env_api.h"
+#include "uservars.h"
 
 static char doc[] =
     "bg_setenv/bg_printenv - Environment tool for the EFI Boot Guard";
@@ -31,6 +32,9 @@ static struct argp_option options_setenv[] = {
     {"confirm", 'c', 0, 0, "Confirm working environment"},
     {"update", 'u', 0, 0, "Automatically update oldest revision"},
     {"verbose", 'v', 0, 0, "Be verbose"},
+    {"uservar", 'x', "KEY=VAL", 0, "Set user-defined string variable. For "
+				   "setting multiple variables, use this "
+				   "option multiple times."},
     {0}};
 
 static struct argp_option options_printenv[] = {
@@ -83,6 +87,27 @@ static char *ustate2str(uint8_t ustate)
 	if (ustate >= USTATE_MIN && ustate <= USTATE_MAX) {
 		return ustatemap[ustate];
 	}
+}
+
+static int set_uservars(uint8_t *uservars, char *arg)
+{
+	char *key, *value, *end_key;
+
+	key = strtok_r(arg, "=", &end_key);
+	if (key == NULL) {
+		return 0;
+	}
+
+	value = strtok_r(NULL, "=", &end_key);
+	if (value == NULL) {
+		bgenv_set_uservar(uservars, key, USERVAR_TYPE_DELETED, NULL, 0);
+		return 0;
+	}
+
+	bgenv_set_uservar(uservars, key, USERVAR_TYPE_DEFAULT, value,
+			  strlen(value) + 1);
+
+	return 0;
 }
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
@@ -200,6 +225,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		/* Set verbosity in the library */
 		bgenv_be_verbose(true);
 		break;
+	case 'x':
+		/* Set user-defined variable(s) */
+		set_uservars(arguments->tmpdata.userdata, arg);
+		break;
 	case ARGP_KEY_ARG:
 		/* too many arguments - program terminates with call to
 		 * argp_usage with non-zero return code */
@@ -209,6 +238,33 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		return ARGP_ERR_UNKNOWN;
 	}
 	return 0;
+}
+
+static void merge_uservars(uint8_t *dest, uint8_t *src)
+{
+	char *key, *val, *type;
+	uint32_t rsize, dsize;
+	uint8_t *var;
+
+	if (!src || !dest) {
+		return;
+	}
+
+	while (*src) {
+		bgenv_map_uservar(src, &key, &type, (uint8_t **)&val, &rsize,
+				  &dsize);
+		if (strncmp(type, USERVAR_TYPE_DELETED,
+			    strlen(USERVAR_TYPE_DELETED) - 1) == 0) {
+			var = bgenv_find_uservar(dest, key);
+			if (var) {
+				bgenv_del_uservar(dest, var);
+			}
+		} else {
+			bgenv_set_uservar(dest, key, type, val,
+					  strlen(val) + 1);
+		}
+		src = bgenv_next_uservar(src);
+	}
 }
 
 static void update_environment(BG_ENVDATA *dest, BG_ENVDATA *src)
@@ -237,8 +293,28 @@ static void update_environment(BG_ENVDATA *dest, BG_ENVDATA *src)
 		       (void *)&src->watchdog_timeout_sec,
 		       sizeof(src->watchdog_timeout_sec));
 	}
+	merge_uservars(dest->userdata, src->userdata);
+
 	dest->crc32 =
 	    crc32(0, (Bytef *)dest, sizeof(BG_ENVDATA) - sizeof(dest->crc32));
+}
+
+static void dump_uservars(uint8_t *udata)
+{
+	char *key, *value, *type;
+	uint32_t rsize, dsize;
+
+	while (*udata) {
+		bgenv_map_uservar(udata, &key, &type, (uint8_t **)&value,
+				  &rsize, &dsize);
+		printf("%s ", key);
+		if (strcmp(type, USERVAR_TYPE_DEFAULT) == 0) {
+			printf("= %s\n", value);
+		} else {
+			printf("( User defined type )\n");
+		}
+		udata = bgenv_next_uservar(udata);
+	}
 }
 
 static void dump_env(BG_ENVDATA *env)
@@ -251,6 +327,9 @@ static void dump_env(BG_ENVDATA *env)
 	printf("watchdog timeout: %u seconds\n", env->watchdog_timeout_sec);
 	printf("ustate: %u (%s)\n", (uint8_t)env->ustate,
 	       ustate2str(env->ustate));
+	printf("\n");
+	printf("user variables:\n");
+	dump_uservars(env->userdata);
 	printf("\n\n");
 }
 
@@ -274,7 +353,8 @@ int main(int argc, char **argv)
 	arguments.which_part = 0;
 	memset((void *)&arguments.tmpdata, IGNORE_MARKER_BYTE,
 	       sizeof(BG_ENVDATA));
-
+	memset((void *)&arguments.tmpdata.userdata, 0,
+	       sizeof(arguments.tmpdata.userdata));
 	error_t e;
 	if (e = argp_parse(argp, argc, argv, 0, 0, &arguments)) {
 		return e;
