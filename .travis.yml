@@ -10,6 +10,10 @@
 # the COPYING file in the top-level directory.
 #
 
+env:
+  matrix:
+    - TARGET=native
+    - TARGET=i586
 language: c
 
 compiler:
@@ -24,12 +28,4 @@ install:
   - sudo apt-get install --no-install-recommends --target-release xenial libcmocka-dev
 
 script:
-  - autoreconf -fi
-  - mkdir build-x86_64 && cd build-x86_64
-  - ../configure
-  - make check
-  # Switch to 32-bit (libcmocka-dev can only be installed in one variant)
-  - sudo apt-get install --no-install-recommends --target-release xenial libcmocka-dev:i386
-  - mkdir ../build-i586 && cd ../build-i586
-  - ../configure --with-gnuefi-lib-dir=/usr/lib32 CFLAGS=-m32 host_alias=i586-linux
-  - make check
+  - ./.travis-build.sh
