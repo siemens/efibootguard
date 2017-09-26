@@ -62,7 +62,7 @@ typedef struct {
 	BG_ENVDATA *data;
 } BGENV;
 
-extern void be_verbose(bool v);
+extern void bgenv_be_verbose(bool v);
 
 extern char *str16to8(char *buffer, wchar_t *src);
 extern wchar_t *str8to16(wchar_t *buffer, char *src);

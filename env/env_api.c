@@ -13,9 +13,49 @@
 #include "env_api.h"
 #include "ebgenv.h"
 
+/* UEFI uses 16-bit wide unicode strings.
+ * However, wchar_t support functions are fixed to 32-bit wide
+ * characters in glibc. This code is compiled with
+ *  -fshort-wchar
+ * which enables 16-bit wide wchar_t support. However,
+ * glibc functions do not work with 16-bit wchar_t input, except
+ * it was specifically compiled for that, which is unusual.
+ * Thus, the needed conversion by truncation function is
+ * reimplemented here.
+ */
+char *str16to8(char *buffer, wchar_t *src)
+{
+	if (!src || !buffer) {
+		return NULL;
+	}
+	char *tmp = buffer;
+	while (*src) {
+		*buffer = (char)*src;
+		src++;
+		buffer++;
+	}
+	*buffer = 0;
+	return tmp;
+}
+
+wchar_t *str8to16(wchar_t *buffer, char *src)
+{
+	if (!src || !buffer) {
+		return NULL;
+	}
+	wchar_t *tmp = buffer;
+	while (*src) {
+		*buffer = (wchar_t)*src;
+		src++;
+		buffer++;
+	}
+	*buffer = 0;
+	return tmp;
+}
+
 void ebg_beverbose(ebgenv_t *e, bool v)
 {
-	be_verbose(v);
+	bgenv_be_verbose(v);
 }
 
 int ebg_env_create_new(ebgenv_t *e)

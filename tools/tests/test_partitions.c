@@ -18,6 +18,7 @@
 #include <cmocka.h>
 #include "env_api.h"
 #include "ebgpart.h"
+#include "ebgenv.h"
 #include "test-interface.h"
 
 static PedDevice ped_devices[32] = {0};

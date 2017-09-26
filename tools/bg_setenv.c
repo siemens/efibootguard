@@ -198,7 +198,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		/* Set verbosity in this program */
 		verbosity = true;
 		/* Set verbosity in the library */
-		be_verbose(true);
+		bgenv_be_verbose(true);
 		break;
 	case ARGP_KEY_ARG:
 		/* too many arguments - program terminates with call to

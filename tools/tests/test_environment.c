@@ -18,6 +18,7 @@
 #include <cmocka.h>
 #include <string.h>
 #include "env_api.h"
+#include "ebgenv.h"
 #include "test-interface.h"
 
 /* Mock functions from libparted */

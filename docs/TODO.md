@@ -14,10 +14,6 @@
 	  key-value pairs.
 
 * API refactoring
-	* Currently, there are two APIs, a lower API 'bg_utils.c', and an
-	  adapter-API 'ebgenv.c'. After refactoring the state variable, the API
-	  will be simplified as well.  It is possible, that only one API is
-	  needed then.
 	* Function / Datatype / Variable names remind of Parted and should be
 	  renamed if code developes independent of libparted.
 

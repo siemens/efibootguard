@@ -6,7 +6,7 @@ The library `libebgenv.a` provides an API to access the environment from a
 user space program.
 
 The header file with the interface definitions is
-[/swupdate-adapter/ebgenv.h](../swupdate-adapter/ebgenv.h).
+[/include/ebgenv.h](../include/ebgenv.h).
 
 The interface provides functions to:
 * enable/disable for output to stdout and stderr

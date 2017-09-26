@@ -39,12 +39,12 @@ CLEANFILES =
 #
 # Static libraries
 #
-lib_LIBRARIES = libebgenv.a libenv_api.a
+lib_LIBRARIES = libebgenv.a
 
 libebgenv_a_SOURCES = \
 	env/@env_api_file@.c \
-	tools/ebgpart.c \
-	swupdate-adapter/ebgenv.c
+	env/env_api.c \
+	tools/ebgpart.c
 
 libebgenv_a_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
@@ -53,16 +53,8 @@ libebgenv_a_CPPFLAGS = \
 libebgenv_a_CFLAGS = \
 	$(AM_CFLAGS)
 
-libenv_api_a_SOURCES = \
-	tools/ebgpart.c \
-	env/@env_api_file@.c
-
-libenv_api_a_CFLAGS = \
-	$(AM_CFLAGS)
-
 pkginclude_HEADERS = \
-	swupdate-adapter/ebgenv.h \
-	include/env_api.h
+	include/ebgenv.h
 
 #
 # bg_setenv binary
@@ -77,11 +69,11 @@ bg_setenv_CFLAGS = \
 	$(AM_CFLAGS)
 
 bg_setenv_LDADD = \
-	-lenv_api \
+	-lebgenv \
 	-lz
 
 bg_setenv_DEPENDENCIES = \
-	libenv_api.a
+	libebgenv.a
 
 install-exec-hook:
 	$(LN_S) -f bg_setenv$(EXEEXT) \
