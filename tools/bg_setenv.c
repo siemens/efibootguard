@@ -10,7 +10,10 @@
  * the COPYING file in the top-level directory.
  */
 
+#include <sys/queue.h>
+
 #include "env_api.h"
+#include "ebgenv.h"
 #include "uservars.h"
 
 static char doc[] =
@@ -44,15 +47,90 @@ static struct argp_option options_printenv[] = {
 struct arguments {
 	bool output_to_file;
 	int which_part;
-	BG_ENVDATA tmpdata;
 };
 
-/* The following byte is used to mark parts of a temporary
- * environment structure as to be ignored and not overwrite
- * values of the real environment. Can be anything
- * except used ASCII codes (should be > 0x7F).
- */
-#define IGNORE_MARKER_BYTE 0xEA
+typedef enum { ENV_TASK_SET, ENV_TASK_DEL } BGENV_TASK;
+
+struct stailhead *headp;
+struct env_action {
+	char *key;
+	char *type;
+	uint8_t *data;
+	BGENV_TASK task;
+	STAILQ_ENTRY(env_action) journal;
+};
+
+STAILQ_HEAD(stailhead, env_action) head = STAILQ_HEAD_INITIALIZER(head);
+
+static void journal_add_action(BGENV_TASK task, char *key, char *type,
+			       uint8_t *data, size_t datalen)
+{
+	struct env_action *new_action;
+
+	new_action = calloc(1, sizeof(struct env_action));
+	new_action->task = task;
+	if (key) {
+		asprintf(&(new_action->key), "%s", key);
+	}
+	if (type) {
+		asprintf(&(new_action->type), "%s", type);
+	}
+	if (data && datalen) {
+		new_action->data = (uint8_t *)malloc(datalen);
+		memcpy(new_action->data, data, datalen);
+	}
+	STAILQ_INSERT_TAIL(&head, new_action, journal);
+}
+
+static void journal_free_action(struct env_action *action)
+{
+	if (action->data) free(action->data);
+	if (action->type) free(action->type);
+	if (action->key) free(action->key);
+}
+
+static void journal_process_action(BGENV *env, struct env_action *action)
+{
+	uint8_t *var;
+	ebgenv_t e;
+	uint16_t ustate;
+	char *arg, *tmp;
+	int ret;
+
+	switch (action->task) {
+	case ENV_TASK_SET:
+		VERBOSE(stdout, "Task = SET, key = %s, type = %s, val = %s\n",
+		        action->key, action->type, (char *)action->data);
+		if (strncmp(action->key, "ustate", strlen("ustate")+1) == 0) {
+			e.bgenv = env;
+			arg = (char *)action->data;
+			errno = 0;
+			ustate = strtol(arg, &tmp, 10);
+			if ((errno == ERANGE && (ustate == LONG_MAX ||
+			                         ustate == LONG_MIN)) ||
+                            (errno != 0 && ustate == 0) || (tmp == arg)) {
+				fprintf(stderr, "Invalid value for ustate: %s",
+						(char *)action->data);
+				return;
+			}
+			if (ret = ebg_env_setglobalstate(&e, ustate) != 0) {
+				fprintf(stderr, "Error setting global state.",
+					strerror(ret));
+			}
+			return;
+		}
+		bgenv_set(env, action->key, action->type, action->data,
+			  strlen(action->data) + 1);
+		break;
+	case ENV_TASK_DEL:
+		VERBOSE(stdout, "Task = DEL, key = %s\n", action->key);
+		var = bgenv_find_uservar(env->data->userdata, action->key);
+		if (var) {
+			bgenv_del_uservar(env->data->userdata, var);
+		}
+		break;
+	}
+}
 
 /* auto update feature automatically updates partition with
  * oldest environment revision (lowest value)
@@ -89,23 +167,23 @@ static char *ustate2str(uint8_t ustate)
 	}
 }
 
-static int set_uservars(uint8_t *uservars, char *arg)
+static int set_uservars(char *arg)
 {
-	char *key, *value, *end_key;
+	char *key, *value;
 
-	key = strtok_r(arg, "=", &end_key);
+	key = strtok(arg, "=");
 	if (key == NULL) {
 		return 0;
 	}
 
-	value = strtok_r(NULL, "=", &end_key);
+	value = strtok(NULL, "=");
 	if (value == NULL) {
-		bgenv_set_uservar(uservars, key, USERVAR_TYPE_DELETED, NULL, 0);
+		journal_add_action(ENV_TASK_DEL, key, NULL, NULL, 0);
 		return 0;
 	}
 
-	bgenv_set_uservar(uservars, key, USERVAR_TYPE_DEFAULT, value,
-			  strlen(value) + 1);
+	journal_add_action(ENV_TASK_SET, key, USERVAR_TYPE_DEFAULT, value,
+			   strlen(value) + 1);
 
 	return 0;
 }
@@ -126,8 +204,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				ENV_STRING_LENGTH);
 			return 1;
 		}
-		memcpy(arguments->tmpdata.kernelfile, str8to16(buffer, arg),
-		       strlen(arg) * 2 + 2);
+		journal_add_action(ENV_TASK_SET, "kernelfile", "String", arg,
+				   strlen(arg) + 1);
 		break;
 	case 'a':
 		if (strlen(arg) > ENV_STRING_LENGTH) {
@@ -137,8 +215,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				ENV_STRING_LENGTH);
 			return 1;
 		}
-		memcpy(arguments->tmpdata.kernelparams, str8to16(buffer, arg),
-		       strlen(arg) * 2 + 2);
+		journal_add_action(ENV_TASK_SET, "kernelparams", "String", arg,
+				   strlen(arg) + 1);
 		break;
 	case 'p':
 		i = strtol(arg, &tmp, 10);
@@ -178,7 +256,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 			    ustatemap[3]);
 			return 1;
 		} else {
-			arguments->tmpdata.ustate = i;
+			asprintf(&tmp, "%u", i);
+			journal_add_action(ENV_TASK_SET, "ustate", "String",
+					   tmp, strlen(tmp) + 1);
 			VERBOSE(stdout, "Ustate set to %u (%s).\n", i,
 				ustate2str(i));
 		}
@@ -186,14 +266,16 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 	case 'r':
 		i = atoi(arg);
 		VERBOSE(stdout, "Revision is set to %d.\n", i);
-		arguments->tmpdata.revision = i;
+		journal_add_action(ENV_TASK_SET, "revision", "String", arg,
+				   strlen(arg) + 1);
 		break;
 	case 'w':
 		i = atoi(arg);
 		if (i != 0) {
 			VERBOSE(stdout,
 				"Setting watchdog timeout to %d seconds.\n", i);
-			arguments->tmpdata.watchdog_timeout_sec = i;
+			journal_add_action(ENV_TASK_SET, "watchdog_timeout_sec",
+					   "String", arg, strlen(arg) + 1);
 		} else {
 			fprintf(stderr, "Watchdog timeout must be non-zero.\n");
 			return 1;
@@ -207,7 +289,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		VERBOSE(stdout,
 			"Confirming environment to work. Removing boot-once "
 			"and testing flag.\n");
-		arguments->tmpdata.ustate = 0;
+		journal_add_action(ENV_TASK_SET, "ustate", "String", "0", 2);
 		break;
 	case 'u':
 		if (part_specified) {
@@ -227,7 +309,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		break;
 	case 'x':
 		/* Set user-defined variable(s) */
-		set_uservars(arguments->tmpdata.userdata, arg);
+		set_uservars(arg);
 		break;
 	case ARGP_KEY_ARG:
 		/* too many arguments - program terminates with call to
@@ -238,65 +320,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		return ARGP_ERR_UNKNOWN;
 	}
 	return 0;
-}
-
-static void merge_uservars(uint8_t *dest, uint8_t *src)
-{
-	char *key, *val, *type;
-	uint32_t rsize, dsize;
-	uint8_t *var;
-
-	if (!src || !dest) {
-		return;
-	}
-
-	while (*src) {
-		bgenv_map_uservar(src, &key, &type, (uint8_t **)&val, &rsize,
-				  &dsize);
-		if (strncmp(type, USERVAR_TYPE_DELETED,
-			    strlen(USERVAR_TYPE_DELETED) - 1) == 0) {
-			var = bgenv_find_uservar(dest, key);
-			if (var) {
-				bgenv_del_uservar(dest, var);
-			}
-		} else {
-			bgenv_set_uservar(dest, key, type, val,
-					  strlen(val) + 1);
-		}
-		src = bgenv_next_uservar(src);
-	}
-}
-
-static void update_environment(BG_ENVDATA *dest, BG_ENVDATA *src)
-{
-	if (!dest || !src) {
-		return;
-	}
-	if ((uint8_t)*src->kernelfile != IGNORE_MARKER_BYTE) {
-		memcpy((void *)dest->kernelfile, (void *)src->kernelfile,
-		       sizeof(src->kernelfile));
-	}
-	if ((uint8_t)*src->kernelparams != IGNORE_MARKER_BYTE) {
-		memcpy((void *)dest->kernelparams, (void *)src->kernelparams,
-		       sizeof(src->kernelparams));
-	}
-	if ((uint8_t)src->ustate != IGNORE_MARKER_BYTE) {
-		memcpy((void *)&dest->ustate, (void *)&src->ustate,
-		       sizeof(src->ustate));
-	}
-	if ((uint8_t)src->revision != IGNORE_MARKER_BYTE) {
-		memcpy((void *)&dest->revision, (void *)&src->revision,
-		       sizeof(src->revision));
-	}
-	if ((uint8_t)src->watchdog_timeout_sec != IGNORE_MARKER_BYTE) {
-		memcpy((void *)&dest->watchdog_timeout_sec,
-		       (void *)&src->watchdog_timeout_sec,
-		       sizeof(src->watchdog_timeout_sec));
-	}
-	merge_uservars(dest->userdata, src->userdata);
-
-	dest->crc32 =
-	    crc32(0, (Bytef *)dest, sizeof(BG_ENVDATA) - sizeof(dest->crc32));
 }
 
 static void dump_uservars(uint8_t *udata)
@@ -333,6 +356,46 @@ static void dump_env(BG_ENVDATA *env)
 	printf("\n\n");
 }
 
+static void update_environment(BGENV *env)
+{
+	struct env_action *action;
+
+	printf("Processing journal...\n");
+
+	STAILQ_FOREACH(action, &head, journal)
+	{
+		journal_process_action(env, action);
+		journal_free_action(action);
+		STAILQ_REMOVE(&head, action, env_action, journal);
+		free(action);
+	}
+
+	env->data->crc32 = crc32(0, (const Bytef *)env->data,
+				 sizeof(BG_ENVDATA) - sizeof(env->data->crc32));
+}
+
+static void dump_envs(void)
+{
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		if (verbosity) {
+			printf("\n----------------------------\n");
+			printf(" Config Partition #%d ", i);
+		}
+		BGENV *env = bgenv_open_by_index(i);
+		if (env) {
+			if (verbosity) {
+				dump_env(env->data);
+			}
+		} else {
+			fprintf(stderr, "Error, could not read environment "
+					"for index %d\n",
+				i);
+			return;
+		}
+		bgenv_close(env);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	static struct argp argp_setenv = {options_setenv, parse_opt, NULL, doc};
@@ -351,122 +414,31 @@ int main(int argc, char **argv)
 	struct arguments arguments;
 	arguments.output_to_file = false;
 	arguments.which_part = 0;
-	memset((void *)&arguments.tmpdata, IGNORE_MARKER_BYTE,
-	       sizeof(BG_ENVDATA));
-	memset((void *)&arguments.tmpdata.userdata, 0,
-	       sizeof(arguments.tmpdata.userdata));
+
+	STAILQ_INIT(&head);
+
 	error_t e;
 	if (e = argp_parse(argp, argc, argv, 0, 0, &arguments)) {
 		return e;
 	}
-	int result = 0;
-	if (!arguments.output_to_file) {
-		if (!bgenv_init()) {
-			fprintf(stderr,
-				"Error initializing FAT environment.\n");
-			return 1;
-		}
-		for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-			if (verbosity) {
-				printf("\n----------------------------\n");
-				printf(" Config Partition #%d ", i);
-			}
-			BGENV *env = bgenv_open_by_index(i);
-			if (env) {
-				if (verbosity) {
-					dump_env(env->data);
-				}
-			} else {
-				fprintf(stderr, "Error, could not read "
-						"environment for index %d\n",
-					i);
-				return 1;
-			}
-			bgenv_close(env);
-		}
-		if (write_mode) {
-			BGENV *env_new;
-			BGENV *env_current;
-			if (auto_update) {
-				/* search latest and oldest revision */
-				env_current = bgenv_open_latest();
-				if (!env_current) {
-					fprintf(stderr, "Failed to retrieve "
-							"latest "
-							"environment.\n");
-					return 1;
-				}
-				arguments.tmpdata.revision =
-				    env_current->data->revision + 1;
 
-				env_new = bgenv_open_oldest();
-				if (!env_new) {
-					fprintf(stderr, "Failed to retrieve "
-							"oldest "
-							"environment.\n");
-					return 1;
-				}
-				if (verbosity) {
-					printf("Updating environment with "
-					       "revision %u\n",
-					       env_new->data->revision);
-				}
-				/* if auto-updating, copy data from current
-				 * revision to new
-				 * revision, so that all data which is not
-				 * overwritten is
-				 * kept
-				 */
-				if (!env_current->data || !env_new->data) {
-					fprintf(stderr, "Invalid environment "
-							"data pointer.\n");
-					bgenv_close(env_new);
-					bgenv_close(env_current);
-					return 1;
-				}
-				memcpy((char *)env_new->data,
-				       (char *)env_current->data,
-				       sizeof(BG_ENVDATA));
-				if (!bgenv_close(env_current)) {
-					fprintf(stderr,
-						"Error closing environment.\n");
-				}
-			} else {
-				if (part_specified) {
-					env_new = bgenv_open_by_index(
-					    arguments.which_part);
-				} else {
-					env_new = bgenv_open_latest();
-				}
-				if (!env_new) {
-					fprintf(stderr, "Failed to retrieve "
-							"environment by "
-							"index.\n");
-					return 1;
-				}
-			}
-			update_environment(env_new->data, &arguments.tmpdata);
-			if (verbosity) {
-				printf("New environment data:\n");
-				printf("---------------------\n");
-				dump_env(env_new->data);
-			}
-			if (!bgenv_write(env_new)) {
-				fprintf(stderr, "Error storing environment.\n");
-				return 1;
-			}
-			if (!bgenv_close(env_new)) {
-				fprintf(stderr, "Error closing environment.\n");
-				return 1;
-			}
-		}
-	} else {
-		/* arguments.output_to_file can only be true in write mode */
+	int result = 0;
+
+	/* arguments are parsed, journal is filled */
+
+	/* is output to file ? */
+	if (arguments.output_to_file) {
+		/* execute journal and write to file */
+		BGENV env;
 		BG_ENVDATA data;
+
+		memset(&env, 0, sizeof(BGENV));
 		memset(&data, 0, sizeof(BG_ENVDATA));
-		update_environment(&data, &arguments.tmpdata);
+		env.data = &data;
+
+		update_environment(&env);
 		if (verbosity) {
-			dump_env(&data);
+			dump_env(env.data);
 		}
 		FILE *of = fopen(envfilepath, "wb");
 		if (of) {
@@ -487,7 +459,87 @@ int main(int argc, char **argv)
 			result = 1;
 		}
 		free(envfilepath);
+
+		return 0;
 	}
 
+	/* not in file mode */
+	if (!bgenv_init()) {
+		fprintf(stderr, "Error initializing FAT environment.\n");
+		return 1;
+	}
+
+	dump_envs();
+
+	if (!write_mode) {
+		return 0;
+	}
+
+	BGENV *env_new;
+	BGENV *env_current;
+	char *tmp;
+
+	if (auto_update) {
+		/* clone latest environment */
+
+		env_current = bgenv_open_latest();
+		if (!env_current) {
+			fprintf(stderr, "Failed to retrieve latest environment."
+					"\n");
+			return 1;
+		}
+		env_new = bgenv_open_oldest();
+		if (!env_new) {
+			fprintf(stderr, "Failed to retrieve oldest environment."
+					"\n");
+			return 1;
+		}
+		if (verbosity) {
+			printf("Updating environment with revision %u\n",
+			       env_new->data->revision);
+		}
+
+		if (!env_current->data || !env_new->data) {
+			fprintf(stderr, "Invalid environment data pointer.\n");
+			bgenv_close(env_new);
+			bgenv_close(env_current);
+			return 1;
+		}
+
+		memcpy((char *)env_new->data, (char *)env_current->data,
+		       sizeof(BG_ENVDATA));
+		env_new->data->revision = env_current->data->revision + 1;
+
+		if (!bgenv_close(env_current)) {
+			fprintf(stderr, "Error closing environment.\n");
+		}
+	} else {
+		if (part_specified) {
+			env_new = bgenv_open_by_index(arguments.which_part);
+		} else {
+			env_new = bgenv_open_latest();
+		}
+		if (!env_new) {
+			fprintf(stderr, "Failed to retrieve environment by "
+					"index.\n");
+			return 1;
+		}
+	}
+
+	update_environment(env_new);
+
+	if (verbosity) {
+		printf("New environment data:\n");
+		printf("---------------------\n");
+		dump_env(env_new->data);
+	}
+	if (!bgenv_write(env_new)) {
+		fprintf(stderr, "Error storing environment.\n");
+		return 1;
+	}
+	if (!bgenv_close(env_new)) {
+		fprintf(stderr, "Error closing environment.\n");
+		return 1;
+	}
 	return result;
 }
