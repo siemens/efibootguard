@@ -98,13 +98,13 @@ This step first creates a custom label contained in `EFILABEL`, which is later
 used to specify the kernel location.
 
 ```
-# mount /dev/sdX2 /mnt && cd /mnt
-# echo -n "KERNEL1" | iconv -f ascii -t UTF-16LE > EFILABEL
-# bg_setenv -f -r 1 --kernel="C:KERNEL1:vmlinuz-linux" --args="root=/dev/sdX4 noinitrd"
+# mount /dev/sdX2 /mnt
+# echo -n "KERNEL1" | iconv -f ascii -t UTF-16LE > /mnt/EFILABEL
+# bg_setenv -f /mnt -r 1 --kernel="C:KERNEL1:vmlinuz-linux" --args="root=/dev/sdX4 noinitrd"
 # umount /mnt
-# mount /dev/sdX3 /mnt && cd /mnt
-# echo -n "KERNEL2" | iconv -f ascii -t UTF-16LE > EFILABEL
-# bg_setenv -f -r 2 --kernel="C:KERNEL2:vmlinuz-linux" --args="root=/dev/sdX5 noinitrd"
+# mount /dev/sdX3 /mnt
+# echo -n "KERNEL2" | iconv -f ascii -t UTF-16LE > /mnt/EFILABEL
+# bg_setenv -f /mnt -r 2 --kernel="C:KERNEL2:vmlinuz-linux" --args="root=/dev/sdX5 noinitrd"
 # umount /mnt
 ```
 

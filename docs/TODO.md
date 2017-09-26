@@ -6,7 +6,6 @@
 	  the current working environment to the (latest-1) environment, so
 	  that if the current environment breaks, there is a backup with the
 	  latest values.
-	* Make `bg_setenv -f` take a path to where the `BGENV.DAT` is stored.
 
 * Application specific variables
 	* applications may need to store their own variables into the

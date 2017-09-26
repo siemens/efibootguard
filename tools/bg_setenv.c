@@ -24,7 +24,9 @@ static struct argp_option options_setenv[] = {
 				 "above zero is updated."},
     {"revision", 'r', "REVISION", 0, "Set revision value"},
     {"testing", 't', "TESTING", 0, "Set test mode for environment"},
-    {"file", 'f', 0, 0, "Output environment to file"},
+    {"filepath", 'f', "ENVFILE_DIR", 0, "Output environment to file. Expects "
+					"an output path where the file name "
+					"is automatically appended."},
     {"watchdog", 'w', "WATCHDOG_TIMEOUT", 0, "Watchdog timeout in seconds"},
     {"confirm", 'c', 0, 0, "Confirm working environment"},
     {"update", 'u', 0, 0, "Automatically update oldest revision"},
@@ -57,6 +59,8 @@ static bool auto_update = false;
 static bool part_specified = false;
 
 static bool verbosity = false;
+
+static char *envfilepath = NULL;
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
 {
@@ -138,6 +142,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		break;
 	case 'f':
 		arguments->output_to_file = true;
+		asprintf(&envfilepath, "%s/%s", arg, FAT_ENV_FILENAME);
 		break;
 	case 'c':
 		VERBOSE(stdout,
@@ -363,22 +368,25 @@ int main(int argc, char **argv)
 		if (verbosity) {
 			dump_env(&data);
 		}
-		FILE *of = fopen(FAT_ENV_FILENAME, "wb");
+		FILE *of = fopen(envfilepath, "wb");
 		if (of) {
 			if (fwrite(&data, sizeof(BG_ENVDATA), 1, of) != 1) {
 				fprintf(stderr,
-					"Error writing to output file.\n");
-				result = 1;
+					"Error writing to output file: %s\n",
+					strerror(errno));
+				result = errno;
 			}
 			if (fclose(of)) {
 				fprintf(stderr, "Error closing output file.\n");
 				result = 1;
 			};
-			printf("Output written to %s.\n", FAT_ENV_FILENAME);
+			printf("Output written to %s.\n", envfilepath);
 		} else {
-			fprintf(stderr, "Error opening output file.\n");
+			fprintf(stderr, "Error opening output file %s (%s).\n",
+				envfilepath, strerror(errno));
 			result = 1;
 		}
+		free(envfilepath);
 	}
 
 	return result;
