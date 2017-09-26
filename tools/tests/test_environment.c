@@ -17,7 +17,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <string.h>
-#include "bg_utils.h"
+#include "env_api.h"
 #include "test-interface.h"
 
 /* Mock functions from libparted */

@@ -10,7 +10,7 @@
  * the COPYING file in the top-level directory.
  */
 
-#include "bg_utils.h"
+#include "env_api.h"
 #include "ebgdefs.h"
 #include "ebgenv.h"
 

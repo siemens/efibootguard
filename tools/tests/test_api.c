@@ -18,7 +18,7 @@
 #include <cmocka.h>
 #include <string.h>
 #include <error.h>
-#include "bg_utils.h"
+#include "env_api.h"
 #include "ebgenv.h"
 
 static BGENV env = {0};

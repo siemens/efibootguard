@@ -13,7 +13,7 @@
 #ifndef __TEST_INTERFACE_H__
 #define __TEST_INTERFACE_H__
 
-#include "bg_utils.h"
+#include "env_api.h"
 
 bool read_env(CONFIG_PART *part, BG_ENVDATA *env);
 bool write_env(CONFIG_PART *part, BG_ENVDATA *env);

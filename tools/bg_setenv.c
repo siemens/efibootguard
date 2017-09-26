@@ -10,7 +10,7 @@
  * the COPYING file in the top-level directory.
  */
 
-#include "bg_utils.h"
+#include "env_api.h"
 
 static char doc[] =
     "bg_setenv/bg_printenv - Environment tool for the EFI Boot Guard";

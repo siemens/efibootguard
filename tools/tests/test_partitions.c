@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include "bg_utils.h"
+#include "env_api.h"
 #include "test-interface.h"
 
 static PedDevice ped_devices[32] = {0};
