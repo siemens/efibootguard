@@ -14,10 +14,10 @@
 #
 
 AC_INIT([efibootguard],
-        [0.1.0],
-        [],
-        [efibootguard],
-        [])
+	[0.1.0],
+	[],
+	[efibootguard],
+	[])
 
 AC_CONFIG_SRCDIR([bootguard.c])
 AC_CONFIG_MACRO_DIR([m4])
@@ -83,15 +83,15 @@ SET_ARCH(IA64, ia64*)
 ARCH=$(echo $host | sed "s/\(-\).*$//")
 
 AM_COND_IF(ARCH_I686, [
-        ARCH=ia32
-        MACHINE_TYPE_NAME=ia32])
+	   ARCH=ia32
+	   MACHINE_TYPE_NAME=ia32])
 
 AM_COND_IF(ARCH_I586, [
-        ARCH=ia32
-        MACHINE_TYPE_NAME=ia32])
+	   ARCH=ia32
+	   MACHINE_TYPE_NAME=ia32])
 
 AM_COND_IF(ARCH_X86_64, [
-        MACHINE_TYPE_NAME=x64])
+	   MACHINE_TYPE_NAME=x64])
 
 AC_SUBST([ARCH])
 AC_SUBST([MACHINE_TYPE_NAME])
@@ -127,21 +127,21 @@ AC_TYPE_UINT8_T
 
 # ------------------------------------------------------------------------------
 AC_CONFIG_FILES([
-        Makefile
-        tools/tests/Makefile
+	Makefile
+	tools/tests/Makefile
 ])
 
 AC_OUTPUT
 AC_MSG_RESULT([
-        $PACKAGE_NAME $VERSION
+	$PACKAGE_NAME $VERSION
 
-        arch:                    $ARCH
-        machine type:            $MACHINE_TYPE_NAME
+	arch:                    $ARCH
+	machine type:            $MACHINE_TYPE_NAME
 
-        prefix:                  ${prefix}
-        exec_prefix:             ${exec_prefix}
-        libexecdir:              ${libexecdir}
-        libdir:                  ${libdir}
+	prefix:                  ${prefix}
+	exec_prefix:             ${exec_prefix}
+	libexecdir:              ${libexecdir}
+	libdir:                  ${libdir}
 
-        efi libs:                ${GNUEFI_LIB_DIR}
+	efi libs:                ${GNUEFI_LIB_DIR}
 ])
