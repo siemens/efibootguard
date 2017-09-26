@@ -256,11 +256,11 @@ bool probe_config_partitions(CONFIG_PART *cfgpart)
 				strlen(devpath) + 1);
 			if (probe_config_file(&cfgpart[count])) {
 				printf_debug("%s", "Environment file found.\n");
-				if (count >= CONFIG_PARTITION_COUNT) {
+				if (count >= ENV_NUM_CONFIG_PARTS) {
 					VERBOSE(stderr, "Error, there are "
 							"more than %d config "
 							"partitions.\n",
-						CONFIG_PARTITION_COUNT);
+						ENV_NUM_CONFIG_PARTS);
 					return false;
 				}
 				count++;
@@ -268,10 +268,10 @@ bool probe_config_partitions(CONFIG_PART *cfgpart)
 			part = ped_disk_next_partition(pd, part);
 		}
 	}
-	if (count < CONFIG_PARTITION_COUNT) {
+	if (count < ENV_NUM_CONFIG_PARTS) {
 		VERBOSE(stderr,
 			"Error, less than %d config partitions exist.\n",
-			CONFIG_PARTITION_COUNT);
+			ENV_NUM_CONFIG_PARTS);
 		return false;
 	}
 	return true;
@@ -350,21 +350,21 @@ bool write_env(CONFIG_PART *part, BG_ENVDATA *env)
 	return result;
 }
 
-CONFIG_PART config_parts[CONFIG_PARTITION_COUNT];
-BG_ENVDATA oldenvs[CONFIG_PARTITION_COUNT];
+CONFIG_PART config_parts[ENV_NUM_CONFIG_PARTS];
+BG_ENVDATA oldenvs[ENV_NUM_CONFIG_PARTS];
 
 bool bgenv_init(BGENVTYPE type)
 {
 	switch (type) {
 	case BGENVTYPE_FAT:
 		memset((void *)&config_parts, 0,
-		       sizeof(CONFIG_PART) * CONFIG_PARTITION_COUNT);
+		       sizeof(CONFIG_PART) * ENV_NUM_CONFIG_PARTS);
 		/* enumerate all config partitions */
 		if (!probe_config_partitions(config_parts)) {
 			VERBOSE(stderr, "Error finding config partitions.\n");
 			return false;
 		}
-		for (int i = 0; i < CONFIG_PARTITION_COUNT; i++) {
+		for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 			read_env(&config_parts[i], &oldenvs[i]);
 			uint32_t sum = crc32(0, (Bytef *)&oldenvs[i],
 			    sizeof(BG_ENVDATA) - sizeof(oldenvs[i].crc32));
@@ -385,7 +385,7 @@ BGENV *bgenv_get_by_index(BGENVTYPE type, uint32_t index)
 	switch (type) {
 	case BGENVTYPE_FAT:
 		/* get config partition by index and allocate handle */
-		if (index >= CONFIG_PARTITION_COUNT) {
+		if (index >= ENV_NUM_CONFIG_PARTS) {
 			return NULL;
 		}
 		if (!(handle = calloc(1, sizeof(BGENV)))) {
@@ -406,7 +406,7 @@ BGENV *bgenv_get_oldest(BGENVTYPE type)
 
 	switch (type) {
 	case BGENVTYPE_FAT:
-		for (int i = 0; i < CONFIG_PARTITION_COUNT; i++) {
+		for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 			if (oldenvs[i].revision < minrev) {
 				minrev = oldenvs[i].revision;
 				min_idx = i;
@@ -424,7 +424,7 @@ BGENV *bgenv_get_latest(BGENVTYPE type)
 
 	switch (type) {
 	case BGENVTYPE_FAT:
-		for (int i = 0; i < CONFIG_PARTITION_COUNT; i++) {
+		for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 			if (oldenvs[i].revision > maxrev) {
 				maxrev = oldenvs[i].revision;
 				max_idx = i;

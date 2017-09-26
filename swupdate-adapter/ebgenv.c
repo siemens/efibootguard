@@ -327,7 +327,7 @@ int ebg_env_set(char *key, char *value)
 bool ebg_env_isupdatesuccessful(void)
 {
 	/* find all environments with revision 0 */
-	for (int i = 0; i < CONFIG_PARTITION_COUNT; i++) {
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 		BGENV *env = bgenv_get_by_index(BGENVTYPE_FAT, i);
 
 		if (!env) {
@@ -348,7 +348,7 @@ bool ebg_env_isupdatesuccessful(void)
 
 int ebg_env_clearerrorstate(void)
 {
-	for (int i = 0; i < CONFIG_PARTITION_COUNT; i++) {
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 		BGENV *env = bgenv_get_by_index(BGENVTYPE_FAT, i);
 
 		if (!env) {

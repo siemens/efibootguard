@@ -22,8 +22,8 @@
 
 /* Mock functions from libparted */
 
-CONFIG_PART config_parts[CONFIG_PARTITION_COUNT];
-BG_ENVDATA oldenvs[CONFIG_PARTITION_COUNT];
+CONFIG_PART config_parts[ENV_NUM_CONFIG_PARTS];
+BG_ENVDATA oldenvs[ENV_NUM_CONFIG_PARTS];
 
 FILE test_file;
 

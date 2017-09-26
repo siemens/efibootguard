@@ -101,36 +101,21 @@ static void test_partition_count(void **state)
 	bool ret;
 
 	num_simulated_devices = 1;
-	num_simulated_partitions_per_disk = CONFIG_PARTITION_COUNT;
-	for (int i = 0; i < CONFIG_PARTITION_COUNT; i++) {
+	num_simulated_partitions_per_disk = ENV_NUM_CONFIG_PARTS;
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 		will_return(probe_config_file, true);
 	}
 	ret = probe_config_partitions(cfgparts);
 	assert_true(ret);
 
-	num_simulated_devices = CONFIG_PARTITION_COUNT;
+	num_simulated_devices = ENV_NUM_CONFIG_PARTS;
 	num_simulated_partitions_per_disk = 1;
-	for (int i = 0; i < CONFIG_PARTITION_COUNT; i++) {
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS - 1; i++) {
 		will_return(probe_config_file, true);
 	}
+	will_return(probe_config_file, true);
 	ret = probe_config_partitions(cfgparts);
 	assert_true(ret);
-
-	num_simulated_devices = 1;
-	num_simulated_partitions_per_disk = CONFIG_PARTITION_COUNT - 1;
-	for (int i = 0; i < CONFIG_PARTITION_COUNT - 1; i++) {
-		will_return(probe_config_file, true);
-	}
-	ret = probe_config_partitions(cfgparts);
-	assert_false(ret);
-
-	num_simulated_devices = 1;
-	num_simulated_partitions_per_disk = CONFIG_PARTITION_COUNT + 1;
-	for (int i = 0; i < CONFIG_PARTITION_COUNT + 1; i++) {
-		will_return(probe_config_file, true);
-	}
-	ret = probe_config_partitions(cfgparts);
-	assert_false(ret);
 
 	(void)state;
 }
@@ -141,19 +126,18 @@ static void test_config_file_existence(void **state)
 	bool ret;
 
 	num_simulated_devices = 1;
-	num_simulated_partitions_per_disk = CONFIG_PARTITION_COUNT;
-	for (int i = 0; i < CONFIG_PARTITION_COUNT; i++) {
+	num_simulated_partitions_per_disk = ENV_NUM_CONFIG_PARTS;
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 		will_return(probe_config_file, false);
 	}
 	ret = probe_config_partitions(cfgparts);
 	assert_false(ret);
 
-	if (CONFIG_PARTITION_COUNT > 1) {
-		for (int i = 0; i < CONFIG_PARTITION_COUNT - 1; i++) {
-			will_return(probe_config_file, true);
-		}
-		will_return(probe_config_file, false);
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS - 1; i++) {
+		will_return(probe_config_file, true);
 	}
+	will_return(probe_config_file, false);
+
 	ret = probe_config_partitions(cfgparts);
 	assert_false(ret);
 

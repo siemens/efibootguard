@@ -133,6 +133,20 @@ AC_ARG_WITH([env-backend],
 	    [ ENV_API_FILE="env_api_fat" ])
 
 AC_SUBST([env_api_file], [${ENV_API_FILE}])
+
+AC_ARG_WITH([num-config-parts],
+	    AS_HELP_STRING([--with-num-config-parts=INT],
+			   [specify the number of used config partitions, defaults to 2]),
+	    [
+		ENV_NUM_CONFIG_PARTS=${withval:-0}
+		AS_IF([test "${ENV_NUM_CONFIG_PARTS}" -lt "1"],
+		      [
+			AC_MSG_ERROR([Invalid number of config partitions.])
+		      ])
+	    ],
+	    [ ENV_NUM_CONFIG_PARTS=2 ])
+
+AC_DEFINE_UNQUOTED([ENV_NUM_CONFIG_PARTS], [${ENV_NUM_CONFIG_PARTS}], [Number of config partitions])
 # ------------------------------------------------------------------------------
 AC_CONFIG_FILES([
 	Makefile
@@ -154,4 +168,5 @@ AC_MSG_RESULT([
 	efi libs:                ${GNUEFI_LIB_DIR}
 
 	environment backend:     ${ENV_API_FILE}.c
+	number of config parts:  ${ENV_NUM_CONFIG_PARTS}
 ])

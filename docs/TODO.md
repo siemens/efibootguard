@@ -29,8 +29,4 @@
 	  needed then.
 	* Function / Datatype / Variable names remind of Parted and should be
 	  renamed if code developes independent of libparted.
-	* The number of valid config partitions expected by the bootloader and
-	  the tools is currently fixed to the number defined by
-	  `CONFIG_PARTITION_COUNT` in `include/envdata.h`. This value should be
-	  made configurable by a config flag.
 

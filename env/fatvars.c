@@ -15,10 +15,8 @@
 #include <syspart.h>
 #include <envdata.h>
 
-#define CONFIG_PARTITION_COUNT 2
-
 static int current_partition = 0;
-static BG_ENVDATA env[CONFIG_PARTITION_COUNT];
+static BG_ENVDATA env[ENV_NUM_CONFIG_PARTS];
 
 BG_STATUS save_current_config(void)
 {
@@ -41,10 +39,10 @@ BG_STATUS save_current_config(void)
 		return BG_CONFIG_ERROR;
 	}
 
-	if (numHandles != CONFIG_PARTITION_COUNT) {
+	if (numHandles != ENV_NUM_CONFIG_PARTS) {
 		Print(L"Error, unexpected number of config partitions: found "
 		      L"%d, but expected %d.\n",
-		      numHandles, CONFIG_PARTITION_COUNT);
+		      numHandles, ENV_NUM_CONFIG_PARTS);
 		/* In case of saving, this must be treated as error, to not
 		 * overwrite another partition's config file. */
 		mfree(roots);
@@ -90,7 +88,7 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 	UINTN numHandles = CONFIG_PARTITION_MAXCOUNT;
 	EFI_FILE_HANDLE *roots;
 	UINTN i;
-	int env_invalid[CONFIG_PARTITION_COUNT] = {0};
+	int env_invalid[ENV_NUM_CONFIG_PARTS] = {0};
 
 	roots = (EFI_FILE_HANDLE *)mmalloc(sizeof(EFI_FILE_HANDLE) *
 					   CONFIG_PARTITION_MAXCOUNT);
@@ -106,10 +104,10 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 		return BG_CONFIG_ERROR;
 	}
 
-	if (numHandles != CONFIG_PARTITION_COUNT) {
+	if (numHandles != ENV_NUM_CONFIG_PARTS) {
 		Print(L"Warning, unexpected number of config partitions: found "
 		      L"%d, but expected %d.\n",
-		      numHandles, CONFIG_PARTITION_COUNT);
+		      numHandles, ENV_NUM_CONFIG_PARTS);
 		/* Don't treat this as error because we may still be able to
 		 * find a
 		 * valid config */
@@ -174,7 +172,7 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 	 * configuration. */
 	UINTN latest_rev = 0, latest_idx = 0;
 	UINTN pre_latest_rev = 0, pre_latest_idx = 0;
-	for (i = 0; i < CONFIG_PARTITION_COUNT; i++) {
+	for (i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 		if (!env_invalid[i]) {
 			if (env[i].revision > latest_rev) {
 				pre_latest_rev = latest_rev;

@@ -264,7 +264,7 @@ int main(int argc, char **argv)
 				"Error initializing FAT environment.\n");
 			return 1;
 		}
-		for (int i = 0; i < CONFIG_PARTITION_COUNT; i++) {
+		for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 			if (verbosity) {
 				printf("\n----------------------------\n");
 				printf(" Config Partition #%d ", i);
