@@ -18,13 +18,22 @@
 
 #define CONFIG_PARTITION_MAXCOUNT 64
 
+#define USTATE_OK 0
+#define USTATE_INSTALLED 1
+#define USTATE_TESTING 2
+#define USTATE_FAILED 3
+#define USTATE_UNKNOWN 4
+
+#define USTATE_MIN 0
+#define USTATE_MAX 4
+
 #pragma pack(push)
 #pragma pack(1)
 struct _BG_ENVDATA {
 	uint16_t kernelfile[ENV_STRING_LENGTH];
 	uint16_t kernelparams[ENV_STRING_LENGTH];
-	uint8_t testing;
-	uint8_t boot_once;
+	uint8_t padding;
+	uint8_t ustate;
 	uint16_t watchdog_timeout_sec;
 	uint32_t revision;
 	uint32_t crc32;

@@ -115,8 +115,7 @@ static void test_api_accesscurrent(void **state)
 	assert_int_equal(ebg_env_set("kernelparams", "root=/dev/sda"), 0);
 	assert_int_equal(ebg_env_set("watchdog_timeout_sec", "abc"), EINVAL);
 	assert_int_equal(ebg_env_set("watchdog_timeout_sec", "0013"), 0);
-	assert_int_equal(ebg_env_set("testing", "1"), 0);
-	assert_int_equal(ebg_env_set("boot_once", "1"), 0);
+	assert_int_equal(ebg_env_set("ustate", "1"), 0);
 
 	will_return(bgenv_write, true);
 	ret = ebg_env_close();
@@ -134,8 +133,7 @@ static void test_api_accesscurrent(void **state)
 	assert_string_equal(ebg_env_get("kernelfile"), "vmlinuz");
 	assert_string_equal(ebg_env_get("kernelparams"), "root=/dev/sda");
 	assert_string_equal(ebg_env_get("watchdog_timeout_sec"), "13");
-	assert_string_equal(ebg_env_get("testing"), "1");
-	assert_string_equal(ebg_env_get("boot_once"), "1");
+	assert_string_equal(ebg_env_get("ustate"), "1");
 	assert_string_equal(ebg_env_get("revision"), test_env_revision_str);
 
 	will_return(bgenv_write, true);
@@ -154,29 +152,21 @@ static void test_api_update(void **state)
 	assert_int_equal(envupdate.data->revision, test_env_revision + 1);
 	assert_int_equal(envupdate.data->watchdog_timeout_sec,
 			 DEFAULT_WATCHDOG_TIMEOUT_SEC);
+	assert_int_equal(envupdate.data->ustate, 1);
 
-	assert_int_equal(ebg_env_set("testing", "1"), 0);
-	assert_int_equal(ebg_env_set("boot_once", "1"), 0);
+	assert_int_equal(ebg_env_set("ustate", "2"), 0);
 	assert_int_equal(ebg_env_confirmupdate(), 0);
 
 	assert_int_equal(ebg_env_set("revision", "0"), 0);
-	assert_int_equal(ebg_env_set("testing", "1"), 0);
-	assert_int_equal(ebg_env_set("boot_once", "1"), 0);
+	assert_int_equal(ebg_env_set("ustate", "3"), 0);
 	assert_false(ebg_env_isupdatesuccessful());
 
 	assert_int_equal(ebg_env_set("revision", "0"), 0);
-	assert_int_equal(ebg_env_set("testing", "1"), 0);
-	assert_int_equal(ebg_env_set("boot_once", "0"), 0);
+	assert_int_equal(ebg_env_set("ustate", "0"), 0);
 	assert_true(ebg_env_isupdatesuccessful());
 
 	assert_int_equal(ebg_env_set("revision", "0"), 0);
-	assert_int_equal(ebg_env_set("testing", "0"), 0);
-	assert_int_equal(ebg_env_set("boot_once", "0"), 0);
-	assert_true(ebg_env_isupdatesuccessful());
-
-	assert_int_equal(ebg_env_set("revision", "0"), 0);
-	assert_int_equal(ebg_env_set("testing", "1"), 0);
-	assert_int_equal(ebg_env_set("boot_once", "1"), 0);
+	assert_int_equal(ebg_env_set("ustate", "3"), 0);
 	will_return(bgenv_write, true);
 	assert_int_equal(ebg_env_clearerrorstate(), 0);
 	assert_true(ebg_env_isupdatesuccessful());

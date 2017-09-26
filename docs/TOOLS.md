@@ -28,7 +28,7 @@ In most cases, the user wants to update to a new environment configuration,
 which can be done with:
 
 ```
-./bg_setenv --update --kernel="XXXX" --args="YYYY" --watchdog=25 --testing=1
+./bg_setenv --update --kernel="XXXX" --args="YYYY" --watchdog=25
 ```
 
 The `--update` parameter tells `bg_setenv` to automatically overwrite the
@@ -71,12 +71,15 @@ To simulate a failed update, with its environment data stored in config partitio
 issue:
 
 ```
-bg_setenv --partition=1 --bootonce --testing=1 --revision=0
+bg_setenv --partition=1 --ustate=FAILED --revision=0
 ```
+
+*NOTE*: The user can either specify a number after `--ustate=` or a string resembling
+the value.
 
 To simulate a reboot of a recently updated configuration stored in config partition 1,
 issue:
 
 ```
-bg_setenv --partition=1 --boot_once
+bg_setenv --partition=1 --ustate=TESTING
 ```

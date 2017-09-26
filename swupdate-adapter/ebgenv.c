@@ -19,8 +19,7 @@ typedef enum {
 	EBGENV_KERNELPARAMS,
 	EBGENV_WATCHDOG_TIMEOUT_SEC,
 	EBGENV_REVISION,
-	EBGENV_BOOT_ONCE,
-	EBGENV_TESTING,
+	EBGENV_USTATE,
 	EBGENV_UNKNOWN
 } EBGENVKEY;
 
@@ -84,11 +83,8 @@ static EBGENVKEY ebg_env_str2enum(char *key)
 	if (strncmp(key, "revision", strlen("revision") + 1) == 0) {
 		return EBGENV_REVISION;
 	}
-	if (strncmp(key, "boot_once", strlen("boot_once") + 1) == 0) {
-		return EBGENV_BOOT_ONCE;
-	}
-	if (strncmp(key, "testing", strlen("testing") + 1) == 0) {
-		return EBGENV_TESTING;
+	if (strncmp(key, "ustate", strlen("ustate") + 1) == 0) {
+		return EBGENV_USTATE;
 	}
 	return EBGENV_UNKNOWN;
 }
@@ -131,7 +127,7 @@ int ebg_env_create_new(void)
 	memset(env_current->data, 0, sizeof(BG_ENVDATA));
 	/* update revision field and testing mode */
 	env_current->data->revision = new_rev;
-	env_current->data->testing = 1;
+	env_current->data->ustate = USTATE_INSTALLED;
 	/* set default watchdog timeout */
 	env_current->data->watchdog_timeout_sec = 30;
 	ebg_new_env_created = true;
@@ -218,19 +214,8 @@ char *ebg_env_get(char *key)
 			return NULL;
 		}
 		return buffer;
-	case EBGENV_BOOT_ONCE:
-		if (asprintf(&buffer, "%lu", env_current->data->boot_once) <
-		    0) {
-			errno = ENOMEM;
-			return NULL;
-		}
-		if (!ebg_gc_addpointer(buffer)) {
-			errno = ENOMEM;
-			return NULL;
-		}
-		return buffer;
-	case EBGENV_TESTING:
-		if (asprintf(&buffer, "%lu", env_current->data->testing) < 0) {
+	case EBGENV_USTATE:
+		if (asprintf(&buffer, "%u", env_current->data->ustate) < 0) {
 			errno = ENOMEM;
 			return NULL;
 		}
@@ -294,7 +279,7 @@ int ebg_env_set(char *key, char *value)
 		}
 		env_current->data->watchdog_timeout_sec = val;
 		break;
-	case EBGENV_BOOT_ONCE:
+	case EBGENV_USTATE:
 		errno = 0;
 		val = strtol(value, &p, 10);
 		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
@@ -304,19 +289,7 @@ int ebg_env_set(char *key, char *value)
 		if (p == value) {
 			return EINVAL;
 		}
-		env_current->data->boot_once = val;
-		break;
-	case EBGENV_TESTING:
-		errno = 0;
-		val = strtol(value, &p, 10);
-		env_current->data->testing = val;
-		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
-		    (errno != 0 && val == 0)) {
-			return errno;
-		}
-		if (p == value) {
-			return EINVAL;
-		}
+		env_current->data->ustate = val;
 		break;
 	default:
 		return EINVAL;
@@ -337,7 +310,7 @@ bool ebg_env_isupdatesuccessful(void)
 		 * with
 		 * testing and boot_once set */
 		if (env->data->revision == REVISION_FAILED &&
-		    env->data->testing == 1 && env->data->boot_once == 1) {
+		    env->data->ustate == USTATE_FAILED) {
 			(void)bgenv_close(env);
 			return false;
 		}
@@ -355,9 +328,8 @@ int ebg_env_clearerrorstate(void)
 			continue;
 		}
 		if (env->data->revision == REVISION_FAILED &&
-		    env->data->testing == 1 && env->data->boot_once == 1) {
-			env->data->testing = 0;
-			env->data->boot_once = 0;
+		    env->data->ustate == USTATE_FAILED) {
+			env->data->ustate = USTATE_OK;
 			if (!bgenv_write(env)) {
 				(void)bgenv_close(env);
 				return EIO;
@@ -372,12 +344,7 @@ int ebg_env_clearerrorstate(void)
 
 int ebg_env_confirmupdate(void)
 {
-	int ret = ebg_env_set("testing", "0");
-
-	if (ret) {
-		return ret;
-	}
-	return ebg_env_set("boot_once", "0");
+	return ebg_env_set("ustate", "0");
 }
 
 bool ebg_env_isokay(void)
@@ -390,7 +357,7 @@ bool ebg_env_isokay(void)
 		errno = EIO;
 		return res;
 	}
-	if (env->data->testing == 0) {
+	if (env->data->ustate == USTATE_OK) {
 		res = true;
 	}
 	bgenv_close(env);
@@ -407,7 +374,7 @@ bool ebg_env_isinstalled(void)
 		errno = EIO;
 		return res;
 	}
-	if (env->data->testing == 1 && env->data->boot_once == 0) {
+	if (env->data->ustate == USTATE_INSTALLED) {
 		res = true;
 	}
 	bgenv_close(env);
@@ -424,7 +391,7 @@ bool ebg_env_istesting(void)
 		errno = EIO;
 		return res;
 	}
-	if (env->data->testing == 1 && env->data->boot_once == 1) {
+	if (env->data->ustate == USTATE_TESTING) {
 		res = true;
 	}
 	bgenv_close(env);

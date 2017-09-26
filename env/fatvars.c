@@ -193,24 +193,21 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 	current_partition = latest_idx;
 
 	/* Test if this configuration is in test mode */
-	if (env[latest_idx].testing) {
-		if (env[latest_idx].boot_once) {
-			/* If it has already been booted, this indicates a
-			 * failed update. In this case, mark it as failed by
-			 * giving a zero-revision */
-			env[latest_idx].revision = REVISION_FAILED;
-			save_current_config();
-			/* We must boot with the configuration that was active
-			 * before
-			 */
-			current_partition = pre_latest_idx;
-		} else {
-			/* If this configuration has never been booted with, set
-			 * boot_once flag to indicate that this configuration is
-			 * now being tested */
-			env[latest_idx].boot_once = TRUE;
-			save_current_config();
-		}
+	if (env[latest_idx].ustate == USTATE_TESTING) {
+		/* If it has already been booted, this indicates a failed
+		 * update. In this case, mark it as failed by giving a
+		 * zero-revision */
+		env[latest_idx].ustate = USTATE_FAILED;
+		env[latest_idx].revision = REVISION_FAILED;
+		save_current_config();
+		/* We must boot with the configuration that was active before
+		 */
+		current_partition = pre_latest_idx;
+	} else if (env[latest_idx].ustate == USTATE_INSTALLED) {
+		/* If this configuration has never been booted with, set ustate
+		 * to indicate that this configuration is now being tested */
+		env[latest_idx].ustate = USTATE_TESTING;
+		save_current_config();
 	}
 
 	bglp->payload_path = StrDuplicate(env[current_partition].kernelfile);
@@ -219,8 +216,8 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 	bglp->timeout = env[current_partition].watchdog_timeout_sec;
 
 	Print(L"Config Revision: %d:\n", latest_rev);
-	Print(L" testing: %s\n",
-	      env[current_partition].testing ? L"yes" : L"no");
+	Print(L" ustate: %d\n",
+	      env[current_partition].ustate);
 	Print(L" kernel: %s\n", bglp->payload_path);
 	Print(L" args: %s\n", bglp->payload_options);
 	Print(L" timeout: %d seconds\n", bglp->timeout);

@@ -13,15 +13,6 @@
 	  method must be defined and implemented to account for generic
 	  key-value pairs.
 
-* State refactoring
-	* Currently, there are three variables 'revision', 'testing',
-	  'boot_once', where the latter two are mapped onto a variable called
-	  'ustate'. The 'ustate' variable in turn equals an enum type variable
-	  within swupdate, so that for the swupdate adapter, a complex mapping
-	  must be implemented.  To resolve this issue, the two variables
-	  'boot_once' and 'testing' will be unified to the 'ustate' variable,
-	  which will have the same enum type as used in 'swupdate'.
-
 * API refactoring
 	* Currently, there are two APIs, a lower API 'bg_utils.c', and an
 	  adapter-API 'ebgenv.c'. After refactoring the state variable, the API

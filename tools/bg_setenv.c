@@ -23,7 +23,7 @@ static struct argp_option options_setenv[] = {
 				 "with the smallest revision value "
 				 "above zero is updated."},
     {"revision", 'r', "REVISION", 0, "Set revision value"},
-    {"testing", 't', "TESTING", 0, "Set test mode for environment"},
+    {"ustate", 's', "USTATE", 0, "Set update status for environment"},
     {"filepath", 'f', "ENVFILE_DIR", 0, "Output environment to file. Expects "
 					"an output path where the file name "
 					"is automatically appended."},
@@ -31,7 +31,6 @@ static struct argp_option options_setenv[] = {
     {"confirm", 'c', 0, 0, "Confirm working environment"},
     {"update", 'u', 0, 0, "Automatically update oldest revision"},
     {"verbose", 'v', 0, 0, "Be verbose"},
-    {"bootonce", 'b', 0, 0, "Simulate boot with update installed"},
     {0}};
 
 static struct argp_option options_printenv[] = {
@@ -61,6 +60,30 @@ static bool part_specified = false;
 static bool verbosity = false;
 
 static char *envfilepath = NULL;
+
+static char *ustatemap[] = {"OK", "INSTALLED", "TESTING", "FAILED", "UNKNOWN"};
+
+static uint8_t str2ustate(char *str)
+{
+	uint8_t i;
+
+	if (!str) {
+		return USTATE_UNKNOWN;
+	}
+	for (i = USTATE_MIN; i < USTATE_MAX; i++) {
+		if (strncasecmp(str, ustatemap[i], strlen(ustatemap[i])) == 0) {
+			return i;
+		}
+	}
+	return USTATE_UNKNOWN;
+}
+
+static char *ustate2str(uint8_t ustate)
+{
+	if (ustate >= USTATE_MIN && ustate <= USTATE_MAX) {
+		return ustatemap[ustate];
+	}
+}
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
 {
@@ -110,18 +133,29 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 			return 1;
 		}
 		break;
-	case 't':
-		i = atoi(arg);
-		if (i == 0 || i == 1) {
-			if (arguments->tmpdata.testing = (bool)i) {
-				VERBOSE(stdout, "Testing mode enabled.\n");
+	case 's':
+		i = strtol(arg, &tmp, 10);
+		if ((errno == ERANGE && (i == LONG_MAX || i == LONG_MIN)) ||
+		    (errno != 0 && i == 0) || (tmp == arg)) {
+			// maybe user specified an enum string
+			i = str2ustate(arg);
+			if (i == USTATE_UNKNOWN) {
+				fprintf(stderr, "Invalid state specified.\n");
+				return 1;
 			}
-		} else {
+		}
+		if (i < 0 || i > 3) {
 			fprintf(
 			    stderr,
-			    "Invalid testing flag specified. Possible values: "
-			    "0 (disabled), 1 (enabled)\n");
+			    "Invalid ustate value specified. Possible values: "
+			    "0 (%s), 1 (%s), 2 (%s), 3 (%s)\n",
+			    ustatemap[0], ustatemap[1], ustatemap[2],
+			    ustatemap[3]);
 			return 1;
+		} else {
+			arguments->tmpdata.ustate = i;
+			VERBOSE(stdout, "Ustate set to %u (%s).\n", i,
+				ustate2str(i));
 		}
 		break;
 	case 'r':
@@ -148,8 +182,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		VERBOSE(stdout,
 			"Confirming environment to work. Removing boot-once "
 			"and testing flag.\n");
-		arguments->tmpdata.boot_once = false;
-		arguments->tmpdata.testing = false;
+		arguments->tmpdata.ustate = 0;
 		break;
 	case 'u':
 		if (part_specified) {
@@ -166,13 +199,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		verbosity = true;
 		/* Set verbosity in the library */
 		be_verbose(true);
-		break;
-	case 'b':
-		/* Simulate a reboot with testing=1 */
-		VERBOSE(stdout,
-			"Simulating reboot by setting boot_once to 1.\n");
-		arguments->tmpdata.testing = true;
-		arguments->tmpdata.boot_once = true;
 		break;
 	case ARGP_KEY_ARG:
 		/* too many arguments - program terminates with call to
@@ -198,9 +224,9 @@ static void update_environment(BG_ENVDATA *dest, BG_ENVDATA *src)
 		memcpy((void *)dest->kernelparams, (void *)src->kernelparams,
 		       sizeof(src->kernelparams));
 	}
-	if ((uint8_t)src->testing != IGNORE_MARKER_BYTE) {
-		memcpy((void *)&dest->testing, (void *)&src->testing,
-		       sizeof(src->testing));
+	if ((uint8_t)src->ustate != IGNORE_MARKER_BYTE) {
+		memcpy((void *)&dest->ustate, (void *)&src->ustate,
+		       sizeof(src->ustate));
 	}
 	if ((uint8_t)src->revision != IGNORE_MARKER_BYTE) {
 		memcpy((void *)&dest->revision, (void *)&src->revision,
@@ -210,10 +236,6 @@ static void update_environment(BG_ENVDATA *dest, BG_ENVDATA *src)
 		memcpy((void *)&dest->watchdog_timeout_sec,
 		       (void *)&src->watchdog_timeout_sec,
 		       sizeof(src->watchdog_timeout_sec));
-	}
-	if ((uint8_t)src->boot_once != IGNORE_MARKER_BYTE) {
-		memcpy((void *)&dest->boot_once, (void *)&src->boot_once,
-		       sizeof(src->boot_once));
 	}
 	dest->crc32 =
 	    crc32(0, (Bytef *)dest, sizeof(BG_ENVDATA) - sizeof(dest->crc32));
@@ -227,8 +249,8 @@ static void dump_env(BG_ENVDATA *env)
 	printf("kernel: %s\n", str16to8(buffer, env->kernelfile));
 	printf("kernelargs: %s\n", str16to8(buffer, env->kernelparams));
 	printf("watchdog timeout: %u seconds\n", env->watchdog_timeout_sec);
-	printf("test flag: %s\n", env->testing ? "enabled" : "disabled");
-	printf("boot once flag: %s\n", env->boot_once ? "set" : "not set");
+	printf("ustate: %u (%s)\n", (uint8_t)env->ustate,
+	       ustate2str(env->ustate));
 	printf("\n\n");
 }
 
