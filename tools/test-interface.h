@@ -20,5 +20,6 @@ bool write_env(CONFIG_PART *part, BG_ENVDATA *env);
 
 bool probe_config_file(CONFIG_PART *cfgpart);
 bool probe_config_partitions(CONFIG_PART *cfgparts);
+bool mount_partition(CONFIG_PART *cfgpart);
 
 #endif // __TEST_INTERFACE_H__

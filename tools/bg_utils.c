@@ -90,7 +90,8 @@ static char *get_mountpoint(char *devpath)
 	return NULL;
 }
 
-static bool mount_partition(CONFIG_PART *cfgpart)
+__attribute__((noinline))
+bool mount_partition(CONFIG_PART *cfgpart)
 {
 	char tmpdir_template[256];
 	char *mountpoint;
@@ -160,6 +161,7 @@ static FILE *open_config_file(CONFIG_PART *cfgpart, char *mode)
 	return config;
 }
 
+__attribute__((noinline))
 bool probe_config_file(CONFIG_PART *cfgpart)
 {
 	bool do_unmount = false;

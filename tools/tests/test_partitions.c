@@ -84,6 +84,11 @@ PedPartition *ped_disk_next_partition(const PedDisk *disk,
 	return NULL;
 }
 
+bool mount_partition(CONFIG_PART *cfgpart)
+{
+	return true;
+}
+
 bool probe_config_file(CONFIG_PART *cfgpart)
 {
 	return mock_type(bool);

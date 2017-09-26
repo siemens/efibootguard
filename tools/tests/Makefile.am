@@ -27,35 +27,22 @@ AM_CFLAGS = \
 
 CLEANFILES =
 
+libebgenv-test.a: $(top_builddir)/libebgenv.a
+	$(AM_V_GEN) $(OBJCOPY) --weaken $< $@
+
+CLEANFILES += libebgenv-test.a
+
 test_partitions_LDADD = \
-	libebgenv-test_partitions.a \
+	libebgenv-test.a \
 	-lcmocka
-
-libebgenv-test_partitions.a: $(top_builddir)/libebgenv.a
-	$(AM_V_GEN) $(OBJCOPY) -W probe_config_file -W ped_device_probe_all \
-	  -W ped_device_get_next -W ped_disk_next_partition $< $@
-
-CLEANFILES += libebgenv-test_partitions.a
 
 test_environment_LDADD = \
-	libebgenv-test_environment.a \
+	libebgenv-test.a \
 	-lcmocka
-
-libebgenv-test_environment.a: $(top_builddir)/libebgenv.a
-	$(AM_V_GEN) $(OBJCOPY) -W oldenvs -W configparts -W fopen -W fopen64 \
-	  -W fclose -W fread -W fwrite -W feof $< $@
-
-CLEANFILES += libebgenv-test_environment.a
 
 test_api_LDADD = \
-	libebgenv-test_api.a \
+	libebgenv-test.a \
 	-lcmocka
-
-libebgenv-test_api.a: $(top_builddir)/libebgenv.a
-	$(AM_V_GEN) $(OBJCOPY) -W bgenv_init -W bgenv_write -W bgenv_close \
-	  -W bgenv_get_latest -W bgenv_get_by_index -W bgenv_get_oldest $< $@
-
-CLEANFILES += libebgenv-test_api.a
 
 check_PROGRAMS = test_partitions test_environment test_api
 
