@@ -14,6 +14,7 @@ env:
   matrix:
     - TARGET=native
     - TARGET=i586
+    - TARGET=cppcheck
 language: c
 
 compiler:
