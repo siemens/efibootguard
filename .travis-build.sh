@@ -2,7 +2,21 @@
 
 set -euo pipefail
 
-TARGET="${TARGET-"$1"}"
+PARAM="${PARAM-"${1-""}"}"
+TARGET="${TARGET-""}"
+
+COVERITY_SCAN_BRANCH="${COVERITY_SCAN_BRANCH:-"0"}"
+if [ "$COVERITY_SCAN_BRANCH" == "1" ]
+then
+    if [ "$TARGET" == "native" ]
+    then
+        TARGET_EFFECTIVE="${PARAM:-"success"}"
+    else
+        TARGET_EFFECTIVE="success"
+    fi
+else
+    TARGET_EFFECTIVE="${PARAM:-"${TARGET}"}"
+fi
 
 prepare_build()
 {
@@ -32,7 +46,7 @@ install_cppcheck()
     rm -rf cppcheck
 }
 
-case "$TARGET" in
+case "$TARGET_EFFECTIVE" in
     native)
         prepare_build
         enter_build
@@ -87,6 +101,20 @@ case "$TARGET" in
         # files are provided. Compare 'cppcheck --help'.
         exec cppcheck -f -q --error-exitcode=2 --std=posix \
             $enable $suppress $cpp_conf $includes .
+        ;;
+    coverity_prepare)
+        prepare_build
+        enter_build
+        ../configure
+        exit 0
+        ;;
+    coverity_build)
+        enter_build
+        exec make
+        ;;
+    success)
+        echo "Skipping $TARGET" >&2
+        exit 0
         ;;
     *)
         exit -1
