@@ -15,6 +15,7 @@
 #include "env_api.h"
 #include "ebgenv.h"
 #include "uservars.h"
+#include "version.h"
 
 static char doc[] =
     "bg_setenv/bg_printenv - Environment tool for the EFI Boot Guard";
@@ -38,10 +39,12 @@ static struct argp_option options_setenv[] = {
     {"uservar", 'x', "KEY=VAL", 0, "Set user-defined string variable. For "
 				   "setting multiple variables, use this "
 				   "option multiple times."},
+    {"version", 'V', 0, 0, "Print version"},
     {0}};
 
 static struct argp_option options_printenv[] = {
     {"verbose", 'v', 0, 0, "Be verbose"},
+    {"version", 'V', 0, 0, "Print version"},
     {0}};
 
 struct arguments {
@@ -311,6 +314,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		/* Set user-defined variable(s) */
 		set_uservars(arg);
 		break;
+	case 'V':
+		printf("EFI Boot Guard %s\n", EFIBOOTGUARD_VERSION);
+		exit(0);
 	case ARGP_KEY_ARG:
 		/* too many arguments - program terminates with call to
 		 * argp_usage with non-zero return code */

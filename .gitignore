@@ -78,3 +78,4 @@ Makefile.in
 /Makefile
 /tools/tests/Makefile
 .deps/
+version.h

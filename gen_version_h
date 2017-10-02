@@ -1,0 +1,28 @@
+#!/bin/sh
+#
+# EFI Boot Guard
+#
+# Copyright (c) Siemens AG, 2017
+#
+# Authors:
+#  Jan Kiszka <jan.kiszka@siemens.com>
+#
+# This work is licensed under the terms of the GNU GPL, version 2.  See
+# the COPYING file in the top-level directory.
+#
+
+echo "/* Auto-generated - leave alone and don't commit! */"
+echo ""
+
+cd "$1" > /dev/null
+
+if ! git rev-parse 2>/dev/null; then
+	version="`cat VERSION`"
+else
+	describe="`git describe --long --dirty --match "v[0-9].[0-9]*"`"
+	version="`echo $describe | sed -e 's/\([^-]*\)-\(.*\)/\1 (\2)/'`"
+fi
+
+cd - > /dev/null
+
+echo "#define EFIBOOTGUARD_VERSION	\"$version\""

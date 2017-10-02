@@ -36,6 +36,33 @@ ARFLAGS = cr
 EXTRA_DIST = autogen.sh README LICENSE
 CLEANFILES =
 
+define filechk
+	$(AM_V_at)set -e;			\
+	echo '  CHK      $@';			\
+	mkdir -p $(dir $@);			\
+	$(filechk_$(1)) < $< > $@.tmp;		\
+	if [ -r $@ ] && cmp -s $@ $@.tmp; then	\
+		rm -f $@.tmp;			\
+	else					\
+		echo '  UPD      $@';		\
+		mv -f $@.tmp $@;		\
+	fi
+endef
+
+#
+# Version header
+#
+define filechk_version
+	$(top_srcdir)/gen_version_h $(top_srcdir)/
+endef
+
+GEN_VERSION_H := $(top_builddir)/version.h
+
+$(GEN_VERSION_H): $(top_srcdir)/Makefile.in FORCE
+	$(call filechk,version)
+
+CLEANFILES += $(GEN_VERSION_H)
+
 #
 # Static libraries
 #
@@ -168,6 +195,8 @@ $(top_builddir)/drivers/watchdog/%.o: $(top_srcdir)/drivers/watchdog/%.S
 	@$(MKDIR_P) $(shell dirname $@)/
 	$(AM_V_CC)$(GNUEFI_CC) $(efi_cppflags) $(efi_cflags) -c $< -o $@
 
+$(top_builddir)/main.o: $(GEN_VERSION_H)
+
 $(efi_solib): $(efi_objects)
 	$(AM_V_CCLD)$(LD) $(efi_ldflags) $(efi_objects) \
 		-o $@ -lefi -lgnuefi $(shell $(CC) $(CFLAGS) -print-libgcc-file-name); \
@@ -177,6 +206,8 @@ $(efi_loadername): $(efi_solib)
 	$(AM_V_GEN) $(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic \
 	  -j .dynsym -j .rel -j .rela -j .reloc -j .init_array \
 	  --target=efi-app-$(ARCH) $< $@
+
+$(top_builddir)/tools/bg_setenv-bg_setenv.o: $(GEN_VERSION_H)
 
 bg_printenvdir = $(top_srcdir)
 
@@ -189,3 +220,7 @@ CLEANFILES += bg_printenv
 
 # Tests depend on libraries being built - start with "."
 SUBDIRS = . tools/tests
+
+FORCE:
+
+.PHONY: FORCE
