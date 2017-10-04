@@ -117,6 +117,8 @@ case "$TARGET_EFFECTIVE" in
         exit 0
         ;;
     *)
+        echo "No or not existing targen choosen." \
+             "($TARGET, $TARGET_EFFECTIVE)" >&2
         exit -1
         ;;
 esac
