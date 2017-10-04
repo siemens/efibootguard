@@ -18,6 +18,31 @@ else
     TARGET_EFFECTIVE="${PARAM:-"${TARGET}"}"
 fi
 
+install_common_deps()
+{
+    sudo apt-get install gcc-multilib gnu-efi libpci-dev
+}
+
+install_native_deps()
+{
+    sudo apt-add-repository \
+         'deb http://archive.ubuntu.com/ubuntu xenial universe'
+    sudo apt-get update -qq
+    sudo apt-get install --no-install-recommends \
+         --target-release xenial libcmocka-dev
+}
+
+install_i586_deps()
+{
+    sudo apt-get install --no-install-recommends \
+         libz-dev:i386
+    sudo apt-add-repository \
+         'deb http://archive.ubuntu.com/ubuntu xenial universe'
+    sudo apt-get update -qq
+    sudo apt-get install --no-install-recommends \
+         --target-release xenial libcmocka-dev:i386
+}
+
 prepare_build()
 {
     autoreconf -fi
@@ -48,6 +73,8 @@ install_cppcheck()
 
 case "$TARGET_EFFECTIVE" in
     native)
+        install_common_deps
+        install_native_deps
         prepare_build
         enter_build
         ../configure
@@ -55,8 +82,8 @@ case "$TARGET_EFFECTIVE" in
         ;;
 
     i586)
-        sudo apt-get install --no-install-recommends \
-            --target-release xenial libcmocka-dev:i386
+        install_common_deps
+        install_i586_deps
         prepare_build
         enter_build
         ../configure --with-gnuefi-lib-dir=/usr/lib32 CFLAGS=-m32 \
@@ -65,6 +92,8 @@ case "$TARGET_EFFECTIVE" in
         ;;
 
     cppcheck)
+	install_common_deps
+	install_native_deps
         echo "Building and installing cppcheck..."
         if ! install_cppcheck >cppcheck_build.log 2>&1
         then
@@ -103,6 +132,8 @@ case "$TARGET_EFFECTIVE" in
             $enable $suppress $cpp_conf $includes .
         ;;
     coverity_prepare)
+        install_common_deps
+        install_native_deps
         prepare_build
         enter_build
         ../configure

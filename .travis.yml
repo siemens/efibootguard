@@ -25,12 +25,6 @@ sudo: required
 before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:444 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt
 
-install:
-  - sudo apt-get install gcc-multilib gnu-efi libpci-dev libz-dev:i386
-  - sudo apt-add-repository 'deb http://archive.ubuntu.com/ubuntu xenial universe'
-  - sudo apt-get update -qq
-  - sudo apt-get install --no-install-recommends --target-release xenial libcmocka-dev
-
 addons:
   coverity_scan:
     project:
