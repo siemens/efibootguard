@@ -149,11 +149,10 @@ static void test_api_update(void **state)
 {
 	will_return(bgenv_open_latest, &env);
 	will_return(bgenv_open_oldest, &envupdate);
+	will_return(bgenv_open_latest, &env);
 	assert_int_equal(ebg_env_create_new(&e), 0);
 
 	assert_int_equal(envupdate.data->revision, test_env_revision + 1);
-	assert_int_equal(envupdate.data->watchdog_timeout_sec,
-			 DEFAULT_WATCHDOG_TIMEOUT_SEC);
 	assert_int_equal(envupdate.data->ustate, 1);
 
 	assert_int_equal(ebg_env_set(&e, "ustate", "2"), 0);

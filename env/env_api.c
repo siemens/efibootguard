@@ -66,7 +66,15 @@ int ebg_env_create_new(ebgenv_t *e)
 	}
 
 	if (!e->ebg_new_env_created) {
+		BGENV *latest_env = bgenv_open_latest();
 		e->bgenv = (void *)bgenv_create_new();
+		BG_ENVDATA *new_data = ((BGENV *)e->bgenv)->data;
+		uint32_t new_rev = new_data->revision;
+		uint8_t new_ustate = new_data->ustate;
+		memcpy(new_data, latest_env->data, sizeof(BG_ENVDATA));
+		new_data->revision = new_rev;
+		new_data->ustate = new_ustate;
+		bgenv_close(latest_env);
 	}
 
 	e->ebg_new_env_created = e->bgenv != NULL;
