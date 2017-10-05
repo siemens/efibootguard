@@ -96,34 +96,38 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 {
 	uint8_t *var;
 	ebgenv_t e;
-	uint16_t ustate;
-	char *arg, *tmp;
-	int ret;
+	char *tmp;
 
 	switch (action->task) {
 	case ENV_TASK_SET:
 		VERBOSE(stdout, "Task = SET, key = %s, type = %s, val = %s\n",
 		        action->key, action->type, (char *)action->data);
 		if (strncmp(action->key, "ustate", strlen("ustate")+1) == 0) {
+			uint16_t ustate;
+			unsigned long t;
+			char *arg;
+			int ret;
 			e.bgenv = env;
 			arg = (char *)action->data;
 			errno = 0;
-			ustate = strtol(arg, &tmp, 10);
-			if ((errno == ERANGE && (ustate == LONG_MAX ||
-			                         ustate == LONG_MIN)) ||
-                            (errno != 0 && ustate == 0) || (tmp == arg)) {
+			t = strtol(arg, &tmp, 10);
+			if ((errno == ERANGE && (t == LONG_MAX ||
+			                         t == LONG_MIN)) ||
+                            (errno != 0 && t == 0) || (tmp == arg)) {
 				fprintf(stderr, "Invalid value for ustate: %s",
 						(char *)action->data);
 				return;
 			}
-			if (ret = ebg_env_setglobalstate(&e, ustate) != 0) {
-				fprintf(stderr, "Error setting global state.",
+			ustate = (uint16_t)t;;
+			if ((ret = ebg_env_setglobalstate(&e, ustate)) != 0) {
+				fprintf(stderr,
+					"Error setting global state: %s.",
 					strerror(ret));
 			}
 			return;
 		}
 		bgenv_set(env, action->key, action->type, action->data,
-			  strlen(action->data) + 1);
+			  strlen((char *)action->data) + 1);
 		break;
 	case ENV_TASK_DEL:
 		VERBOSE(stdout, "Task = DEL, key = %s\n", action->key);
@@ -165,9 +169,10 @@ static uint8_t str2ustate(char *str)
 
 static char *ustate2str(uint8_t ustate)
 {
-	if (ustate >= USTATE_MIN && ustate <= USTATE_MAX) {
-		return ustatemap[ustate];
+	if (ustate > USTATE_MAX) {
+		ustate = USTATE_MAX;
 	}
+	return ustatemap[ustate];
 }
 
 static int set_uservars(char *arg)
@@ -185,8 +190,8 @@ static int set_uservars(char *arg)
 		return 0;
 	}
 
-	journal_add_action(ENV_TASK_SET, key, USERVAR_TYPE_DEFAULT, value,
-			   strlen(value) + 1);
+	journal_add_action(ENV_TASK_SET, key, USERVAR_TYPE_DEFAULT,
+			   (uint8_t *)value, strlen(value) + 1);
 
 	return 0;
 }
@@ -195,7 +200,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 {
 	struct arguments *arguments = state->input;
 	int i;
-	wchar_t buffer[ENV_STRING_LENGTH];
 	char *tmp;
 
 	switch (key) {
@@ -207,8 +211,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				ENV_STRING_LENGTH);
 			return 1;
 		}
-		journal_add_action(ENV_TASK_SET, "kernelfile", "String", arg,
-				   strlen(arg) + 1);
+		journal_add_action(ENV_TASK_SET, "kernelfile", "String",
+				   (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'a':
 		if (strlen(arg) > ENV_STRING_LENGTH) {
@@ -218,8 +222,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				ENV_STRING_LENGTH);
 			return 1;
 		}
-		journal_add_action(ENV_TASK_SET, "kernelparams", "String", arg,
-				   strlen(arg) + 1);
+		journal_add_action(ENV_TASK_SET, "kernelparams", "String",
+				   (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'p':
 		i = strtol(arg, &tmp, 10);
@@ -261,16 +265,16 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		} else {
 			asprintf(&tmp, "%u", i);
 			journal_add_action(ENV_TASK_SET, "ustate", "String",
-					   tmp, strlen(tmp) + 1);
-			VERBOSE(stdout, "Ustate set to %u (%s).\n", i,
+					   (uint8_t *)tmp, strlen(tmp) + 1);
+			VERBOSE(stdout, "Ustate set to %d (%s).\n", i,
 				ustate2str(i));
 		}
 		break;
 	case 'r':
 		i = atoi(arg);
 		VERBOSE(stdout, "Revision is set to %d.\n", i);
-		journal_add_action(ENV_TASK_SET, "revision", "String", arg,
-				   strlen(arg) + 1);
+		journal_add_action(ENV_TASK_SET, "revision", "String",
+				   (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'w':
 		i = atoi(arg);
@@ -278,7 +282,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 			VERBOSE(stdout,
 				"Setting watchdog timeout to %d seconds.\n", i);
 			journal_add_action(ENV_TASK_SET, "watchdog_timeout_sec",
-					   "String", arg, strlen(arg) + 1);
+					   "String", (uint8_t *)arg,
+					   strlen(arg) + 1);
 		} else {
 			fprintf(stderr, "Watchdog timeout must be non-zero.\n");
 			return 1;
@@ -292,7 +297,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		VERBOSE(stdout,
 			"Confirming environment to work. Removing boot-once "
 			"and testing flag.\n");
-		journal_add_action(ENV_TASK_SET, "ustate", "String", "0", 2);
+		journal_add_action(ENV_TASK_SET, "ustate", "String",
+				   (uint8_t *)"0", 2);
 		break;
 	case 'u':
 		if (part_specified) {
@@ -373,11 +379,16 @@ static void update_environment(BGENV *env)
 		journal_process_action(env, action);
 		journal_free_action(action);
 		STAILQ_REMOVE(&head, action, env_action, journal);
-		free(action);
 	}
 
 	env->data->crc32 = crc32(0, (const Bytef *)env->data,
 				 sizeof(BG_ENVDATA) - sizeof(env->data->crc32));
+
+	while (!STAILQ_EMPTY(&head)) {
+		action = STAILQ_FIRST(&head);
+		STAILQ_REMOVE_HEAD(&head, journal);
+		free(action);
+	}
 }
 
 static void dump_envs(void)
@@ -424,7 +435,8 @@ int main(int argc, char **argv)
 	STAILQ_INIT(&head);
 
 	error_t e;
-	if (e = argp_parse(argp, argc, argv, 0, 0, &arguments)) {
+	e = argp_parse(argp, argc, argv, 0, 0, &arguments);
+	if (e) {
 		return e;
 	}
 
@@ -456,7 +468,7 @@ int main(int argc, char **argv)
 			}
 			if (fclose(of)) {
 				fprintf(stderr, "Error closing output file.\n");
-				result = 1;
+				result = errno;
 			};
 			printf("Output written to %s.\n", envfilepath);
 		} else {
@@ -483,7 +495,6 @@ int main(int argc, char **argv)
 
 	BGENV *env_new;
 	BGENV *env_current;
-	char *tmp;
 
 	if (auto_update) {
 		/* clone latest environment */

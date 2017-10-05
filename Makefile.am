@@ -27,7 +27,8 @@ AM_CFLAGS = \
 	-Wmissing-prototypes \
 	-fshort-wchar \
 	-DHAVE_ENDIAN_H \
-	-D_GNU_SOURCE
+	-D_GNU_SOURCE \
+	-D_FILE_OFFSET_BITS=64
 
 AM_LDFLAGS = -L$(top_builddir)/
 

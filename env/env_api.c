@@ -145,7 +145,6 @@ uint16_t ebg_env_getglobalstate(ebgenv_t *e)
 		 * with ustate == USTATE_FAILED */
 		if (env->data->revision == REVISION_FAILED &&
 		    env->data->ustate == USTATE_FAILED) {
-			(void)bgenv_close(env);
 			res = 3;
 		}
 		(void)bgenv_close(env);
@@ -174,7 +173,7 @@ int ebg_env_setglobalstate(ebgenv_t *e, uint16_t ustate)
 	if (ustate > USTATE_FAILED) {
 		return EINVAL;
 	}
-	snprintf(buffer, sizeof(buffer), "%d", ustate);
+	(void)snprintf(buffer, sizeof(buffer), "%d", ustate);
 	res =
 	    bgenv_set((BGENV *)e->bgenv, "ustate", "String", buffer,
 		      strlen(buffer));

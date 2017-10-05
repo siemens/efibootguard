@@ -109,6 +109,14 @@ case "$TARGET_EFFECTIVE" in
         suppress+=" --suppress=variableScope:/usr/include/bits/stdlib-bsearch.h"
         # Function 'efi_main' is called by efi:
         suppress+=" --suppress=unusedFunction:main.c"
+        # Some functions are defined for API only
+        suppress+=" --suppress=unusedFunction:utils.c"
+        suppress+=" --suppress=unusedFunction:env/env_api.c"
+        suppress+=" --suppress=unusedFunction:env/fatvars.c"
+        suppress+=" --suppress=unusedFunction:tools/tests/test_environment.c"
+        suppress+=" --suppress=unusedFunction:env/env_api_fat.c"
+        # EFI uses void* as ImageBase needed for further calculations
+        suppress+=" --suppress=arithOperationsOnVoidPointer:main.c"
 
         enable="--enable=warning \
                 --enable=style \
@@ -128,7 +136,7 @@ case "$TARGET_EFFECTIVE" in
         cpp_conf="-U__WINT_TYPE__"
         # Exit code '1' is returned if arguments are not valid or if no input
         # files are provided. Compare 'cppcheck --help'.
-        exec cppcheck -f -q --error-exitcode=2 --std=posix \
+        exec cppcheck -f -q --error-exitcode=2 \
             $enable $suppress $cpp_conf $includes .
         ;;
     coverity_prepare)

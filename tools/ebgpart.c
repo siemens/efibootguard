@@ -43,8 +43,9 @@ static void add_block_dev(PedDevice *dev)
 
 static char *GUID_to_str(uint8_t *g)
 {
-	snprintf(buffer, 37, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%"
-			     "02X%02X%02X%02X%02X",
+	(void)snprintf(buffer, 37,
+		       "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-"
+		       "%02X%02X%02X%02X%02X%02X",
 		 g[3], g[2], g[1], g[0], g[5], g[4], g[7], g[6], g[8], g[9],
 		 g[10], g[11], g[12], g[13], g[14], g[15]);
 	return buffer;
@@ -75,7 +76,7 @@ static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
 	if (strcmp(GPT_PARTITION_GUID_FAT_NTFS, GUID_to_str(e->type_GUID)) !=
 		0 &&
 	    strcmp(GPT_PARTITION_GUID_ESP, GUID_to_str(e->type_GUID)) != 0) {
-		asprintf(&pfst->name, "not supported");
+		asprintf(&pfst->name, "%s", "not supported");
 		return true;
 	}
 	VERBOSE(stdout, "GPT Partition #%u is FAT/NTFS.\n", i);
@@ -87,7 +88,7 @@ static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
 		return false;
 	}
 	/* Look if it is a FAT12 or FAT16 */
-	off64_t dest = e->start_LBA * LB_SIZE + 0x36;
+	off64_t dest = (off64_t)e->start_LBA * LB_SIZE + 0x36;
 	if (lseek64(fd, dest, SEEK_SET) == -1) {
 		VERBOSE(stderr, "Error seeking FAT12/16 Id String: %s\n",
 			strerror(errno));
@@ -103,7 +104,7 @@ static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
 	if (strcmp(FAT_id, "FAT12   ") != 0 &&
 	    strcmp(FAT_id, "FAT16   ") != 0) {
 		/* No FAT12/16 so read ID field for FAT32 */
-		dest = e->start_LBA * LB_SIZE + 0x52;
+		dest = (off64_t)e->start_LBA * LB_SIZE + 0x52;
 		if (lseek64(fd, dest, SEEK_SET) == -1) {
 			VERBOSE(stderr, "Error seeking FAT32 Id String: %s\n",
 				strerror(errno));
@@ -116,11 +117,11 @@ static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
 		}
 	}
 	if (strcmp(FAT_id, "FAT12   ") == 0) {
-		asprintf(&pfst->name, "fat12");
+		asprintf(&pfst->name, "%s", "fat12");
 	} else if (strcmp(FAT_id, "FAT16   ") == 0) {
-		asprintf(&pfst->name, "fat16");
+		asprintf(&pfst->name, "%s", "fat16");
 	} else {
-		asprintf(&pfst->name, "fat32");
+		asprintf(&pfst->name, "%s", "fat32");
 	}
 	VERBOSE(stdout, "GPT Partition #%u is %s.\n", i, pfst->name);
 	if (lseek64(fd, curr, SEEK_SET) == -1) {
@@ -191,19 +192,19 @@ static void scanLogicalVolumes(int fd, off64_t extended_start_LBA,
 			       PedPartition *partition, int lognum)
 {
 	struct Masterbootrecord next_ebr;
-	PedFileSystemType *pfst;
+	PedFileSystemType *pfst = NULL;
 
 	off64_t offset = extended_start_LBA + ebr->parttable[i].start_LBA;
 	if (extended_start_LBA == 0) {
 		extended_start_LBA = offset;
 	}
-	VERBOSE(stdout, "Seeking to LBA %ld\n", offset);
+	VERBOSE(stdout, "Seeking to LBA %llu\n", (unsigned long long)offset);
 	off64_t res = lseek64(fd, offset * LB_SIZE, SEEK_SET);
 	if (res == -1) {
 		VERBOSE(stderr, "(%s)\n", strerror(errno));
 		return;
 	}
-	VERBOSE(stdout, "Seek returned %ld\n", res);
+	VERBOSE(stdout, "Seek returned %lld\n", (signed long long)res);
 	if (read(fd, &next_ebr, sizeof(next_ebr)) != sizeof(next_ebr)) {
 		VERBOSE(stderr, "Error reading next EBR (%s)\n",
 			strerror(errno));
@@ -233,7 +234,7 @@ static void scanLogicalVolumes(int fd, off64_t extended_start_LBA,
 		if (!pfst) {
 			goto scl_out_of_mem;
 		}
-		if (asprintf(&pfst->name, type_to_name(t)) == -1) {
+		if (asprintf(&pfst->name, "%s", type_to_name(t)) == -1) {
 			goto scl_out_of_mem;
 		};
 		partition = partition->next;
@@ -270,6 +271,7 @@ static bool check_partition_table(PedDevice *dev)
 	}
 	int numpartitions = 0;
 	PedPartition **list_end = &dev->part_list;
+	PedPartition *tmp = NULL;
 	for (int i = 0; i < 4; i++) {
 		if (mbr.parttable[i].partition_type == 0) {
 			continue;
@@ -281,10 +283,12 @@ static bool check_partition_table(PedDevice *dev)
 		if (t == MBR_TYPE_GPT) {
 			VERBOSE(stdout, "GPT header at %X\n",
 				mbr.parttable[i].start_LBA);
-			off64_t offset = LB_SIZE * mbr.parttable[i].start_LBA;
+			off64_t offset = LB_SIZE *
+			    (off64_t)mbr.parttable[i].start_LBA;
 			if (lseek64(fd, offset, SEEK_SET) != offset) {
 				VERBOSE(stderr, "Error seeking EFI Header\n.");
 				VERBOSE(stderr, "(%s)", strerror(errno));
+				close(fd);
 				return false;
 			}
 			struct EFIHeader efihdr;
@@ -301,8 +305,8 @@ static bool check_partition_table(PedDevice *dev)
 				efihdr.signature[6], efihdr.signature[7]);
 			VERBOSE(stdout, "Number of partition entries: %u\n",
 				efihdr.partitions);
-			VERBOSE(stdout, "Partition Table @ LBA %lu\n",
-				efihdr.partitiontable_LBA);
+			VERBOSE(stdout, "Partition Table @ LBA %llu\n",
+				(unsigned long long)efihdr.partitiontable_LBA);
 			read_GPT_entries(fd, efihdr.partitiontable_LBA,
 					 efihdr.partitions, dev);
 			break;
@@ -312,7 +316,7 @@ static bool check_partition_table(PedDevice *dev)
 			goto cpt_out_of_mem;
 		}
 
-		PedPartition *tmp = calloc(sizeof(PedPartition), 1);
+		tmp = calloc(sizeof(PedPartition), 1);
 		if (!tmp) {
 			goto cpt_out_of_mem;
 		}
@@ -324,7 +328,7 @@ static bool check_partition_table(PedDevice *dev)
 		list_end = &((*list_end)->next);
 
 		if (t == MBR_TYPE_EXTENDED || t == MBR_TYPE_EXTENDED_LBA) {
-			asprintf(&pfst->name, "extended");
+			asprintf(&pfst->name, "%s", "extended");
 			scanLogicalVolumes(fd, 0, &mbr, i, tmp, 5);
 			/* Could be we still have MBR entries after
 			 * logical volumes */
@@ -332,7 +336,7 @@ static bool check_partition_table(PedDevice *dev)
 				list_end = &((*list_end)->next);
 			}
 		} else {
-			asprintf(&pfst->name, type_to_name(t));
+			asprintf(&pfst->name, "%s", type_to_name(t));
 		}
 		continue;
 	cpt_out_of_mem:
@@ -363,7 +367,8 @@ static int scan_devdir(unsigned int fmajor, unsigned int fminor, char *fullname,
 		if (!devfile) {
 			break;
 		}
-		snprintf(fullname, maxlen, "%s/%s", DEVDIR, devfile->d_name);
+		(void)snprintf(fullname, maxlen, "%s/%s", DEVDIR,
+			       devfile->d_name);
 		struct stat fstat;
 		if (stat(fullname, &fstat) == -1) {
 			VERBOSE(stderr, "stat failed on %s\n", fullname);
@@ -389,7 +394,7 @@ static int get_major_minor(char *filename, unsigned int *major, unsigned int *mi
 		return -1;
 	}
 	int res = fscanf(fh, "%u:%u", major, minor);
-	fclose(fh);
+	(void)fclose(fh);
 	if (res < 2) {
 		VERBOSE(stderr,
 			"Error reading major/minor of device entry. (%s)\n",
@@ -402,7 +407,7 @@ static int get_major_minor(char *filename, unsigned int *major, unsigned int *mi
 void ped_device_probe_all(void)
 {
 	struct dirent *sysblockfile;
-	char fullname[DEV_FILENAME_LEN];
+	char fullname[DEV_FILENAME_LEN+16];
 
 	DIR *sysblockdir = opendir(SYSBLOCKDIR);
 	if (!sysblockdir) {
@@ -420,7 +425,7 @@ void ped_device_probe_all(void)
 		    strcmp(sysblockfile->d_name, "..") == 0) {
 			continue;
 		}
-		snprintf(fullname, sizeof(fullname), "/sys/block/%s/dev",
+		(void)snprintf(fullname, sizeof(fullname), "/sys/block/%s/dev",
 			 sysblockfile->d_name);
 		/* Get major and minor revision from /sys/block/sdX/dev */
 		unsigned int fmajor, fminor;
@@ -428,10 +433,10 @@ void ped_device_probe_all(void)
 			continue;
 		}
 		VERBOSE(stdout,
-			"Trying device with: Major = %d, Minor = %d, (%s)\n",
+			"Trying device with: Major = %u, Minor = %u, (%s)\n",
 			fmajor, fminor, fullname);
 		/* Check if this file is really in the dev directory */
-		snprintf(fullname, sizeof(fullname), "%s/%s", DEVDIR,
+		(void)snprintf(fullname, sizeof(fullname), "%s/%s", DEVDIR,
 			 sysblockfile->d_name);
 		struct stat fstat;
 		if (stat(fullname, &fstat) == -1) {
@@ -444,7 +449,7 @@ void ped_device_probe_all(void)
 		}
 		/* This is a block device, so add it to the list*/
 		PedDevice *dev = calloc(sizeof(PedDevice), 1);
-		asprintf(&dev->model, "N/A");
+		asprintf(&dev->model, "%s", "N/A");
 		asprintf(&dev->path, "%s", fullname);
 		if (check_partition_table(dev)) {
 			add_block_dev(dev);

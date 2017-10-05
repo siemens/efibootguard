@@ -78,7 +78,7 @@ bool mount_partition(CONFIG_PART *cfgpart)
 {
 	char tmpdir_template[256];
 	char *mountpoint;
-	snprintf(tmpdir_template, 256, "%s", tmp_mnt_dir);
+	(void)snprintf(tmpdir_template, 256, "%s", tmp_mnt_dir);
 	if (!cfgpart) {
 		return false;
 	}
@@ -204,7 +204,7 @@ bool probe_config_partitions(CONFIG_PART *cfgpart)
 
 	ped_device_probe_all();
 
-	while (dev = ped_device_get_next(dev)) {
+	while ((dev = ped_device_get_next(dev))) {
 		printf_debug("Device: %s\n", dev->model);
 		PedDisk *pd = ped_disk_new(dev);
 		if (!pd) {
@@ -220,11 +220,11 @@ bool probe_config_partitions(CONFIG_PART *cfgpart)
 				continue;
 			}
 			if (strncmp("/dev/mmcblk", dev->path, 11) == 0) {
-				snprintf(devpath, 4096, "%sp%u", dev->path,
-					 part->num);
+				(void)snprintf(devpath, 4096, "%sp%u",
+					       dev->path, part->num);
 			} else {
-				snprintf(devpath, 4096, "%s%u", dev->path,
-					 part->num);
+				(void)snprintf(devpath, 4096, "%s%u",
+					       dev->path, part->num);
 			}
 			if (!cfgpart[count].devpath) {
 				cfgpart[count].devpath =
@@ -493,7 +493,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 		}
 		break;
 	case EBGENV_WATCHDOG_TIMEOUT_SEC:
-		sprintf(buffer, "%lu", env->data->watchdog_timeout_sec);
+		sprintf(buffer, "%u", env->data->watchdog_timeout_sec);
 		if (!data) {
 			return strlen(buffer);
 		}
@@ -503,7 +503,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 		}
 		break;
 	case EBGENV_REVISION:
-		sprintf(buffer, "%lu", env->data->revision);
+		sprintf(buffer, "%u", env->data->revision);
 		if (!data) {
 			return strlen(buffer);
 		}

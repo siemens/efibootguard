@@ -69,7 +69,7 @@ void bgenv_serialize_uservar(uint8_t *p, char *key, char *type, void *data,
 	uint32_t payload_size, data_size;
 
 	/* store key */
-	strncpy(p, key, strlen(key) + 1);
+	strncpy((char *)p, key, strlen(key) + 1);
 	p += strlen(key) + 1;
 
 	/* store payload_size after key */
@@ -180,8 +180,8 @@ uint8_t *bgenv_uservar_alloc(uint8_t *udata, uint32_t datalen)
 		return NULL;
 	}
 	spaceleft = bgenv_user_free(udata);
-	VERBOSE(stdout, "uservar_alloc: free: %u requested: %u \n", spaceleft,
-		datalen);
+	VERBOSE(stdout, "uservar_alloc: free: %lu requested: %lu \n",
+		(unsigned long)spaceleft, (unsigned long)datalen);
 
 	/* To find the end of user variables, a 2nd 0 must be there after the
 	 * last variable content, thus, we need one extra byte if appending a
@@ -258,7 +258,7 @@ uint32_t bgenv_user_free(uint8_t *udata)
 	while (*udata) {
 		bgenv_map_uservar(udata, NULL, NULL, NULL, &rsize, NULL);
 		spaceleft -= rsize;
-		if (spaceleft <= 0)
+		if (spaceleft == 0)
 			break;
 		udata = bgenv_next_uservar(udata);
 	}
