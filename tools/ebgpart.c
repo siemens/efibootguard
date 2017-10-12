@@ -255,7 +255,7 @@ static bool check_partition_table(PedDevice *dev)
 
 	VERBOSE(stdout, "Checking %s\n", dev->path);
 	fd = open(dev->path, O_RDONLY);
-	if (fd == 0) {
+	if (fd < 0) {
 		VERBOSE(stderr, "Error opening block device.\n");
 		return false;
 	}
@@ -294,6 +294,7 @@ static bool check_partition_table(PedDevice *dev)
 			struct EFIHeader efihdr;
 			if (read(fd, &efihdr, sizeof(efihdr)) !=
 			    sizeof(efihdr)) {
+				close(fd);
 				VERBOSE(stderr, "Error reading EFI Header\n.");
 				VERBOSE(stderr, "(%s)", strerror(errno));
 				return false;
@@ -340,6 +341,7 @@ static bool check_partition_table(PedDevice *dev)
 		}
 		continue;
 	cpt_out_of_mem:
+		close(fd);
 		if (pfst) free(pfst);
 		if (tmp) free(tmp);
 		return false;
