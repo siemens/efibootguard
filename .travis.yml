@@ -23,6 +23,7 @@ compiler:
 sudo: required
 
 before_install:
+  - if [ $TRAVIS_BRANCH = coverity_scan ] && [ ${TRAVIS_JOB_NUMBER##*.} != 1 ]; then exit 0; fi
   - echo -n | openssl s_client -connect scan.coverity.com:444 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt
 
 addons:
