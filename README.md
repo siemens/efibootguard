@@ -19,8 +19,8 @@ the source tree.
 
 Continuous integration:
 * [Travis CI](https://travis-ci.org/siemens/efibootguard):
-  * Master branch: ![](https://travis-ci.org/siemens/efibootguard.svg?branch=master)
-  * Next branch: ![](https://travis-ci.org/siemens/efibootguard.svg?branch=next)
+  * Master branch: ![](https://img.shields.io/travis/siemens/efibootguard/master.svg)
+  * Next branch: ![](https://img.shields.io/travis/siemens/efibootguard/next.svg)
 * Coverity: ![](https://img.shields.io/coverity/scan/13885.svg)
 
 ## Watchdog support ##
