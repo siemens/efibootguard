@@ -187,7 +187,7 @@ static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
 		tmpp->fs_type = pfst;
 
 		if (!check_GPT_FAT_entry(fd, &e, pfst, i)) {
-			if (pfst->name) free(pfst->name);
+			free(pfst->name);
 			free(pfst);
 			free(tmpp);
 			dev->part_list = NULL;
@@ -256,8 +256,8 @@ static void scanLogicalVolumes(int fd, off64_t extended_start_LBA,
 	return;
 scl_out_of_mem:
 	VERBOSE(stderr, "Out of memory\n");
-	if (pfst) free(pfst);
-	if (partition->next) free(partition->next);
+	free(pfst);
+	free(partition->next);
 }
 
 static bool check_partition_table(PedDevice *dev)
@@ -359,8 +359,8 @@ static bool check_partition_table(PedDevice *dev)
 	cpt_out_of_mem:
 		close(fd);
 		VERBOSE(stderr, "Out of mem while checking partition table\n.");
-		if (pfst) free(pfst);
-		if (tmp) free(tmp);
+		free(pfst);
+		free(tmp);
 		return false;
 	}
 	close(fd);
@@ -494,19 +494,21 @@ pedprobe_error:
 
 static void ped_partition_destroy(PedPartition *p)
 {
-	if (!p) return;
-	if (!p->fs_type) goto fs_type_Null;
-	if (p->fs_type->name) free(p->fs_type->name);
-	free(p->fs_type);
-fs_type_Null:
+	if (!p)
+		return;
+	if (p->fs_type) {
+		free(p->fs_type->name);
+		free(p->fs_type);
+	}
 	free(p);
 }
 
 static void ped_device_destroy(PedDevice *d)
 {
-	if (!d) return;
-	if (d->model) free(d->model);
-	if (d->path) free(d->path);
+	if (!d)
+		return;
+	free(d->model);
+	free(d->path);
 	PedPartition *p = d->part_list;
 	while (p) {
 		PedPartition *tmpp = p;
