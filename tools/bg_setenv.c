@@ -65,31 +65,52 @@ struct env_action {
 
 STAILQ_HEAD(stailhead, env_action) head = STAILQ_HEAD_INITIALIZER(head);
 
-static void journal_add_action(BGENV_TASK task, char *key, char *type,
-			       uint8_t *data, size_t datalen)
+static void journal_free_action(struct env_action *action)
+{
+	if (!action)
+		return;
+	free(action->data);
+	free(action->type);
+	free(action->key);
+	free(action);
+}
+
+static error_t journal_add_action(BGENV_TASK task, char *key, char *type,
+				  uint8_t *data, size_t datalen)
 {
 	struct env_action *new_action;
 
 	new_action = calloc(1, sizeof(struct env_action));
+	if (!new_action) {
+		return ENOMEM;
+	}
 	new_action->task = task;
 	if (key) {
-		asprintf(&(new_action->key), "%s", key);
+		if (asprintf(&(new_action->key), "%s", key) == -1) {
+			new_action->key = NULL;
+			goto newaction_nomem;
+		}
 	}
 	if (type) {
-		asprintf(&(new_action->type), "%s", type);
+		if (asprintf(&(new_action->type), "%s", type) == -1) {
+			new_action->type = NULL;
+			goto newaction_nomem;
+		}
 	}
 	if (data && datalen) {
 		new_action->data = (uint8_t *)malloc(datalen);
+		if (!new_action->data) {
+			new_action->data = NULL;
+			goto newaction_nomem;
+		}
 		memcpy(new_action->data, data, datalen);
 	}
 	STAILQ_INSERT_TAIL(&head, new_action, journal);
-}
+	return 0;
 
-static void journal_free_action(struct env_action *action)
-{
-	if (action->data) free(action->data);
-	if (action->type) free(action->type);
-	if (action->key) free(action->key);
+newaction_nomem:
+	journal_free_action(new_action);
+	return ENOMEM;
 }
 
 static void journal_process_action(BGENV *env, struct env_action *action)
@@ -175,7 +196,7 @@ static char *ustate2str(uint8_t ustate)
 	return ustatemap[ustate];
 }
 
-static int set_uservars(char *arg)
+static error_t set_uservars(char *arg)
 {
 	char *key, *value;
 
@@ -186,21 +207,18 @@ static int set_uservars(char *arg)
 
 	value = strtok(NULL, "=");
 	if (value == NULL) {
-		journal_add_action(ENV_TASK_DEL, key, NULL, NULL, 0);
-		return 0;
+		return journal_add_action(ENV_TASK_DEL, key, NULL, NULL, 0);
 	}
-
-	journal_add_action(ENV_TASK_SET, key, USERVAR_TYPE_DEFAULT,
-			   (uint8_t *)value, strlen(value) + 1);
-
-	return 0;
+	return journal_add_action(ENV_TASK_SET, key, USERVAR_TYPE_DEFAULT,
+				  (uint8_t *)value, strlen(value) + 1);
 }
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
 {
 	struct arguments *arguments = state->input;
-	int i;
+	int i, res;
 	char *tmp;
+	error_t e = 0;
 
 	switch (key) {
 	case 'k':
@@ -211,8 +229,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				ENV_STRING_LENGTH);
 			return 1;
 		}
-		journal_add_action(ENV_TASK_SET, "kernelfile", "String",
-				   (uint8_t *)arg, strlen(arg) + 1);
+		e = journal_add_action(ENV_TASK_SET, "kernelfile", "String",
+				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'a':
 		if (strlen(arg) > ENV_STRING_LENGTH) {
@@ -222,8 +240,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				ENV_STRING_LENGTH);
 			return 1;
 		}
-		journal_add_action(ENV_TASK_SET, "kernelparams", "String",
-				   (uint8_t *)arg, strlen(arg) + 1);
+		e = journal_add_action(ENV_TASK_SET, "kernelparams", "String",
+				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'p':
 		i = strtol(arg, &tmp, 10);
@@ -263,9 +281,12 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 			    ustatemap[3]);
 			return 1;
 		} else {
-			asprintf(&tmp, "%u", i);
-			journal_add_action(ENV_TASK_SET, "ustate", "String",
-					   (uint8_t *)tmp, strlen(tmp) + 1);
+			res = asprintf(&tmp, "%u", i);
+			if (res == -1) {
+				return ENOMEM;
+			}
+			e = journal_add_action(ENV_TASK_SET, "ustate", "String",
+					       (uint8_t *)tmp, strlen(tmp) + 1);
 			VERBOSE(stdout, "Ustate set to %d (%s).\n", i,
 				ustate2str(i));
 		}
@@ -273,17 +294,18 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 	case 'r':
 		i = atoi(arg);
 		VERBOSE(stdout, "Revision is set to %d.\n", i);
-		journal_add_action(ENV_TASK_SET, "revision", "String",
-				   (uint8_t *)arg, strlen(arg) + 1);
+		e = journal_add_action(ENV_TASK_SET, "revision", "String",
+				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'w':
 		i = atoi(arg);
 		if (i != 0) {
 			VERBOSE(stdout,
 				"Setting watchdog timeout to %d seconds.\n", i);
-			journal_add_action(ENV_TASK_SET, "watchdog_timeout_sec",
-					   "String", (uint8_t *)arg,
-					   strlen(arg) + 1);
+			e = journal_add_action(ENV_TASK_SET,
+					       "watchdog_timeout_sec",
+					       "String", (uint8_t *)arg,
+					       strlen(arg) + 1);
 		} else {
 			fprintf(stderr, "Watchdog timeout must be non-zero.\n");
 			return 1;
@@ -291,14 +313,17 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		break;
 	case 'f':
 		arguments->output_to_file = true;
-		asprintf(&envfilepath, "%s/%s", arg, FAT_ENV_FILENAME);
+		res = asprintf(&envfilepath, "%s/%s", arg, FAT_ENV_FILENAME);
+		if (res == -1) {
+			return ENOMEM;
+		}
 		break;
 	case 'c':
 		VERBOSE(stdout,
 			"Confirming environment to work. Removing boot-once "
 			"and testing flag.\n");
-		journal_add_action(ENV_TASK_SET, "ustate", "String",
-				   (uint8_t *)"0", 2);
+		e = journal_add_action(ENV_TASK_SET, "ustate", "String",
+				       (uint8_t *)"0", 2);
 		break;
 	case 'u':
 		if (part_specified) {
@@ -318,7 +343,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		break;
 	case 'x':
 		/* Set user-defined variable(s) */
-		set_uservars(arg);
+		e = set_uservars(arg);
 		break;
 	case 'V':
 		printf("EFI Boot Guard %s\n", EFIBOOTGUARD_VERSION);
@@ -331,7 +356,11 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 	default:
 		return ARGP_ERR_UNKNOWN;
 	}
-	return 0;
+
+	if (e) {
+		fprintf(stderr, "Error creating journal: %s\n", strerror(e));
+	}
+	return e;
 }
 
 static void dump_uservars(uint8_t *udata)
@@ -374,21 +403,16 @@ static void update_environment(BGENV *env)
 
 	printf("Processing journal...\n");
 
-	STAILQ_FOREACH(action, &head, journal)
-	{
+	while (!STAILQ_EMPTY(&head)) {
+		action = STAILQ_FIRST(&head);
 		journal_process_action(env, action);
+		STAILQ_REMOVE_HEAD(&head, journal);
 		journal_free_action(action);
-		STAILQ_REMOVE(&head, action, env_action, journal);
 	}
 
 	env->data->crc32 = crc32(0, (const Bytef *)env->data,
 				 sizeof(BG_ENVDATA) - sizeof(env->data->crc32));
 
-	while (!STAILQ_EMPTY(&head)) {
-		action = STAILQ_FIRST(&head);
-		STAILQ_REMOVE_HEAD(&head, journal);
-		free(action);
-	}
 }
 
 static void dump_envs(void)

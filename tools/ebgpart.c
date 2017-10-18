@@ -76,7 +76,9 @@ static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
 	if (strcmp(GPT_PARTITION_GUID_FAT_NTFS, GUID_to_str(e->type_GUID)) !=
 		0 &&
 	    strcmp(GPT_PARTITION_GUID_ESP, GUID_to_str(e->type_GUID)) != 0) {
-		asprintf(&pfst->name, "%s", "not supported");
+		if (asprintf(&pfst->name, "%s", "not supported") == -1) {
+			goto error_asprintf;
+		}
 		return true;
 	}
 	VERBOSE(stdout, "GPT Partition #%u is FAT/NTFS.\n", i);
@@ -117,11 +119,17 @@ static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
 		}
 	}
 	if (strcmp(FAT_id, "FAT12   ") == 0) {
-		asprintf(&pfst->name, "%s", "fat12");
+		if (asprintf(&pfst->name, "%s", "fat12") == -1) {
+			goto error_asprintf;
+		}
 	} else if (strcmp(FAT_id, "FAT16   ") == 0) {
-		asprintf(&pfst->name, "%s", "fat16");
+		if (asprintf(&pfst->name, "%s", "fat16") == -1) {
+			goto error_asprintf;
+		}
 	} else {
-		asprintf(&pfst->name, "%s", "fat32");
+		if (asprintf(&pfst->name, "%s", "fat32") == -1) {
+			goto error_asprintf;
+		}
 	}
 	VERBOSE(stdout, "GPT Partition #%u is %s.\n", i, pfst->name);
 	if (lseek64(fd, curr, SEEK_SET) == -1) {
@@ -130,6 +138,10 @@ static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
 		return false;
 	}
 	return true;
+
+error_asprintf:
+	VERBOSE(stderr, "Error in asprintf - possibly out of memory.\n");
+	return false;
 }
 
 static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
@@ -329,7 +341,9 @@ static bool check_partition_table(PedDevice *dev)
 		list_end = &((*list_end)->next);
 
 		if (t == MBR_TYPE_EXTENDED || t == MBR_TYPE_EXTENDED_LBA) {
-			asprintf(&pfst->name, "%s", "extended");
+			if (asprintf(&pfst->name, "%s", "extended") == -1) {
+				goto cpt_out_of_mem;
+			}
 			scanLogicalVolumes(fd, 0, &mbr, i, tmp, 5);
 			/* Could be we still have MBR entries after
 			 * logical volumes */
@@ -337,11 +351,14 @@ static bool check_partition_table(PedDevice *dev)
 				list_end = &((*list_end)->next);
 			}
 		} else {
-			asprintf(&pfst->name, "%s", type_to_name(t));
+			if (asprintf(&pfst->name, "%s", type_to_name(t)) == -1) {
+				goto cpt_out_of_mem;
+			}
 		}
 		continue;
 	cpt_out_of_mem:
 		close(fd);
+		VERBOSE(stderr, "Out of mem while checking partition table\n.");
 		if (pfst) free(pfst);
 		if (tmp) free(tmp);
 		return false;
@@ -451,15 +468,25 @@ void ped_device_probe_all(void)
 		}
 		/* This is a block device, so add it to the list*/
 		PedDevice *dev = calloc(sizeof(PedDevice), 1);
-		asprintf(&dev->model, "%s", "N/A");
-		asprintf(&dev->path, "%s", fullname);
+		if (!dev) {
+			continue;
+		}
+		if (asprintf(&dev->model, "%s", "N/A") == -1) {
+			dev->model = NULL;
+			goto pedprobe_error;
+		}
+		if (asprintf(&dev->path, "%s", fullname) == -1) {
+			dev->path = NULL;
+			goto pedprobe_error;
+		}
 		if (check_partition_table(dev)) {
 			add_block_dev(dev);
-		} else {
-			free(dev->model);
-			free(dev->path);
-			free(dev);
+			continue;
 		}
+pedprobe_error:
+		free(dev->model);
+		free(dev->path);
+		free(dev);
 	} while (sysblockfile);
 
 	closedir(sysblockdir);
