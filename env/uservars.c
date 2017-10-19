@@ -96,7 +96,7 @@ int bgenv_get_uservar(uint8_t *udata, char *key, char *type, void *data,
 	uservar = bgenv_find_uservar(udata, key);
 
 	if (!uservar) {
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	bgenv_map_uservar(uservar, &lkey, &ltype, &value, NULL, &dsize);
@@ -136,7 +136,7 @@ int bgenv_set_uservar(uint8_t *udata, char *key, char *type, void *data,
 		p = bgenv_uservar_alloc(udata, total_size);
 	}
 	if (!p) {
-		return errno;
+		return -errno;
 	}
 
 	bgenv_serialize_uservar(p, key, type, data, total_size);

@@ -104,7 +104,7 @@ static void test_api_accesscurrent(void **state)
 	assert_int_equal(ret, 0);
 
 	ret = ebg_env_set(&e, "kernelfile", "vmlinuz");
-	assert_int_equal(ret, EPERM);
+	assert_int_equal(ret, -EPERM);
 
 	will_return(bgenv_open_latest, &env);
 	ret = ebg_env_open_current(&e);
@@ -112,7 +112,7 @@ static void test_api_accesscurrent(void **state)
 
 	assert_int_equal(ebg_env_set(&e, "kernelfile", "vmlinuz"), 0);
 	assert_int_equal(ebg_env_set(&e, "kernelparams", "root=/dev/sda"), 0);
-	assert_int_equal(ebg_env_set(&e, "watchdog_timeout_sec", "abc"), EINVAL);
+	assert_int_equal(ebg_env_set(&e, "watchdog_timeout_sec", "abc"), -EINVAL);
 	assert_int_equal(ebg_env_set(&e, "watchdog_timeout_sec", "0013"), 0);
 	assert_int_equal(ebg_env_set(&e, "ustate", "1"), 0);
 
@@ -121,7 +121,7 @@ static void test_api_accesscurrent(void **state)
 	assert_int_equal(ret, 0);
 
 	ret = ebg_env_get(&e, "kernelfile", buffer);
-	assert_int_equal(ret, EPERM);
+	assert_int_equal(ret, -EPERM);
 
 	will_return(bgenv_open_latest, &env);
 	ret = ebg_env_open_current(&e);
@@ -282,7 +282,7 @@ static void test_api_uservars(void **state)
 	ret = ebg_env_set_ex(&e, "A", "B", dummymem, space_left);
 	free(dummymem);
 
-	assert_int_equal(ret, ENOMEM);
+	assert_int_equal(ret, -ENOMEM);
 
 	// test user data type
 	ret = ebg_env_set_ex(&e, "A", "B", "C", 2);

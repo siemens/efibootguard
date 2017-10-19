@@ -58,7 +58,8 @@ int ebg_env_get(ebgenv_t *e, char *key, char* buffer);
  *  @param e A pointer to an ebgenv_t context.
  *  @param key name of the environment variable to set
  *  @param value a string to be stored into the variable
- *  @return 0 on success, errno on failure
+ *  @return 0 on success, -errno on failure. If buffer is NULL,
+ *	    the required buffer size is returned.
  */
 int ebg_env_set(ebgenv_t *e, char *key, char *value);
 
@@ -68,7 +69,7 @@ int ebg_env_set(ebgenv_t *e, char *key, char *value);
  *  @param datatype user specific string to identify the datatype of the value
  *  @param value arbitrary data to be stored into the variable
  *  @param datalen length of the data to be stored into the variable
- *  @return 0 on success, errno on failure
+ *  @return 0 on success, -errno on failure
  */
 int ebg_env_set_ex(ebgenv_t *e, char *key, char *datatype, uint8_t *value,
 		   uint32_t datalen);

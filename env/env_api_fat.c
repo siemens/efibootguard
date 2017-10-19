@@ -454,11 +454,11 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 	char buffer[ENV_STRING_LENGTH];
 
 	if (!key || maxlen == 0) {
-		return EINVAL;
+		return -EINVAL;
 	}
 	e = bgenv_str2enum(key);
 	if (!env) {
-		return EPERM;
+		return -EPERM;
 	}
 	if (e == EBGENV_UNKNOWN) {
 		if (!data) {
@@ -526,7 +526,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 		if (!data) {
 			return 0;
 		}
-		return EINVAL;
+		return -EINVAL;
 	}
 	return 0;
 }
@@ -539,12 +539,12 @@ int bgenv_set(BGENV *env, char *key, char *type, void *data, uint32_t datalen)
 	char *value = (char *)data;
 
 	if (!key || !data || datalen == 0) {
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	e = bgenv_str2enum(key);
 	if (!env) {
-		return EPERM;
+		return -EPERM;
 	}
 	if (e == EBGENV_UNKNOWN) {
 		return bgenv_set_uservar(env->data->userdata, key, type, data,
@@ -555,10 +555,10 @@ int bgenv_set(BGENV *env, char *key, char *type, void *data, uint32_t datalen)
 		val = strtol(value, &p, 10);
 		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
 		    (errno != 0 && val == 0)) {
-			return errno;
+			return -errno;
 		}
 		if (p == value) {
-			return EINVAL;
+			return -EINVAL;
 		}
 		env->data->revision = val;
 		break;
@@ -572,10 +572,10 @@ int bgenv_set(BGENV *env, char *key, char *type, void *data, uint32_t datalen)
 		val = strtol(value, &p, 10);
 		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
 		    (errno != 0 && val == 0)) {
-			return errno;
+			return -errno;
 		}
 		if (p == value) {
-			return EINVAL;
+			return -EINVAL;
 		}
 		env->data->watchdog_timeout_sec = val;
 		break;
@@ -583,15 +583,15 @@ int bgenv_set(BGENV *env, char *key, char *type, void *data, uint32_t datalen)
 		val = strtol(value, &p, 10);
 		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
 		    (errno != 0 && val == 0)) {
-			return errno;
+			return -errno;
 		}
 		if (p == value) {
-			return EINVAL;
+			return -EINVAL;
 		}
 		env->data->ustate = val;
 		break;
 	default:
-		return EINVAL;
+		return -EINVAL;
 	}
 	return 0;
 }
