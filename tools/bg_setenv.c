@@ -399,12 +399,11 @@ static void dump_env(BG_ENVDATA *env)
 
 static void update_environment(BGENV *env)
 {
-	struct env_action *action;
-
 	printf("Processing journal...\n");
 
 	while (!STAILQ_EMPTY(&head)) {
-		action = STAILQ_FIRST(&head);
+		struct env_action *action = STAILQ_FIRST(&head);
+
 		journal_process_action(env, action);
 		STAILQ_REMOVE_HEAD(&head, journal);
 		journal_free_action(action);
