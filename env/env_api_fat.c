@@ -475,7 +475,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 	case EBGENV_KERNELFILE:
 		str16to8(buffer, env->data->kernelfile);
 		if (!data) {
-			return strlen(buffer);
+			return strlen(buffer)+1;
 		}
 		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
@@ -485,7 +485,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 	case EBGENV_KERNELPARAMS:
 		str16to8(buffer, env->data->kernelparams);
 		if (!data) {
-			return strlen(buffer);
+			return strlen(buffer)+1;
 		}
 		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
@@ -495,7 +495,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 	case EBGENV_WATCHDOG_TIMEOUT_SEC:
 		sprintf(buffer, "%u", env->data->watchdog_timeout_sec);
 		if (!data) {
-			return strlen(buffer);
+			return strlen(buffer)+1;
 		}
 		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
@@ -505,7 +505,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 	case EBGENV_REVISION:
 		sprintf(buffer, "%u", env->data->revision);
 		if (!data) {
-			return strlen(buffer);
+			return strlen(buffer)+1;
 		}
 		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
@@ -515,7 +515,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 	case EBGENV_USTATE:
 		sprintf(buffer, "%u", env->data->ustate);
 		if (!data) {
-			return strlen(buffer);
+			return strlen(buffer)+1;
 		}
 		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
