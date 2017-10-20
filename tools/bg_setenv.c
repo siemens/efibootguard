@@ -244,6 +244,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'p':
+		errno = 0;
 		i = strtol(arg, &tmp, 10);
 		if ((errno == ERANGE && (i == LONG_MAX || i == LONG_MIN)) ||
 		    (errno != 0 && i == 0) || (tmp == arg)) {
@@ -262,6 +263,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		}
 		break;
 	case 's':
+		errno = 0;
 		i = strtol(arg, &tmp, 10);
 		if ((errno == ERANGE && (i == LONG_MAX || i == LONG_MIN)) ||
 		    (errno != 0 && i == 0) || (tmp == arg)) {

@@ -552,6 +552,7 @@ int bgenv_set(BGENV *env, char *key, char *type, void *data, uint32_t datalen)
 	}
 	switch (e) {
 	case EBGENV_REVISION:
+		errno = 0;
 		val = strtol(value, &p, 10);
 		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
 		    (errno != 0 && val == 0)) {
@@ -569,6 +570,7 @@ int bgenv_set(BGENV *env, char *key, char *type, void *data, uint32_t datalen)
 		str8to16(env->data->kernelparams, value);
 		break;
 	case EBGENV_WATCHDOG_TIMEOUT_SEC:
+		errno = 0;
 		val = strtol(value, &p, 10);
 		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
 		    (errno != 0 && val == 0)) {
@@ -580,6 +582,7 @@ int bgenv_set(BGENV *env, char *key, char *type, void *data, uint32_t datalen)
 		env->data->watchdog_timeout_sec = val;
 		break;
 	case EBGENV_USTATE:
+		errno = 0;
 		val = strtol(value, &p, 10);
 		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
 		    (errno != 0 && val == 0)) {
