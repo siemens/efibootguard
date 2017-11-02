@@ -46,7 +46,8 @@ libenvapi_testlib_fat.a: libtest_env_api_fat.a
 
 check_PROGRAMS = test_bgenv_init_retval \
 		 test_probe_config_partitions \
-		 test_probe_config_file
+		 test_probe_config_file \
+		 test_ebgenv_api_internal
 
 FAT_TESTLIB=libenvapi_testlib_fat.a
 
@@ -67,5 +68,8 @@ test_probe_config_file_SOURCES = test_probe_config_file.c fake_devices.c \
 				 $(SRC_TEST_COMMON)
 test_probe_config_file_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
 
+test_ebgenv_api_internal_CFLAGS = $(AM_CFLAGS)
+test_ebgenv_api_internal_SOURCES = test_ebgenv_api_internal.c $(SRC_TEST_COMMON)
+test_ebgenv_api_internal_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
 
 TESTS = $(check_PROGRAMS)
