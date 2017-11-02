@@ -163,6 +163,9 @@ AC_ARG_WITH([mem-uservars],
 	    ])
 
 AC_DEFINE_UNQUOTED([ENV_MEM_USERVARS], [${ENV_MEM_USERVARS}], [Reserved memory for user variables])
+
+PKG_PROG_PKG_CONFIG()
+PKG_CHECK_MODULES(LIBCHECK, check)
 # ------------------------------------------------------------------------------
 AC_CONFIG_FILES([
 	Makefile

@@ -25,13 +25,14 @@ install_common_deps()
 
 install_native_deps()
 {
-    true
+    sudo apt-get install --no-install-recommends \
+         libz-dev check
 }
 
 install_i586_deps()
 {
     sudo apt-get install --no-install-recommends \
-         libz-dev:i386
+         libz-dev:i386 check:i386
 }
 
 prepare_build()
@@ -77,14 +78,17 @@ case "$TARGET_EFFECTIVE" in
         install_i586_deps
         prepare_build
         enter_build
+        export PKG_CONFIG_DIR=
+        export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig
+        export PKG_CONFIG_LIBDIR=/usr/lib/i386-linux-gnu
         ../configure --with-gnuefi-lib-dir=/usr/lib32 CFLAGS=-m32 \
             host_alias=i586-linux
         exec make check
         ;;
 
     cppcheck)
-	install_common_deps
-	install_native_deps
+        install_common_deps
+        install_native_deps
         echo "Building and installing cppcheck..."
         if ! install_cppcheck >cppcheck_build.log 2>&1
         then
@@ -96,8 +100,9 @@ case "$TARGET_EFFECTIVE" in
 
         suppress=""
         # Justified suppressions:
-        # Not part of the project:
-        suppress+=" --suppress=variableScope:/usr/include/bits/stdlib-bsearch.h"
+        # Does not belong to the project
+        suppress+=" --suppress=*:/usr/include/*"
+        suppress+=" --suppress=*:/usr/include/bits/*"
         # Function 'efi_main' is called by efi:
         suppress+=" --suppress=unusedFunction:main.c"
         # Some functions are defined for API only

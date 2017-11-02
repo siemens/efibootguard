@@ -5,13 +5,13 @@
 ### Arch Linux ###
 
 ```
-pacman -S gnu-efi-libs pciutils
+pacman -S gnu-efi-libs pciutils check
 ```
 
 ### Debian 8 ###
 
 ```
-apt-get install gnu-efi libpci-dev
+apt-get install gnu-efi libpci-dev check
 ```
 
 ## Compilation ##
