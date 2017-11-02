@@ -25,22 +25,13 @@ install_common_deps()
 
 install_native_deps()
 {
-    sudo apt-add-repository \
-         'deb http://archive.ubuntu.com/ubuntu xenial universe'
-    sudo apt-get update -qq
-    sudo apt-get install --no-install-recommends \
-         --target-release xenial libcmocka-dev
+    true
 }
 
 install_i586_deps()
 {
     sudo apt-get install --no-install-recommends \
          libz-dev:i386
-    sudo apt-add-repository \
-         'deb http://archive.ubuntu.com/ubuntu xenial universe'
-    sudo apt-get update -qq
-    sudo apt-get install --no-install-recommends \
-         --target-release xenial libcmocka-dev:i386
 }
 
 prepare_build()

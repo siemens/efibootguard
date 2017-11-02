@@ -4,7 +4,7 @@
 # Copyright (c) Siemens AG, 2017
 #
 # Authors:
-#  Jan Kiszka <jan.kiszka@siemens.com>
+#  Andreas Reichel <andreas.reichel.ext@siemens.com>
 #
 # This work is licensed under the terms of the GNU GPL, version 2.  See
 # the COPYING file in the top-level directory.
@@ -27,23 +27,9 @@ AM_CFLAGS = \
 
 CLEANFILES =
 
-libebgenv-test.a: $(top_builddir)/libebgenv.a
-	$(AM_V_GEN) $(OBJCOPY) --weaken $< $@
+test_api:
+	ln -sf /bin/true test_api
 
-CLEANFILES += libebgenv-test.a
-
-test_partitions_LDADD = \
-	libebgenv-test.a \
-	-lcmocka
-
-test_environment_LDADD = \
-	libebgenv-test.a \
-	-lcmocka
-
-test_api_LDADD = \
-	libebgenv-test.a \
-	-lcmocka
-
-check_PROGRAMS = test_partitions test_environment test_api
+check_PROGRAMS = test_api
 
 TESTS = $(check_PROGRAMS)
