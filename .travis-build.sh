@@ -114,6 +114,8 @@ case "$TARGET_EFFECTIVE" in
         suppress+=" --suppress=unusedFunction:env/fatvars.c"
         suppress+=" --suppress=unusedFunction:tools/tests/test_environment.c"
         suppress+=" --suppress=unusedFunction:env/env_api_fat.c"
+        # Some functions are used by linker wrapping
+        suppress+=" --suppress=unusedFunction:tools/tests/test_probe_config_file.c"
         # EFI uses void* as ImageBase needed for further calculations
         suppress+=" --suppress=arithOperationsOnVoidPointer:main.c"
 
