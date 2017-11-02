@@ -20,7 +20,7 @@
 
 bool bgenv_verbosity = false;
 
-static EBGENVKEY bgenv_str2enum(char *key)
+EBGENVKEY bgenv_str2enum(char *key)
 {
 	if (strncmp(key, "kernelfile", strlen("kernelfile") + 1) == 0) {
 		return EBGENV_KERNELFILE;
@@ -120,8 +120,8 @@ bool write_env(CONFIG_PART *part, BG_ENVDATA *env)
 	return result;
 }
 
-static CONFIG_PART config_parts[ENV_NUM_CONFIG_PARTS];
-static BG_ENVDATA envdata[ENV_NUM_CONFIG_PARTS];
+CONFIG_PART config_parts[ENV_NUM_CONFIG_PARTS];
+BG_ENVDATA envdata[ENV_NUM_CONFIG_PARTS];
 
 bool bgenv_init()
 {

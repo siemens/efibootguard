@@ -16,7 +16,10 @@ AM_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/swupdate-adapter \
 	-I$(top_srcdir)/tools \
+	-I$(top_srcdir)/tools/tests \
 	-I$(top_srcdir)/tests/fff \
+	-I$(top_srcdir) \
+	-include config.h \
 	-Wno-unused-parameter \
 	-Wmissing-prototypes \
 	-fshort-wchar \
@@ -24,11 +27,31 @@ AM_CFLAGS = \
 	-D_GNU_SOURCE \
 	-g
 
+libtest_env_api_fat_a_SRC = \
+	../../env/env_api.c \
+	../../env/env_api_fat.c \
+	../../tools/ebgpart.c \
+	../../env/env_config_file.c \
+	../../env/env_config_partitions.c \
+	../../env/env_disk_utils.c \
+	../../env/uservars.c
+
 CLEANFILES =
 
-test_api:
-	ln -sf /bin/true test_api
+noinst_LIBRARIES = libtest_env_api_fat.a
+libtest_env_api_fat_a_SOURCES = $(libtest_env_api_fat_a_SRC)
 
-check_PROGRAMS = test_api
+libenvapi_testlib_fat.a: libtest_env_api_fat.a
+	$(OBJCOPY) --weaken $^ $@
+
+check_PROGRAMS = test_bgenv_init_retval
+
+FAT_TESTLIB=libenvapi_testlib_fat.a
+
+SRC_TEST_COMMON=test_main.c
+
+test_bgenv_init_retval_CFLAGS = $(AM_CFLAGS)
+test_bgenv_init_retval_SOURCES = test_bgenv_init_retval.c $(SRC_TEST_COMMON)
+test_bgenv_init_retval_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
 
 TESTS = $(check_PROGRAMS)
