@@ -44,7 +44,8 @@ libtest_env_api_fat_a_SOURCES = $(libtest_env_api_fat_a_SRC)
 libenvapi_testlib_fat.a: libtest_env_api_fat.a
 	$(OBJCOPY) --weaken $^ $@
 
-check_PROGRAMS = test_bgenv_init_retval
+check_PROGRAMS = test_bgenv_init_retval \
+		 test_probe_config_partitions
 
 FAT_TESTLIB=libenvapi_testlib_fat.a
 
@@ -53,5 +54,11 @@ SRC_TEST_COMMON=test_main.c
 test_bgenv_init_retval_CFLAGS = $(AM_CFLAGS)
 test_bgenv_init_retval_SOURCES = test_bgenv_init_retval.c $(SRC_TEST_COMMON)
 test_bgenv_init_retval_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
+
+test_probe_config_partitions_CFLAGS = $(AM_CFLAGS)
+test_probe_config_partitions_SOURCES = test_probe_config_partitions.c \
+				       fake_devices.c \
+				       $(SRC_TEST_COMMON)
+test_probe_config_partitions_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
 
 TESTS = $(check_PROGRAMS)
