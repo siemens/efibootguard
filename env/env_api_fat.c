@@ -11,11 +11,12 @@
  */
 
 #include "env_api.h"
-#include "ebgpart.h"
+#include "env_disk_utils.h"
+#include "env_config_partitions.h"
+#include "env_config_file.h"
 #include "uservars.h"
 #include "test-interface.h"
-
-const char *tmp_mnt_dir = "/tmp/mnt-XXXXXX";
+#include "ebgpart.h"
 
 bool bgenv_verbosity = false;
 
@@ -46,219 +47,6 @@ void bgenv_be_verbose(bool v)
 	ebgpart_beverbose(v);
 }
 
-static char *get_mountpoint(char *devpath)
-{
-	struct mntent *part = NULL;
-	FILE *mtab = NULL;
-
-	if ((mtab = setmntent("/proc/mounts", "r")) == NULL)
-		return NULL;
-
-	while ((part = getmntent(mtab)) != NULL) {
-		if ((part->mnt_fsname != NULL) &&
-		    (strcmp(part->mnt_fsname, devpath)) == 0) {
-			char *mntpoint;
-
-			if (!(mntpoint =
-				  malloc(strlen(part->mnt_dir) + 1))) {
-				break;
-			};
-			strncpy(mntpoint, part->mnt_dir,
-				strlen(part->mnt_dir) + 1);
-			return mntpoint;
-		}
-	}
-	endmntent(mtab);
-
-	return NULL;
-}
-
-__attribute__((noinline))
-bool mount_partition(CONFIG_PART *cfgpart)
-{
-	char tmpdir_template[256];
-	char *mountpoint;
-	(void)snprintf(tmpdir_template, 256, "%s", tmp_mnt_dir);
-	if (!cfgpart) {
-		return false;
-	}
-	if (!cfgpart->devpath) {
-		return false;
-	}
-	if (!(mountpoint = mkdtemp(tmpdir_template))) {
-		VERBOSE(stderr, "Error creating temporary mount point.\n");
-		return false;
-	}
-	if (mount(cfgpart->devpath, mountpoint, "vfat", 0, "")) {
-		VERBOSE(stderr, "Error mounting to temporary mount point.\n");
-		if (rmdir(tmpdir_template)) {
-			VERBOSE(stderr,
-				"Error deleting temporary directory.\n");
-		}
-		return false;
-	}
-	cfgpart->mountpoint = (char *)malloc(strlen(mountpoint) + 1);
-	if (!cfgpart->mountpoint) {
-		VERBOSE(stderr, "Error, out of memory.\n");
-		return false;
-	}
-	strncpy(cfgpart->mountpoint, mountpoint, strlen(mountpoint) + 1);
-	return true;
-}
-
-static void unmount_partition(CONFIG_PART *cfgpart)
-{
-	if (!cfgpart) {
-		return;
-	}
-	if (!cfgpart->mountpoint) {
-		return;
-	}
-	if (umount(cfgpart->mountpoint)) {
-		VERBOSE(stderr, "Error unmounting temporary mountpoint %s.\n",
-			cfgpart->mountpoint);
-	}
-	if (rmdir(cfgpart->mountpoint)) {
-		VERBOSE(stderr, "Error deleting temporary directory %s.\n",
-			cfgpart->mountpoint);
-	}
-	free(cfgpart->mountpoint);
-	cfgpart->mountpoint = NULL;
-}
-
-static FILE *open_config_file(CONFIG_PART *cfgpart, char *mode)
-{
-	char *configfilepath;
-	configfilepath = (char *)malloc(strlen(FAT_ENV_FILENAME) +
-					strlen(cfgpart->mountpoint) + 2);
-	if (!configfilepath) {
-		return NULL;
-	}
-	strncpy(configfilepath, cfgpart->mountpoint,
-		strlen(cfgpart->mountpoint) + 1);
-	strncat(configfilepath, "/", 1);
-	strncat(configfilepath, FAT_ENV_FILENAME, strlen(FAT_ENV_FILENAME));
-	VERBOSE(stdout, "Probing config file at %s.\n", configfilepath);
-	FILE *config = fopen(configfilepath, mode);
-	free(configfilepath);
-	return config;
-}
-
-__attribute__((noinline))
-bool probe_config_file(CONFIG_PART *cfgpart)
-{
-	bool do_unmount = false;
-	if (!cfgpart) {
-		return false;
-	}
-	printf_debug("Checking device: %s\n", cfgpart->devpath);
-	if (!(cfgpart->mountpoint = get_mountpoint(cfgpart->devpath))) {
-		/* partition is not mounted */
-		cfgpart->not_mounted = true;
-		VERBOSE(stdout, "Partition %s is not mounted.\n",
-			cfgpart->devpath);
-		if (!mount_partition(cfgpart)) {
-			return false;
-		}
-		do_unmount = true;
-	} else {
-		cfgpart->not_mounted = false;
-	}
-
-	if (cfgpart->mountpoint) {
-		/* partition is mounted to mountpoint, either before or by this
-		 * program */
-		VERBOSE(stdout, "Partition %s is mounted to %s.\n",
-			cfgpart->devpath, cfgpart->mountpoint);
-		bool result = false;
-		FILE *config;
-		if (!(config = open_config_file(cfgpart, "rb"))) {
-			printf_debug(
-			    "Could not open config file on partition %s.\n",
-			    FAT_ENV_FILENAME);
-		} else {
-			result = true;
-			if (fclose(config)) {
-				VERBOSE(stderr, "Error closing config file on "
-						"partition %s.\n",
-						cfgpart->devpath);
-			}
-		}
-		if (do_unmount) {
-			unmount_partition(cfgpart);
-		}
-		return result;
-	}
-	return false;
-}
-
-bool probe_config_partitions(CONFIG_PART *cfgpart)
-{
-	PedDevice *dev = NULL;
-	char devpath[4096];
-	int count = 0;
-
-	if (!cfgpart) {
-		return false;
-	}
-
-	ped_device_probe_all();
-
-	while ((dev = ped_device_get_next(dev))) {
-		printf_debug("Device: %s\n", dev->model);
-		PedDisk *pd = ped_disk_new(dev);
-		if (!pd) {
-			continue;
-		}
-		PedPartition *part = pd->part_list;
-		while (part) {
-			if (!part->fs_type || !part->fs_type->name ||
-			    (strcmp(part->fs_type->name, "fat12") != 0 &&
-			     strcmp(part->fs_type->name, "fat16") != 0 &&
-			     strcmp(part->fs_type->name, "fat32") != 0)) {
-				part = ped_disk_next_partition(pd, part);
-				continue;
-			}
-			if (strncmp("/dev/mmcblk", dev->path, 11) == 0) {
-				(void)snprintf(devpath, 4096, "%sp%u",
-					       dev->path, part->num);
-			} else {
-				(void)snprintf(devpath, 4096, "%s%u",
-					       dev->path, part->num);
-			}
-			if (!cfgpart[count].devpath) {
-				cfgpart[count].devpath =
-				    malloc(strlen(devpath) + 1);
-				if (!cfgpart[count].devpath) {
-					VERBOSE(stderr, "Out of memory.");
-					return false;
-				}
-			}
-			strncpy(cfgpart[count].devpath, devpath,
-				strlen(devpath) + 1);
-			if (probe_config_file(&cfgpart[count])) {
-				printf_debug("%s", "Environment file found.\n");
-				if (count >= ENV_NUM_CONFIG_PARTS) {
-					VERBOSE(stderr, "Error, there are "
-							"more than %d config "
-							"partitions.\n",
-						ENV_NUM_CONFIG_PARTS);
-					return false;
-				}
-				count++;
-			}
-			part = ped_disk_next_partition(pd, part);
-		}
-	}
-	if (count < ENV_NUM_CONFIG_PARTS) {
-		VERBOSE(stderr,
-			"Error, less than %d config partitions exist.\n",
-			ENV_NUM_CONFIG_PARTS);
-		return false;
-	}
-	return true;
-}
-
 bool read_env(CONFIG_PART *part, BG_ENVDATA *env)
 {
 	if (!part) {
@@ -286,7 +74,7 @@ bool read_env(CONFIG_PART *part, BG_ENVDATA *env)
 		}
 		result = false;
 	}
-	if (fclose(config)) {
+	if (close_config_file(config)) {
 		VERBOSE(stderr,
 			"Error closing environment file after reading.\n");
 	};
@@ -321,7 +109,7 @@ bool write_env(CONFIG_PART *part, BG_ENVDATA *env)
 			part->devpath);
 		result = false;
 	}
-	if (fclose(config)) {
+	if (close_config_file(config)) {
 		VERBOSE(stderr,
 			"Error closing environment file after writing.\n");
 		result = false;

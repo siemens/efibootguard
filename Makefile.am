@@ -72,6 +72,9 @@ lib_LIBRARIES = libebgenv.a
 libebgenv_a_SOURCES = \
 	env/@env_api_file@.c \
 	env/env_api.c \
+	env/env_config_file.c \
+	env/env_config_partitions.c \
+	env/env_disk_utils.c \
 	env/uservars.c \
 	tools/ebgpart.c
 
@@ -91,7 +94,6 @@ pkginclude_HEADERS = \
 bin_PROGRAMS = bg_setenv
 
 bg_setenv_SOURCES = \
-	tools/ebgpart.c \
 	tools/bg_setenv.c
 
 bg_setenv_CFLAGS = \
