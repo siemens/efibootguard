@@ -98,6 +98,9 @@ case "$TARGET_EFFECTIVE" in
         prepare_build
         ./configure
 
+        ignore=""
+        ignore+=" -i tests/fff"
+
         suppress=""
         # Justified suppressions:
         # Does not belong to the project
@@ -133,7 +136,7 @@ case "$TARGET_EFFECTIVE" in
         # Exit code '1' is returned if arguments are not valid or if no input
         # files are provided. Compare 'cppcheck --help'.
         exec cppcheck -f -q --error-exitcode=2 \
-            $enable $suppress $cpp_conf $includes .
+            $enable $suppress $ignore $cpp_conf $includes .
         ;;
     coverity_prepare)
         install_common_deps

@@ -12,12 +12,11 @@
 
 OBJCOPY ?= objcopy
 
-AM_CPPFLAGS = \
+AM_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/swupdate-adapter \
-	-I$(top_srcdir)/tools
-
-AM_CFLAGS = \
+	-I$(top_srcdir)/tools \
+	-I$(top_srcdir)/tests/fff \
 	-Wno-unused-parameter \
 	-Wmissing-prototypes \
 	-fshort-wchar \
