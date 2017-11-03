@@ -28,7 +28,8 @@ AM_CFLAGS = \
 	-fshort-wchar \
 	-DHAVE_ENDIAN_H \
 	-D_GNU_SOURCE \
-	-D_FILE_OFFSET_BITS=64
+	-D_FILE_OFFSET_BITS=64 \
+	-Werror
 
 AM_LDFLAGS = -L$(top_builddir)/
 
