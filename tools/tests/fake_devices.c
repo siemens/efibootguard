@@ -21,17 +21,30 @@ int num_fake_devices;
 
 void allocate_fake_devices(int n)
 {
-	fake_devices = (PedDevice *)malloc(n * sizeof(PedDevice));
-	for (char i = 0; i < n; i++) {
-		asprintf(&fake_devices[i].model, "%s", "Fake Device");
-		asprintf(&fake_devices[i].path, "/dev/nobrain_%c", 'a' + i);
-		fake_devices[i].part_list = NULL;
-		fake_devices[i].next = NULL;
-	}
+	fake_devices = (PedDevice *)calloc(n, sizeof(PedDevice));
+	if (!fake_devices)
+		exit(1);
 	num_fake_devices = n;
+	for (char i = 0; i < n; i++) {
+		if (asprintf(&fake_devices[i].model, "%s", "Fake Device")
+		    == -1) {
+			fake_devices[i].model = NULL;
+			goto allocate_fake_devs_error;
+		}
+		if (asprintf(&fake_devices[i].path, "/dev/nobrain_%c", 'a' + i)
+		    == -1) {
+			fake_devices[i].path = NULL;
+			goto allocate_fake_devs_error;
+		}
+	}
 	for (char i = n - 1; i > 0; i--) {
 		fake_devices[i-1].next = &fake_devices[i];
 	}
+	return;
+
+allocate_fake_devs_error:
+	free_fake_devices();
+	exit(1);
 }
 
 void add_fake_partition(int devnum)
@@ -43,11 +56,25 @@ void add_fake_partition(int devnum)
 		pp = &(*pp)->next;
 		num++;
 	}
-	*pp = (PedPartition *)malloc(sizeof(PedPartition));
+	*pp = (PedPartition *)calloc(1, sizeof(PedPartition));
+	if (!*pp) {
+		goto allocate_fake_part_error;
+	}
 	(*pp)->num = num;
-	(*pp)->fs_type = (PedFileSystemType *)malloc(sizeof(PedFileSystemType));
-	asprintf(&(*pp)->fs_type->name, "%s", "fat16");
-	(*pp)->next = NULL;
+	(*pp)->fs_type =
+		(PedFileSystemType *)calloc(1, sizeof(PedFileSystemType));
+	if (!(*pp)->fs_type) {
+		goto allocate_fake_part_error;
+	}
+	if (asprintf(&(*pp)->fs_type->name, "%s", "fat16") == -1) {
+		(*pp)->fs_type->name = NULL;
+		goto allocate_fake_part_error;
+	}
+	return;
+
+allocate_fake_part_error:
+	free_fake_devices();
+	exit(1);
 }
 
 void remove_fake_partitions(int n)
@@ -58,8 +85,7 @@ void remove_fake_partitions(int n)
 		next = pp->next;
 		if (!pp->fs_type)
 			goto skip_fstype;
-		if (pp->fs_type->name)
-			free(pp->fs_type->name);
+		free(pp->fs_type->name);
 		free(pp->fs_type);
 skip_fstype:
 		free(pp);
@@ -74,12 +100,9 @@ void free_fake_devices()
 	}
 
 	for (int i = 0; i < num_fake_devices; i++) {
-		if (fake_devices[i].model)
-			free(fake_devices[i].model);
-		if (fake_devices[i].path)
-			free(fake_devices[i].path);
-		if (fake_devices[i].part_list)
-			remove_fake_partitions(i);
+		free(fake_devices[i].model);
+		free(fake_devices[i].path);
+		remove_fake_partitions(i);
 	}
 
 	free(fake_devices);

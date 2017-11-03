@@ -83,12 +83,13 @@ char *get_mountpoint_custom_fake(char *devpath)
 
 	struct fake_env_file_path *fefp;
 	fefp = malloc(sizeof(struct fake_env_file_path));
+	if (!fefp)
+		goto fake_mountpoint_error;
 
-	/* If possibly store created temporary files and paths in a list to
-	 * tidy up later. If not, the test should not fail because of this.
-	 */
 	char *buffer_copy;
-	asprintf(&buffer_copy, "%s", buff);
+	if (asprintf(&buffer_copy, "%s", buff) == -1) {
+		goto fake_mountpoint_error;
+	};
 
 	if (fefp && buffer_copy) {
 		fefp->path = buffer_copy;
@@ -97,6 +98,7 @@ char *get_mountpoint_custom_fake(char *devpath)
 	return buff;
 
 fake_mountpoint_error:
+	free(fefp);
 	free(buff);
 	free(tmpdir);
 	return NULL;
