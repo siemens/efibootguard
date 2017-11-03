@@ -52,14 +52,10 @@ install_cppcheck()
     git clone https://github.com/danmar/cppcheck.git
     git -C cppcheck checkout 1.80
     make -C cppcheck SRCDIR=build \
-                     CFGDIR=/usr/share/cppcheck \
-                     HAVE_RULES=no -j2 || \
+                     CFGDIR=/opt/cppcheck/cfg \
+                     PREFIX=/opt/cppcheck \
+                     HAVE_RULES=no install -j2 || \
             return -1
-    sudo make -C cppcheck install >/dev/null \
-            || return -1
-    # On travis cppcheck ignores CFGDIR. Instead, it looks in $PWD. Compare
-    # strace output.
-    sudo install -m644 ./cppcheck/cfg/* ./ || return -1
     rm -rf cppcheck
 }
 
@@ -90,10 +86,9 @@ case "$TARGET_EFFECTIVE" in
         install_common_deps
         install_native_deps
         echo "Building and installing cppcheck..."
-        if ! install_cppcheck >cppcheck_build.log 2>&1
+        if [ ! -x /opt/cppcheck/bin/cppcheck ]
         then
-            cat cppcheck_build.log
-            exit -1
+            install_cppcheck
         fi
         prepare_build
         ./configure
@@ -138,7 +133,7 @@ case "$TARGET_EFFECTIVE" in
         cpp_conf="-U__WINT_TYPE__"
         # Exit code '1' is returned if arguments are not valid or if no input
         # files are provided. Compare 'cppcheck --help'.
-        exec cppcheck -f -q --error-exitcode=2 \
+        exec /opt/cppcheck/bin/cppcheck -f -q --error-exitcode=2 \
             $enable $suppress $ignore $cpp_conf $includes .
         ;;
     coverity_prepare)

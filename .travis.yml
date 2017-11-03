@@ -36,5 +36,9 @@ addons:
     build_command: "./.travis-build.sh coverity_build"
     branch_pattern: coverity_scan
 
+cache:
+  directories:
+  - /opt/cppcheck
+
 script:
   - ./.travis-build.sh
