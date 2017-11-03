@@ -176,7 +176,7 @@ int ebg_env_setglobalstate(ebgenv_t *e, uint16_t ustate)
 	(void)snprintf(buffer, sizeof(buffer), "%d", ustate);
 	res =
 	    bgenv_set((BGENV *)e->bgenv, "ustate", "String", buffer,
-		      strlen(buffer));
+		      strlen(buffer) + 1);
 
 	if (ustate != USTATE_OK) {
 		return res;
