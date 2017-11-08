@@ -38,7 +38,7 @@ libtest_env_api_fat_a_SRC = \
 
 CLEANFILES =
 
-noinst_LIBRARIES = libtest_env_api_fat.a
+check_LIBRARIES = libtest_env_api_fat.a
 libtest_env_api_fat_a_SOURCES = $(libtest_env_api_fat_a_SRC)
 
 libenvapi_testlib_fat.a: libtest_env_api_fat.a
