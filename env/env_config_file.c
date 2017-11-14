@@ -44,6 +44,7 @@ int close_config_file(FILE *config_file_handle)
 	{
 		return fclose(config_file_handle);
 	}
+	return EINVAL;
 }
 
 bool probe_config_file(CONFIG_PART *cfgpart)
