@@ -212,7 +212,8 @@ static error_t set_uservars(char *arg)
 	if (value == NULL) {
 		return journal_add_action(ENV_TASK_DEL, key, 0, NULL, 0);
 	}
-	return journal_add_action(ENV_TASK_SET, key, USERVAR_TYPE_DEFAULT,
+	return journal_add_action(ENV_TASK_SET, key, USERVAR_TYPE_DEFAULT |
+				  USERVAR_TYPE_STRING_ASCII,
 				  (uint8_t *)value, strlen(value) + 1);
 }
 
