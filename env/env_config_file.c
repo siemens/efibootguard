@@ -19,6 +19,10 @@
 FILE *open_config_file(CONFIG_PART *cfgpart, char *mode)
 {
 	char *configfilepath;
+
+	if (!cfgpart || !cfgpart->mountpoint) {
+		return NULL;
+	}
 	configfilepath = (char *)malloc(strlen(FAT_ENV_FILENAME) +
 					strlen(cfgpart->mountpoint) + 2);
 	if (!configfilepath) {
