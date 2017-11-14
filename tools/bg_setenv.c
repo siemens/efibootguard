@@ -57,7 +57,7 @@ typedef enum { ENV_TASK_SET, ENV_TASK_DEL } BGENV_TASK;
 struct stailhead *headp;
 struct env_action {
 	char *key;
-	char *type;
+	uint64_t type;
 	uint8_t *data;
 	BGENV_TASK task;
 	STAILQ_ENTRY(env_action) journal;
@@ -70,12 +70,11 @@ static void journal_free_action(struct env_action *action)
 	if (!action)
 		return;
 	free(action->data);
-	free(action->type);
 	free(action->key);
 	free(action);
 }
 
-static error_t journal_add_action(BGENV_TASK task, char *key, char *type,
+static error_t journal_add_action(BGENV_TASK task, char *key, uint64_t type,
 				  uint8_t *data, size_t datalen)
 {
 	struct env_action *new_action;
@@ -91,12 +90,7 @@ static error_t journal_add_action(BGENV_TASK task, char *key, char *type,
 			goto newaction_nomem;
 		}
 	}
-	if (type) {
-		if (asprintf(&(new_action->type), "%s", type) == -1) {
-			new_action->type = NULL;
-			goto newaction_nomem;
-		}
-	}
+	new_action->type = type;
 	if (data && datalen) {
 		new_action->data = (uint8_t *)malloc(datalen);
 		if (!new_action->data) {
@@ -121,8 +115,9 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 
 	switch (action->task) {
 	case ENV_TASK_SET:
-		VERBOSE(stdout, "Task = SET, key = %s, type = %s, val = %s\n",
-		        action->key, action->type, (char *)action->data);
+		VERBOSE(stdout, "Task = SET, key = %s, type = %llu, val = %s\n",
+			action->key, (long long unsigned int)action->type,
+			(char *)action->data);
 		if (strncmp(action->key, "ustate", strlen("ustate")+1) == 0) {
 			uint16_t ustate;
 			unsigned long t;
@@ -207,7 +202,7 @@ static error_t set_uservars(char *arg)
 
 	value = strtok(NULL, "=");
 	if (value == NULL) {
-		return journal_add_action(ENV_TASK_DEL, key, NULL, NULL, 0);
+		return journal_add_action(ENV_TASK_DEL, key, 0, NULL, 0);
 	}
 	return journal_add_action(ENV_TASK_SET, key, USERVAR_TYPE_DEFAULT,
 				  (uint8_t *)value, strlen(value) + 1);
@@ -229,7 +224,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				ENV_STRING_LENGTH);
 			return 1;
 		}
-		e = journal_add_action(ENV_TASK_SET, "kernelfile", "String",
+		e = journal_add_action(ENV_TASK_SET, "kernelfile", 0,
 				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'a':
@@ -240,7 +235,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				ENV_STRING_LENGTH);
 			return 1;
 		}
-		e = journal_add_action(ENV_TASK_SET, "kernelparams", "String",
+		e = journal_add_action(ENV_TASK_SET, "kernelparams", 0,
 				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'p':
@@ -287,7 +282,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 			if (res == -1) {
 				return ENOMEM;
 			}
-			e = journal_add_action(ENV_TASK_SET, "ustate", "String",
+			e = journal_add_action(ENV_TASK_SET, "ustate", 0,
 					       (uint8_t *)tmp, strlen(tmp) + 1);
 			VERBOSE(stdout, "Ustate set to %d (%s).\n", i,
 				ustate2str(i));
@@ -296,7 +291,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 	case 'r':
 		i = atoi(arg);
 		VERBOSE(stdout, "Revision is set to %d.\n", i);
-		e = journal_add_action(ENV_TASK_SET, "revision", "String",
+		e = journal_add_action(ENV_TASK_SET, "revision", 0,
 				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'w':
@@ -305,9 +300,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 			VERBOSE(stdout,
 				"Setting watchdog timeout to %d seconds.\n", i);
 			e = journal_add_action(ENV_TASK_SET,
-					       "watchdog_timeout_sec",
-					       "String", (uint8_t *)arg,
-					       strlen(arg) + 1);
+					       "watchdog_timeout_sec", 0,
+					       (uint8_t *)arg, strlen(arg) + 1);
 		} else {
 			fprintf(stderr, "Watchdog timeout must be non-zero.\n");
 			return 1;
@@ -324,7 +318,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		VERBOSE(stdout,
 			"Confirming environment to work. Removing boot-once "
 			"and testing flag.\n");
-		e = journal_add_action(ENV_TASK_SET, "ustate", "String",
+		e = journal_add_action(ENV_TASK_SET, "ustate", 0,
 				       (uint8_t *)"0", 2);
 		break;
 	case 'u':
@@ -367,18 +361,67 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 
 static void dump_uservars(uint8_t *udata)
 {
-	char *key, *value, *type;
+	char *key, *value;
+	uint64_t type;
 	uint32_t rsize, dsize;
+	uint64_t val_unum;
+	int64_t val_snum;
 
 	while (*udata) {
 		bgenv_map_uservar(udata, &key, &type, (uint8_t **)&value,
 				  &rsize, &dsize);
 		printf("%s ", key);
-		if (strcmp(type, USERVAR_TYPE_DEFAULT) == 0) {
+		type &= USERVAR_STANDARD_TYPE_MASK;
+		if (type == USERVAR_TYPE_STRING_ASCII) {
 			printf("= %s\n", value);
+		} else if (type >= USERVAR_TYPE_UINT8 &&
+			   type <= USERVAR_TYPE_UINT64) {
+			switch(type) {
+			case USERVAR_TYPE_UINT8:
+				val_unum = *((uint8_t *) value);
+				break;
+			case USERVAR_TYPE_UINT16:
+				val_unum = *((uint16_t *) value);
+				break;
+			case USERVAR_TYPE_UINT32:
+				val_unum = *((uint32_t *) value);
+				break;
+			case USERVAR_TYPE_UINT64:
+				val_unum = *((uint64_t *) value);
+				break;
+			}
+			printf("= %llu\n", (long long unsigned int) val_unum);
+		} else if (type >= USERVAR_TYPE_SINT8 &&
+			   type <= USERVAR_TYPE_SINT64) {
+			switch(type) {
+			case USERVAR_TYPE_SINT8:
+				val_snum = *((int8_t *) value);
+				break;
+			case USERVAR_TYPE_SINT16:
+				val_snum = *((int16_t *) value);
+				break;
+			case USERVAR_TYPE_SINT32:
+				val_snum = *((int32_t *) value);
+				break;
+			case USERVAR_TYPE_SINT64:
+				val_snum = *((int64_t *) value);
+				break;
+			}
+			printf("= %lld\n", (long long signed int) val_snum);
 		} else {
-			printf("( User defined type )\n");
+			switch(type) {
+			case USERVAR_TYPE_CHAR:
+				printf("= %c\n", (char) *value);
+				break;
+			case USERVAR_TYPE_BOOL:
+				printf("= %s\n",
+				       (bool) *value ? "true" : "false");
+				break;
+			default:
+				printf("( Type is not printable )\n");
+			}
 		}
+
 		udata = bgenv_next_uservar(udata);
 	}
 }

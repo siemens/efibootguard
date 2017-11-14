@@ -17,6 +17,23 @@
 
 #include <errno.h>
 
+#define USERVAR_TYPE_CHAR		1
+#define USERVAR_TYPE_UINT8		2
+#define USERVAR_TYPE_UINT16		3
+#define USERVAR_TYPE_UINT32		4
+#define USERVAR_TYPE_UINT64		5
+#define USERVAR_TYPE_SINT8		6
+#define USERVAR_TYPE_SINT16		7
+#define USERVAR_TYPE_SINT32		8
+#define USERVAR_TYPE_SINT64		9
+#define USERVAR_TYPE_STRING_ASCII      32
+#define USERVAR_TYPE_BOOL	       64
+#define USERVAR_TYPE_GLOBAL    1ULL << 62
+#define USERVAR_TYPE_DELETED   1ULL << 63
+#define USERVAR_TYPE_DEFAULT USERVAR_TYPE_GLOBAL
+
+#define USERVAR_STANDARD_TYPE_MASK ((1ULL << 32) - 1)
+
 typedef struct {
 	void *bgenv;
 	bool ebg_new_env_created;
@@ -66,24 +83,23 @@ int ebg_env_set(ebgenv_t *e, char *key, char *value);
 /** @brief Store new content into variable
  *  @param e A pointer to an ebgenv_t context.
  *  @param key name of the environment variable to set
- *  @param datatype user specific string to identify the datatype of the value
+ *  @param user specific or predefined datatype of the value
  *  @param value arbitrary data to be stored into the variable
  *  @param datalen length of the data to be stored into the variable
  *  @return 0 on success, -errno on failure
  */
-int ebg_env_set_ex(ebgenv_t *e, char *key, char *datatype, uint8_t *value,
+int ebg_env_set_ex(ebgenv_t *e, char *key, uint64_t datatype, uint8_t *value,
 		   uint32_t datalen);
 
 /** @brief Get content of user variable
  *  @param e A pointer to an ebgenv_t context.
  *  @param key name of the environment variable to retrieve
- *  @param datatype buffer for user specific string to identify the
- *         datatype of the value
+ *  @param buffer to store the datatype of the value
  *  @param buffer destination for data to be stored into the variable
  *  @param maxlen size of provided buffer
  *  @return 0 on success, errno on failure
  */
-int ebg_env_get_ex(ebgenv_t *e, char *key, char *datatype, uint8_t *buffer,
+int ebg_env_get_ex(ebgenv_t *e, char *key, uint64_t *datatype, uint8_t *buffer,
 		   uint32_t maxlen);
 
 /** @brief Get available space for user variables

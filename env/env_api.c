@@ -99,7 +99,7 @@ int ebg_env_get(ebgenv_t *e, char *key, char *buffer)
 			 ENV_STRING_LENGTH);
 }
 
-int ebg_env_get_ex(ebgenv_t *e, char *key, char *usertype, uint8_t *buffer,
+int ebg_env_get_ex(ebgenv_t *e, char *key, uint64_t *usertype, uint8_t *buffer,
 		   uint32_t maxlen)
 {
 	return bgenv_get((BGENV *)e->bgenv, key, usertype, buffer, maxlen);
@@ -111,7 +111,7 @@ int ebg_env_set(ebgenv_t *e, char *key, char *value)
 		         strlen(value) + 1);
 }
 
-int ebg_env_set_ex(ebgenv_t *e, char *key, char *usertype, uint8_t *value,
+int ebg_env_set_ex(ebgenv_t *e, char *key, uint64_t usertype, uint8_t *value,
 		   uint32_t datalen)
 {
 	return bgenv_set((BGENV *)e->bgenv, key, usertype, value, datalen);
@@ -174,9 +174,8 @@ int ebg_env_setglobalstate(ebgenv_t *e, uint16_t ustate)
 		return EINVAL;
 	}
 	(void)snprintf(buffer, sizeof(buffer), "%d", ustate);
-	res =
-	    bgenv_set((BGENV *)e->bgenv, "ustate", "String", buffer,
-		      strlen(buffer) + 1);
+	res = bgenv_set((BGENV *)e->bgenv, "ustate", 0, buffer,
+			strlen(buffer) + 1);
 
 	if (ustate != USTATE_OK) {
 		return res;

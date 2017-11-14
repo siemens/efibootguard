@@ -236,7 +236,8 @@ bool bgenv_close(BGENV *env)
 	return false;
 }
 
-int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
+int bgenv_get(BGENV *env, char *key, uint64_t *type, void *data,
+	      uint32_t maxlen)
 {
 	EBGENVKEY e;
 	char buffer[ENV_STRING_LENGTH];
@@ -267,7 +268,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 		}
 		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
-			sprintf(type, "char*");
+			*type = USERVAR_TYPE_STRING_ASCII;
 		}
 		break;
 	case EBGENV_KERNELPARAMS:
@@ -277,7 +278,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 		}
 		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
-			sprintf(type, "char*");
+			*type = USERVAR_TYPE_STRING_ASCII;
 		}
 		break;
 	case EBGENV_WATCHDOG_TIMEOUT_SEC:
@@ -287,7 +288,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 		}
 		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
-			sprintf(type, "uint16_t");
+			*type = USERVAR_TYPE_UINT16;
 		}
 		break;
 	case EBGENV_REVISION:
@@ -297,7 +298,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 		}
 		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
-			sprintf(type, "uint32_t");
+			*type = USERVAR_TYPE_UINT16;
 		}
 		break;
 	case EBGENV_USTATE:
@@ -307,7 +308,7 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 		}
 		strncpy(data, buffer, strlen(buffer)+1);
 		if (type) {
-			sprintf(type, "uint16_t");
+			*type = USERVAR_TYPE_UINT16;
 		}
 		break;
 	default:
@@ -319,7 +320,8 @@ int bgenv_get(BGENV *env, char *key, char *type, void *data, uint32_t maxlen)
 	return 0;
 }
 
-int bgenv_set(BGENV *env, char *key, char *type, void *data, uint32_t datalen)
+int bgenv_set(BGENV *env, char *key, uint64_t type, void *data,
+	      uint32_t datalen)
 {
 	EBGENVKEY e;
 	int val;

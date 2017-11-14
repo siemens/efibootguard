@@ -29,6 +29,7 @@
 #include "config.h"
 #include <zlib.h>
 #include "envdata.h"
+#include "ebgenv.h"
 
 #ifdef DEBUG
 #define printf_debug(fmt, ...) printf(fmt, __VA_ARGS__)
@@ -43,9 +44,6 @@ extern bool bgenv_verbosity;
 #define VERBOSE(o, ...)                                                       \
 	if (bgenv_verbosity)                                                    \
 	fprintf(o, __VA_ARGS__)
-
-#define USERVAR_TYPE_DEFAULT "String"
-#define USERVAR_TYPE_DELETED "\0xDE\0xAD"
 
 typedef enum {
 	EBGENV_KERNELFILE,
@@ -81,9 +79,9 @@ extern BG_ENVDATA *bgenv_read(BGENV *env);
 extern bool bgenv_close(BGENV *env);
 
 extern BGENV *bgenv_create_new(void);
-extern int bgenv_get(BGENV *env, char *key, char *type, void *data,
+extern int bgenv_get(BGENV *env, char *key, uint64_t *type, void *data,
 		     uint32_t maxlen);
-extern int bgenv_set(BGENV *env, char *key, char *type, void *data,
+extern int bgenv_set(BGENV *env, char *key, uint64_t type, void *data,
 		     uint32_t datalen);
 
 #endif // __ENV_API_H__

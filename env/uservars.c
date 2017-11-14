@@ -14,21 +14,28 @@
 #include "env_api.h"
 #include "uservars.h"
 
-void bgenv_map_uservar(uint8_t *udata, char **key, char **type, uint8_t **val,
+void bgenv_map_uservar(uint8_t *udata, char **key, uint64_t *type, uint8_t **val,
 		       uint32_t *record_size, uint32_t *data_size)
 {
 	/* Each user variable is encoded as follows:
-	 * |------------|--------------|-------------|----------------|
-	 * | char KEY[] | uint32_t len | char type[] | uint8_t data[] |
-	 * |------------|--------------|-------------|----------------|
-	 * |   KEY      | < - - - - - - - - PAYLOAD - - - - - - - - > |
+	 * |------------|--------------|---------------|----------------|
+	 * | char KEY[] | uint32_t len | uint64_t type | uint8_t data[] |
+	 * |------------|--------------|---------------|----------------|
+	 * |   KEY      | < - - - - - - - - PAYLOAD - - - - - - - - - > |
 	 *
 	 * here char[] is a null-terminated string
 	 * 'len' is the payload size (visualized by the horizontal dashes)
+	 *
+	 * type is partitioned into the following bit fields:
+	 * | 63      ...       49 | 48     ...     32 | 31     ...    0 |
+	 * |    internal flags    |   user defined    |  standard types |
+	 * |      (reserved)      |  (free for user)  |    (reserved)   |
+	 *
+	 * internal flags and standard types are declared in ebgenv.h
 	 */
 	char *var_key;
 	uint32_t *payload_size;
-	char *var_type;
+	uint64_t *var_type;
 	uint8_t *data;
 
 	/* Get the key */
@@ -46,24 +53,24 @@ void bgenv_map_uservar(uint8_t *udata, char **key, char **type, uint8_t **val,
 	}
 
 	/* Get position of the type field */
-	var_type = (char *)payload_size + sizeof(uint32_t);
+	var_type = (uint64_t *)((uint8_t *)payload_size + sizeof(uint32_t));
 	if (type) {
-		*type = var_type;
+		*type = *var_type;
 	}
 
 	/* Calculate the data size */
 	if (data_size) {
 		*data_size = *payload_size - sizeof(uint32_t) -
-			     strlen(var_type) - 1;
+			     sizeof(uint64_t);
 	}
 	/* Get the pointer to the data field */
-	data = (uint8_t *)(var_type + strlen(var_type) + 1);
+	data = (uint8_t *)var_type + sizeof(uint64_t);
 	if (val) {
 		*val = data;
 	}
 }
 
-void bgenv_serialize_uservar(uint8_t *p, char *key, char *type, void *data,
+void bgenv_serialize_uservar(uint8_t *p, char *key, uint64_t type, void *data,
 			    uint32_t record_size)
 {
 	uint32_t payload_size, data_size;
@@ -78,20 +85,21 @@ void bgenv_serialize_uservar(uint8_t *p, char *key, char *type, void *data,
 	p += sizeof(uint32_t);
 
 	/* store datatype */
-	memcpy(p, type, strlen(type) + 1);
-	p += strlen(type) + 1;
+	*((uint64_t *)p) = type;
+	p += sizeof(uint64_t);
 
 	/* store data */
-	data_size = payload_size - strlen(type) - 1 - sizeof(uint32_t);
+	data_size = payload_size - sizeof(uint32_t) - sizeof(uint64_t);
 	memcpy(p, data, data_size);
 }
 
-int bgenv_get_uservar(uint8_t *udata, char *key, char *type, void *data,
+int bgenv_get_uservar(uint8_t *udata, char *key, uint64_t *type, void *data,
 		      uint32_t maxlen)
 {
 	uint8_t *uservar, *value;
-	char *lkey, *ltype;
+	char *lkey;
 	uint32_t dsize;
+	uint64_t ltype;
 
 	uservar = bgenv_find_uservar(udata, key);
 
@@ -108,25 +116,24 @@ int bgenv_get_uservar(uint8_t *udata, char *key, char *type, void *data,
 	memcpy(data, value, dsize);
 
 	if (type) {
-		memcpy(type, ltype, strlen(ltype) + 1);
+		*type = ltype;
 	}
 
 	return 0;
 }
 
-int bgenv_set_uservar(uint8_t *udata, char *key, char *type, void *data,
+int bgenv_set_uservar(uint8_t *udata, char *key, uint64_t type, void *data,
 	              uint32_t datalen)
 {
 	uint32_t total_size;
 	uint8_t *p;
 
-	total_size = datalen + strlen(type) + 1 + sizeof(uint32_t) +
+	total_size = datalen + sizeof(uint64_t) + sizeof(uint32_t) +
 		     strlen(key) + 1;
 
 	p = bgenv_find_uservar(udata, key);
 	if (p) {
-		if (strncmp(type, USERVAR_TYPE_DELETED,
-			    strlen(USERVAR_TYPE_DELETED) + 1) == 0) {
+		if (type & USERVAR_TYPE_DELETED) {
 			bgenv_del_uservar(udata, p);
 			return 0;
 		}

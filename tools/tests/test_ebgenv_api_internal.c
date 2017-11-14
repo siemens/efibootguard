@@ -273,38 +273,38 @@ START_TEST(ebgenv_api_internal_bgenv_get)
 	handle->data->revision = 10000;
 	handle->data->ustate = USTATE_INSTALLED;
 
-	char *type = NULL, *data = NULL;
+	char *data = NULL;
 	char buffera[22];
 	int res;
 
 	/* Test if bgenv_get fails if maxlen is set to 0
 	 */
-	res = bgenv_get(handle, "kernelfile", type, data, 0);
+	res = bgenv_get(handle, "kernelfile", NULL, data, 0);
 	ck_assert_int_eq(res, -EINVAL);
 
 	/* Test if bgenv_get fails if key is NULL
 	 */
-	res = bgenv_get(handle, NULL, type, data, 1000);
+	res = bgenv_get(handle, NULL, NULL, data, 1000);
 	ck_assert_int_eq(res, -EINVAL);
 
 	/* Test if bgenv_get fails if no environment is provided
 	 */
-	res = bgenv_get(NULL, "kernelfile", type, NULL, 1000);
+	res = bgenv_get(NULL, "kernelfile", NULL, NULL, 1000);
 	ck_assert_int_eq(res, -EPERM);
 
 	/* Test if bgenv_get returns the correct size of the needed
 	 * buffer if provided with a NULL buffer
 	 */
-	res = bgenv_get(handle, "kernelfile", type, NULL, 1000);
+	res = bgenv_get(handle, "kernelfile", NULL, NULL, 1000);
 	ck_assert_int_eq(res, strlen(test_strings[0]) + 1);
 
 	/* Test if bgenv_get returns the correct value
 	 */
-	res = bgenv_get(handle, "kernelfile", type, buffera, res);
+	res = bgenv_get(handle, "kernelfile", NULL, buffera, res);
 	ck_assert_int_eq(strcmp(buffera, test_strings[0]), 0);
 
-	res = bgenv_get(handle, "kernelparams", type, NULL, 1000);
-	res = bgenv_get(handle, "kernelparams", type, buffera, res);
+	res = bgenv_get(handle, "kernelparams", NULL, NULL, 1000);
+	res = bgenv_get(handle, "kernelparams", NULL, buffera, res);
 	ck_assert_int_eq(strcmp(buffera, test_strings[1]), 0);
 
 	free(handle);
@@ -321,17 +321,17 @@ START_TEST(ebgenv_api_internal_bgenv_set)
 
 	/* Test if bgenv_set returns -EINVAL if the handle is invalid
 	 */
-	res = bgenv_set(NULL, "kernelfile", NULL, NULL, 0);
+	res = bgenv_set(NULL, "kernelfile", 0, NULL, 0);
 	ck_assert_int_eq(res, -EINVAL);
 
 	/* Test if bgenv_set returns -EINVAL if the key is invalid
 	 */
-	res = bgenv_set(handle, "AOFIJAOEGIHA", NULL, NULL, 0);
+	res = bgenv_set(handle, "AOFIJAOEGIHA", 0, NULL, 0);
 	ck_assert_int_eq(res, -EINVAL);
 
 	/* Test if bgenv_set works correctly for valid parameters
 	 */
-	res = bgenv_set(handle, "kernelfile", NULL, "vmlinuz", 8);
+	res = bgenv_set(handle, "kernelfile", 0, "vmlinuz", 8);
 	ck_assert_int_eq(res, 0);
 
 	char buffer[8];
@@ -339,31 +339,31 @@ START_TEST(ebgenv_api_internal_bgenv_set)
 
 	ck_assert(strcmp(kfile, "vmlinuz") == 0);
 
-	res = bgenv_set(handle, "watchdog_timeout_sec", NULL, "-0", 2);
+	res = bgenv_set(handle, "watchdog_timeout_sec", 0, "-0", 2);
 	ck_assert_int_eq(res, 0);
 	ck_assert_int_eq(handle->data->watchdog_timeout_sec, 0);
 
-	res = bgenv_set(handle, "watchdog_timeout_sec", NULL, "311", 4);
+	res = bgenv_set(handle, "watchdog_timeout_sec", 0, "311", 4);
 	ck_assert_int_eq(res, 0);
 	ck_assert_int_eq(handle->data->watchdog_timeout_sec, 311);
 
-	res = bgenv_set(handle, "kernelparams", NULL, "root=", 6);
+	res = bgenv_set(handle, "kernelparams", 0, "root=", 6);
 	ck_assert_int_eq(res, 0);
 
 	char *kparm = str16to8(buffer, handle->data->kernelparams);
 
 	ck_assert(strcmp(kparm, "root=") == 0);
 
-	res = bgenv_set(handle, "ustate", NULL, "2", 2);
+	res = bgenv_set(handle, "ustate", 0, "2", 2);
 	ck_assert_int_eq(res, 0);
 
 	ck_assert_int_eq(handle->data->ustate, 2);
 
-	res = bgenv_set(handle, "revision", NULL, "0", 2);
+	res = bgenv_set(handle, "revision", 0, "0", 2);
 	ck_assert_int_eq(res, 0);
 	ck_assert_int_eq(handle->data->revision, 0);
 
-	res = bgenv_set(handle, "revision", NULL, "10301", 6);
+	res = bgenv_set(handle, "revision", 0, "10301", 6);
 	ck_assert_int_eq(res, 0);
 	ck_assert_int_eq(handle->data->revision, 10301);
 

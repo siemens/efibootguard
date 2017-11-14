@@ -34,14 +34,15 @@ FAKE_VALUE_FUNC(bool, bgenv_init);
 FAKE_VALUE_FUNC(bool, bgenv_write, BGENV *);
 FAKE_VALUE_FUNC(bool, bgenv_close, BGENV *);
 
-int __real_bgenv_set(BGENV *, char *, char *, void *, uint32_t);
-int __wrap_bgenv_set(BGENV *, char *, char *, void *, uint32_t);
-int __real_bgenv_get(BGENV *, char *, char *, void *, uint32_t);
-int __wrap_bgenv_get(BGENV *, char *, char *, void *, uint32_t);
+int __real_bgenv_set(BGENV *, char *, uint64_t, void *, uint32_t);
+int __wrap_bgenv_set(BGENV *, char *, uint64_t, void *, uint32_t);
+int __real_bgenv_get(BGENV *, char *, uint64_t *, void *, uint32_t);
+int __wrap_bgenv_get(BGENV *, char *, uint64_t *, void *, uint32_t);
 
 BGENV *bgenv_getset_arg0;
 char *bgenv_getset_arg1;
-char *bgenv_getset_arg2;
+uint64_t *bgenv_get_arg2;
+uint64_t bgenv_set_arg2;
 void *bgenv_getset_arg3;
 uint32_t bgenv_getset_arg4;
 int bgenv_get_call_count;
@@ -51,23 +52,25 @@ int bgenv_set_call_count;
  * we need to use the linker wrapping method and reimplement some of FFFs
  * functionality.
  */
-int __wrap_bgenv_get(BGENV *env, char *key, char *type, void *buffer, uint32_t len)
+int __wrap_bgenv_get(BGENV *env, char *key, uint64_t *type, void *buffer,
+		     uint32_t len)
 {
 	bgenv_get_call_count++;
 	bgenv_getset_arg0 = env;
 	bgenv_getset_arg1 = key;
-	bgenv_getset_arg2 = type;
+	bgenv_get_arg2 = type;
 	bgenv_getset_arg3 = buffer;
 	bgenv_getset_arg4 = len;
 	return __real_bgenv_get(env, key, type, buffer, len);
 }
 
-int __wrap_bgenv_set(BGENV *env, char *key, char *type, void *buffer, uint32_t len)
+int __wrap_bgenv_set(BGENV *env, char *key, uint64_t type, void *buffer,
+		     uint32_t len)
 {
 	bgenv_set_call_count++;
 	bgenv_getset_arg0 = env;
 	bgenv_getset_arg1 = key;
-	bgenv_getset_arg2 = type;
+	bgenv_set_arg2 = type;
 	bgenv_getset_arg3 = buffer;
 	bgenv_getset_arg4 = len;
 	return __real_bgenv_set(env, key, type, buffer, len);
@@ -208,7 +211,7 @@ START_TEST(ebgenv_api_ebg_env_get)
 	ck_assert(bgenv_get_call_count == 1);
 	ck_assert(bgenv_getset_arg0 == e.bgenv);
 	ck_assert(bgenv_getset_arg1 == NULL);
-	ck_assert(bgenv_getset_arg2 == NULL);
+	ck_assert(bgenv_get_arg2 == NULL);
 
 	/* Test if ebg_env_get retrieves correct data if given a valid
 	 * environment handle.
@@ -270,7 +273,7 @@ START_TEST(ebgenv_api_ebg_env_set_ex)
 	memset(&e, 0, sizeof(e));
 	char *key = "mykey";
 	char *value = "dummy";
-	char *usertype = "mytype";
+	uint64_t usertype = 1ULL << 36;
 	int32_t datalen = 5;
 
 	/* Check if ebg_env_set_ex correctly calls bgenv_set
@@ -290,7 +293,7 @@ START_TEST(ebgenv_api_ebg_env_set_ex)
 	ck_assert(bgenv_set_call_count == 1);
 	ck_assert(bgenv_getset_arg0 == e.bgenv);
 	ck_assert_int_eq(strcmp(bgenv_getset_arg1, key), 0);
-	ck_assert_int_eq(strcmp(bgenv_getset_arg2, usertype), 0);
+	ck_assert_int_eq(bgenv_set_arg2, usertype);
 	ck_assert(bgenv_getset_arg3 == value);
 	ck_assert(bgenv_getset_arg4 == datalen);
 
@@ -305,7 +308,7 @@ START_TEST(ebgenv_api_ebg_env_get_ex)
 	memset(&e, 0, sizeof(e));
 	char *key = "mykey";
 	char buffer[5];
-	char type[7];
+	uint64_t type;
 	int32_t datalen = 5;
 
 	/* Check if ebg_env_get_ex correctly calls bgenv_get
@@ -320,12 +323,12 @@ START_TEST(ebgenv_api_ebg_env_get_ex)
 
 	bgenv_get_call_count = 0;
 
-	(void)ebg_env_get_ex(&e, key, type, (uint8_t *)buffer, datalen);
+	(void)ebg_env_get_ex(&e, key, &type, (uint8_t *)buffer, datalen);
 
 	ck_assert(bgenv_get_call_count == 1);
 	ck_assert(bgenv_getset_arg0 == e.bgenv);
 	ck_assert_int_eq(strcmp(bgenv_getset_arg1, key), 0);
-	ck_assert(bgenv_getset_arg2 == type);
+	ck_assert(bgenv_get_arg2 == &type);
 	ck_assert(bgenv_getset_arg3 == buffer);
 	ck_assert(bgenv_getset_arg4 == datalen);
 

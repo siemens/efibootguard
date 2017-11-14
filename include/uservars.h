@@ -15,14 +15,15 @@
 
 #include <stdint.h>
 
-void bgenv_map_uservar(uint8_t *udata, char **key, char **type, uint8_t **val,
-		       uint32_t *record_size, uint32_t *data_size);
-void bgenv_serialize_uservar(uint8_t *p, char *key, char *type, void *data,
-			    uint32_t record_size);
+void bgenv_map_uservar(uint8_t *udata, char **key, uint64_t *type,
+		       uint8_t **val, uint32_t *record_size,
+		       uint32_t *data_size);
+void bgenv_serialize_uservar(uint8_t *p, char *key, uint64_t type, void *data,
+			     uint32_t record_size);
 
-int bgenv_get_uservar(uint8_t *udata, char *key, char *type, void *data,
+int bgenv_get_uservar(uint8_t *udata, char *key, uint64_t *type, void *data,
 		      uint32_t maxlen);
-int bgenv_set_uservar(uint8_t *udata, char *key, char *type, void *data,
+int bgenv_set_uservar(uint8_t *udata, char *key, uint64_t type, void *data,
 	              uint32_t datalen);
 
 uint8_t *bgenv_find_uservar(uint8_t *udata, char *key);
