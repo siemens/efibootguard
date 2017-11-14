@@ -15,6 +15,7 @@ struct _BG_ENVDATA {
     uint8_t ustate;
     uint16_t watchdog_timeout_sec;
     uint32_t revision;
+    uint8_t userdata[ENV_MEM_USERVARS];
     uint32_t crc32;
 };
 ```
@@ -27,6 +28,7 @@ The fields have the following meaning:
 * `ustate`: Update status (`0` OK, `1` INSTALLED, `2` TESTING, `3`: FAILED)
 * `watchdog_timeout_sec`: Number of seconds, the watchdog times out after
 * `revision`: The revision number explained above
+* `userdata`: Stores user variables. See [API.md](API.md) for explanation.
 * `crc32`: A crc32 checksum
 
 The following example cases demonstrate the meaning of the update-specific
