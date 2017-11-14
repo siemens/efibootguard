@@ -486,7 +486,7 @@ START_TEST(ebgenv_api_ebg_env_setglobalstate)
 	envdata[1].ustate = USTATE_OK;
 
 	ret = ebg_env_setglobalstate(&e, 0xFFF);
-	ck_assert_int_eq(ret, EINVAL);
+	ck_assert_int_eq(ret, -EINVAL);
 
 	ret = ebg_env_setglobalstate(&e, USTATE_FAILED);
 
@@ -543,7 +543,7 @@ START_TEST(ebgenv_api_ebg_env_setglobalstate)
 
 	ret = ebg_env_setglobalstate(&e, USTATE_OK);
 
-	ck_assert_int_eq(ret, EIO);
+	ck_assert_int_eq(ret, -EIO);
 
 	/* Test if ebg_env_setglobalstate fails and returns EIO if bgenv_close
 	 * fails
@@ -553,7 +553,7 @@ START_TEST(ebgenv_api_ebg_env_setglobalstate)
 
 	ret = ebg_env_setglobalstate(&e, USTATE_OK);
 
-	ck_assert_int_eq(ret, EIO);
+	ck_assert_int_eq(ret, -EIO);
 
 	(void)ebg_env_close(&e);
 #endif

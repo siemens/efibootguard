@@ -147,7 +147,7 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 			if ((ret = ebg_env_setglobalstate(&e, ustate)) != 0) {
 				fprintf(stderr,
 					"Error setting global state: %s.",
-					strerror(ret));
+					strerror(-ret));
 			}
 			return;
 		}
