@@ -85,5 +85,6 @@ extern int bgenv_set(BGENV *env, char *key, uint64_t type, void *data,
 		     uint32_t datalen);
 extern int bgenv_set_uservar_global(char *key, uint64_t type,
 				    void *data, uint32_t datalen);
+extern uint8_t *bgenv_find_uservar(uint8_t *userdata, char *key);
 
 #endif // __ENV_API_H__

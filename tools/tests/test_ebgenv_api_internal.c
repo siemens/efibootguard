@@ -16,6 +16,7 @@
 #include <env_api.h>
 #include <env_config_file.h>
 #include <env_config_partitions.h>
+#include <ebgenv.h>
 
 DEFINE_FFF_GLOBALS;
 
@@ -23,9 +24,8 @@ static char *devpath = "/dev/nobrain";
 
 Suite *ebg_test_suite(void);
 
-extern bool write_env(CONFIG_PART *part, BG_ENVDATA *env);
+extern bool write_env(CONFIG_PART *, BG_ENVDATA *);
 extern EBGENVKEY bgenv_str2enum(char *);
-extern BGENV *bgenv_open_by_index(uint32_t index);
 
 bool write_env_custom_fake(CONFIG_PART *part, BG_ENVDATA *env);
 
@@ -371,6 +371,77 @@ START_TEST(ebgenv_api_internal_bgenv_set)
 }
 END_TEST
 
+START_TEST(ebgenv_api_internal_uservars)
+{
+	RESET_FAKE(write_env);
+	write_env_fake.custom_fake = write_env_custom_fake;
+
+	int res;
+	BGENV *handle = bgenv_open_latest();
+
+	ck_assert(handle != NULL);
+	ck_assert(handle->data != NULL);
+
+	uint64_t type;
+	uint8_t *data;
+	/* Test a user variable using a user-defined data type
+	 */
+	type = 1ULL << 36;
+	res = bgenv_set(handle, "myvar", type, "mydata", 5);
+	ck_assert_int_eq(res, 0);
+
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		data = bgenv_find_uservar((uint8_t *)&(envdata[i].userdata),
+					  "myvar");
+		if (handle->data != &envdata[i]) {
+			ck_assert(data == NULL);
+		} else
+		{
+			ck_assert(data != NULL);
+		}
+	}
+
+	res = bgenv_set(handle, "myvar", USERVAR_TYPE_GLOBAL, "mydata", 5);
+	ck_assert_int_eq(write_env_fake.call_count, ENV_NUM_CONFIG_PARTS);
+	ck_assert_int_eq(res, 0);
+
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		data = bgenv_find_uservar((uint8_t *)&(envdata[i].userdata),
+					  "myvar");
+		ck_assert(data != NULL);
+	}
+
+	res = bgenv_set(handle, "myvar", USERVAR_TYPE_DELETED, "mydata", 5);
+	ck_assert_int_eq(res, 0);
+
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		data = bgenv_find_uservar((uint8_t *)&(envdata[i].userdata),
+					  "myvar");
+		if (handle->data != &envdata[i]) {
+			ck_assert(data != NULL);
+		} else
+		{
+			ck_assert(data == NULL);
+		}
+	}
+
+	write_env_fake.call_count = 0;
+
+	res = bgenv_set(handle, "myvar", USERVAR_TYPE_DELETED | USERVAR_TYPE_GLOBAL,
+			"mydata", 5);
+	ck_assert_int_eq(write_env_fake.call_count, ENV_NUM_CONFIG_PARTS);
+	ck_assert_int_eq(res, 0);
+
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		data = bgenv_find_uservar((uint8_t *)&(envdata[i].userdata),
+					  "myvar");
+		ck_assert(data == NULL);
+	}
+
+	(void)bgenv_close(handle);
+}
+END_TEST
+
 Suite *ebg_test_suite(void)
 {
 	Suite *s;
@@ -388,7 +459,8 @@ Suite *ebg_test_suite(void)
 		ebgenv_api_internal_bgenv_read,
 		ebgenv_api_internal_bgenv_create_new,
 		ebgenv_api_internal_bgenv_get,
-		ebgenv_api_internal_bgenv_set
+		ebgenv_api_internal_bgenv_set,
+		ebgenv_api_internal_uservars
 	};
 
 	tc_core = tcase_create("Core");
