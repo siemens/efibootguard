@@ -65,6 +65,8 @@ struct env_action {
 
 STAILQ_HEAD(stailhead, env_action) head = STAILQ_HEAD_INITIALIZER(head);
 
+static bool inhibit_global_store = false;
+
 static void journal_free_action(struct env_action *action)
 {
 	if (!action)
@@ -112,6 +114,12 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 	uint8_t *var;
 	ebgenv_t e;
 	char *tmp;
+
+	if (inhibit_global_store) {
+		/* If the environment is written to a file, we don't want a
+		 * global variable storage, but only into the output file */
+		action->type &= ~USERVAR_TYPE_GLOBAL;
+	}
 
 	switch (action->task) {
 	case ENV_TASK_SET:
@@ -309,6 +317,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		break;
 	case 'f':
 		arguments->output_to_file = true;
+		inhibit_global_store = true;
 		res = asprintf(&envfilepath, "%s/%s", arg, FAT_ENV_FILENAME);
 		if (res == -1) {
 			return ENOMEM;
