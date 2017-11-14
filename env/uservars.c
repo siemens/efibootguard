@@ -140,7 +140,11 @@ int bgenv_set_uservar(uint8_t *udata, char *key, uint64_t type, void *data,
 
 		p = bgenv_uservar_realloc(udata, total_size, p);
 	} else {
-		p = bgenv_uservar_alloc(udata, total_size);
+		if ((type & USERVAR_TYPE_DELETED) == 0) {
+			p = bgenv_uservar_alloc(udata, total_size);
+		} else {
+			return 0;
+		}
 	}
 	if (!p) {
 		return -errno;
