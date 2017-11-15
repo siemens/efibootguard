@@ -20,8 +20,8 @@ const char *tmp_mnt_dir = "/tmp/mnt-XXXXXX";
 
 char *get_mountpoint(char *devpath)
 {
-	struct mntent *part = NULL;
-	FILE *mtab = NULL;
+	struct mntent *part;
+	FILE *mtab;
 
 	if ((mtab = setmntent("/proc/mounts", "r")) == NULL)
 		return NULL;
