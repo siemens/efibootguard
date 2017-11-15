@@ -49,15 +49,15 @@ char *get_mountpoint_custom_fake(char *devpath)
 	char *tmpdir = NULL;
 	char *tmpfile = NULL;
 
-	if (asprintf(&tmpdir, "%s", fake_mountpoint) == -1)
-	{
+	if (asprintf(&tmpdir, "%s", fake_mountpoint) == -1) {
 		tmpdir = NULL;
 		goto fake_mountpoint_error;
 	}
 
 	tmpdir = mkdtemp(tmpdir);
-	if (!tmpdir)
+	if (!tmpdir) {
 		goto fake_mountpoint_error;
+	}
 
 	if (asprintf(&buff, "%s", tmpdir) == -1) {
 		buff = NULL;
@@ -83,13 +83,14 @@ char *get_mountpoint_custom_fake(char *devpath)
 
 	struct fake_env_file_path *fefp;
 	fefp = malloc(sizeof(struct fake_env_file_path));
-	if (!fefp)
+	if (!fefp) {
 		goto fake_mountpoint_error;
+	}
 
 	char *buffer_copy;
 	if (asprintf(&buffer_copy, "%s", buff) == -1) {
 		goto fake_mountpoint_error;
-	};
+	}
 
 	if (fefp && buffer_copy) {
 		fefp->path = buffer_copy;
@@ -109,8 +110,7 @@ bool __wrap_probe_config_file(CONFIG_PART *cp)
 	bool ret;
 	probe_config_file_call_count++;
 
-	if (asprintf(&cp->mountpoint, "tmpdir") == -1)
-	{
+	if (asprintf(&cp->mountpoint, "tmpdir") == -1) {
 		cp->not_mounted = true;
 		cp->mountpoint = NULL;
 		return false;

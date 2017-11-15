@@ -33,8 +33,9 @@ static EFI_STATUS unlock_timer_regs(EFI_PCI_IO *pci_io)
 	status = uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
 				   EfiPciIoWidthUint32, 0, ESB_RELOAD_REG,
 				   1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	value = 0x86;
 	return uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
@@ -50,32 +51,37 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	UINT32 value;
 
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL ||
-	    pci_device_id != PCI_DEVICE_ID_INTEL_ESB_9)
+	    pci_device_id != PCI_DEVICE_ID_INTEL_ESB_9) {
 		return EFI_UNSUPPORTED;
+	}
 
 	Print(L"Detected i6300ESB watchdog\n");
 
 	status = unlock_timer_regs(pci_io);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	value = ((timeout * 1000000000ULL) >> 15) / 30;
 	status = uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
 				   EfiPciIoWidthUint32, 0, ESB_TIMER1_REG,
 				   1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	status = unlock_timer_regs(pci_io);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	value = 0;
 	status = uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
 				   EfiPciIoWidthUint32, 0, ESB_TIMER2_REG,
 				   1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	value = ESB_LOCK_WDT_ENABLE | ESB_LOCK_WDT_LOCK;
 	status = uefi_call_wrapper(pci_io->Pci.Write, 5, pci_io,

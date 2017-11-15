@@ -269,8 +269,9 @@ uint32_t bgenv_user_free(uint8_t *udata)
 	while (*udata) {
 		bgenv_map_uservar(udata, NULL, NULL, NULL, &rsize, NULL);
 		spaceleft -= rsize;
-		if (spaceleft == 0)
+		if (spaceleft == 0) {
 			break;
+		}
 		udata = bgenv_next_uservar(udata);
 	}
 

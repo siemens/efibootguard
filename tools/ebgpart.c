@@ -494,8 +494,9 @@ pedprobe_error:
 
 static void ped_partition_destroy(PedPartition *p)
 {
-	if (!p)
+	if (!p) {
 		return;
+	}
 	if (p->fs_type) {
 		free(p->fs_type->name);
 		free(p->fs_type);
@@ -505,8 +506,9 @@ static void ped_partition_destroy(PedPartition *p)
 
 static void ped_device_destroy(PedDevice *d)
 {
-	if (!d)
+	if (!d) {
 		return;
+	}
 	free(d->model);
 	free(d->path);
 	PedPartition *p = d->part_list;

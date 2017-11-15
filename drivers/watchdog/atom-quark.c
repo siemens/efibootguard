@@ -41,8 +41,9 @@ static EFI_STATUS unlock_timer_regs(EFI_PCI_IO *pci_io, UINT32 wdt_base)
 				   EfiPciIoWidthUint8,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
 				   wdt_base + RELOAD0_REG, 1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	value = 0x86;
 	return uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
@@ -58,15 +59,17 @@ static EFI_STATUS write_timer_regs(EFI_PCI_IO *pci_io, UINT32 wdt_base,
 		EFI_STATUS status;
 
 		status = unlock_timer_regs(pci_io, wdt_base);
-		if (EFI_ERROR(status))
+		if (EFI_ERROR(status)) {
 			return status;
+		}
 
 		status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
 					   EfiPciIoWidthUint8,
 					   EFI_PCI_IO_PASS_THROUGH_BAR,
 					   wdt_base + timer, 1, &value);
-		if (EFI_ERROR(status))
+		if (EFI_ERROR(status)) {
 			return status;
+		}
 
 		value >>= 8;
 		timer++;
@@ -85,17 +88,20 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL ||
 	    (pci_device_id != PCI_DEVICE_ID_INTEL_ITC &&
 	     pci_device_id != PCI_DEVICE_ID_INTEL_CENTERTON &&
-	     pci_device_id != PCI_DEVICE_ID_INTEL_QUARK_X1000))
+	     pci_device_id != PCI_DEVICE_ID_INTEL_QUARK_X1000)) {
 		return EFI_UNSUPPORTED;
+	}
 
 	status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
 				   EfiPciIoWidthUint32, WDTBA_REG,
 				   1, &wdt_base);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
-	if (!(wdt_base & WDTBA_ENABLED))
+	if (!(wdt_base & WDTBA_ENABLED)) {
 		return EFI_UNSUPPORTED;
+	}
 
 	wdt_base &= WDTBA_ADDRMASK;
 
@@ -103,21 +109,24 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 
 	value = ((timeout * 1000000000ULL) >> 15) / 30;
 	status = write_timer_regs(pci_io, wdt_base, TIMER1_REG, value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	value = 0;
 	status = write_timer_regs(pci_io, wdt_base, TIMER2_REG, value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	value = CONFIG_RESET_ENABLE;
 	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
 				   EfiPciIoWidthUint8,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
 				   wdt_base + CONFIG_REG, 1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	value = LOCK_WDT_ENABLE | LOCK_WDT_LOCK;
 	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,

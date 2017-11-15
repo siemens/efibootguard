@@ -22,8 +22,9 @@ int num_fake_devices;
 void allocate_fake_devices(int n)
 {
 	fake_devices = (PedDevice *)calloc(n, sizeof(PedDevice));
-	if (!fake_devices)
+	if (!fake_devices) {
 		exit(1);
+	}
 	num_fake_devices = n;
 	for (char i = 0; i < n; i++) {
 		if (asprintf(&fake_devices[i].model, "%s", "Fake Device")
@@ -83,11 +84,10 @@ void remove_fake_partitions(int n)
 	PedPartition *next;
 	while(pp) {
 		next = pp->next;
-		if (!pp->fs_type)
-			goto skip_fstype;
-		free(pp->fs_type->name);
-		free(pp->fs_type);
-skip_fstype:
+		if (pp->fs_type) {
+			free(pp->fs_type->name);
+			free(pp->fs_type);
+		}
 		free(pp);
 		pp = next;
 	}
@@ -110,8 +110,9 @@ void free_fake_devices()
 
 PedDevice *ped_device_get_next_custom_fake(const PedDevice *dev)
 {
-	if (!dev)
+	if (!dev) {
 		return fake_devices;
+	}
 
 	return dev->next;
 }

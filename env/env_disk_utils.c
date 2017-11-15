@@ -23,18 +23,20 @@ char *get_mountpoint(char *devpath)
 	struct mntent *part;
 	FILE *mtab;
 
-	if ((mtab = setmntent("/proc/mounts", "r")) == NULL)
+	mtab = setmntent("/proc/mounts", "r");
+	if (!mtab) {
 		return NULL;
+	}
 
 	while ((part = getmntent(mtab)) != NULL) {
 		if ((part->mnt_fsname != NULL) &&
 		    (strcmp(part->mnt_fsname, devpath)) == 0) {
 			char *mntpoint;
 
-			if (!(mntpoint =
-				  malloc(strlen(part->mnt_dir) + 1))) {
+			mntpoint = malloc(strlen(part->mnt_dir) + 1);
+			if (!mntpoint) {
 				break;
-			};
+			}
 			strncpy(mntpoint, part->mnt_dir,
 				strlen(part->mnt_dir) + 1);
 			return mntpoint;

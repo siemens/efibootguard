@@ -34,8 +34,9 @@ static EFI_STATUS probe_watchdog(EFI_LOADED_IMAGE *loaded_image,
 
 		probe = loaded_image->ImageBase + *entry;
 		if (probe(pci_io, pci_vendor_id, pci_device_id, timeout) ==
-		    EFI_SUCCESS)
+		    EFI_SUCCESS) {
 			return EFI_SUCCESS;
+		}
 	}
 
 	return EFI_UNSUPPORTED;
@@ -51,13 +52,14 @@ static EFI_STATUS scan_devices(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 
 	status = uefi_call_wrapper(BS->LocateHandle, 5, ByProtocol,
 				   &PciIoProtocol, NULL, &size, devices);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	count = size / sizeof(EFI_HANDLE);
-
-	if (count == 0)
+	if (count == 0) {
 		return probe_watchdog(loaded_image, NULL, 0, 0, timeout);
+	}
 
 	do {
 		EFI_HANDLE device = devices[count - 1];
@@ -68,18 +70,20 @@ static EFI_STATUS scan_devices(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 					   &PciIoProtocol, (VOID **)&pci_io,
 					   this_image, NULL,
 					   EFI_OPEN_PROTOCOL_GET_PROTOCOL);
-		if (EFI_ERROR(status))
+		if (EFI_ERROR(status)) {
 			error_exit(L"Could not open PciIoProtocol while "
 				   L"probing watchdogs.",
 				   status);
+		}
 
 		status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
 					   EfiPciIoWidthUint32, PCI_VENDOR_ID,
 					   1, &value);
-		if (EFI_ERROR(status))
+		if (EFI_ERROR(status)) {
 			error_exit(L"Could not read from PCI device while "
 				   L"probing watchdogs.",
 				   status);
+		}
 
 		status = probe_watchdog(loaded_image, pci_io, (UINT16)value,
 					value >> 16, timeout);
@@ -111,10 +115,11 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	    uefi_call_wrapper(BS->OpenProtocol, 6, this_image,
 			      &LoadedImageProtocol, (VOID **)&loaded_image,
 			      this_image, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		error_exit(L"Could not open LoadedImageProtocol to get image "
 			   L"information.",
 			   status);
+	}
 
 	status = get_volumes(&volumes, &volume_count);
 	if (EFI_ERROR(status)) {
@@ -146,29 +151,33 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 
 	payload_dev_path = FileDevicePathFromConfig(
 	    loaded_image->DeviceHandle, bg_loader_params.payload_path);
-	if (!payload_dev_path)
+	if (!payload_dev_path) {
 		error_exit(
 		    L"Could not convert payload file path to device path.",
 		    EFI_OUT_OF_RESOURCES);
+	}
 
 	status = scan_devices(loaded_image, bg_loader_params.timeout);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		error_exit(L"Could not probe watchdog.", status);
+	}
 
 	/* Load and start image */
 	status = uefi_call_wrapper(BS->LoadImage, 6, TRUE, this_image,
 				   payload_dev_path, NULL, 0, &payload_handle);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		error_exit(L"Could not load specified kernel image.", status);
+	}
 
 	status =
 	    uefi_call_wrapper(BS->OpenProtocol, 6, payload_handle,
 			      &LoadedImageProtocol, (VOID **)&loaded_image,
 			      this_image, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		error_exit(L"Could not open LoadedImageProtocol to set kernel "
 			   L"load options.",
 			   status);
+	}
 
 	loaded_image->LoadOptions = bg_loader_params.payload_options;
 	loaded_image->LoadOptionsSize =

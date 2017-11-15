@@ -167,8 +167,9 @@ START_TEST(ebgenv_api_internal_bgenv_write)
 	BGENV *dummy_env;
 
 	dummy_env = calloc(1, sizeof(BGENV));
-	if (!dummy_env)
+	if (!dummy_env) {
 		goto bgew_error;
+	}
 
 	RESET_FAKE(write_env);
 	write_env_fake.custom_fake = write_env_custom_fake;
@@ -190,12 +191,14 @@ START_TEST(ebgenv_api_internal_bgenv_write)
 	 * and envrionment data succeeds
 	 */
 	dummy_env->desc = calloc(1, sizeof(CONFIG_PART));
-	if (!dummy_env->desc)
+	if (!dummy_env->desc) {
 		goto bgew_error;
+	}
 
 	dummy_env->data = calloc(1, sizeof(BG_ENVDATA));
-	if (!dummy_env->data)
+	if (!dummy_env->data) {
 		goto bgew_error;
+	}
 
 	res = bgenv_write(dummy_env);
 	ck_assert(write_env_fake.call_count == 1);

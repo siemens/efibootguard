@@ -69,8 +69,9 @@ static bool inhibit_global_store = false;
 
 static void journal_free_action(struct env_action *action)
 {
-	if (!action)
+	if (!action) {
 		return;
+	}
 	free(action->data);
 	free(action->key);
 	free(action);

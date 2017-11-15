@@ -425,23 +425,26 @@ int bgenv_set(BGENV *env, char *key, uint64_t type, void *data,
 	return 0;
 }
 
-BGENV *bgenv_create_new()
+BGENV *bgenv_create_new(void)
 {
 	BGENV *env_latest;
 	BGENV *env_new;
 
 	env_latest = bgenv_open_latest();
-	if (!env_latest)
+	if (!env_latest) {
 		goto create_new_io_error;
+	}
 
 	int new_rev = env_latest->data->revision + 1;
 
-	if (!bgenv_close(env_latest))
+	if (!bgenv_close(env_latest)) {
 		goto create_new_io_error;
+	}
 
 	env_new = bgenv_open_oldest();
-	if (!env_new)
+	if (!env_new) {
 		goto create_new_io_error;
+	}
 
 	/* zero fields */
 	memset(env_new->data, 0, sizeof(BG_ENVDATA));

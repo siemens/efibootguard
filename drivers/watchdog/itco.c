@@ -42,8 +42,9 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL ||
 	    (pci_device_id != PCI_DEVICE_ID_INTEL_BAYTRAIL &&
-	     pci_device_id != PCI_DEVICE_ID_INTEL_WPT_LP))
+	     pci_device_id != PCI_DEVICE_ID_INTEL_WPT_LP)) {
 		return EFI_UNSUPPORTED;
+	}
 
 	Print(L"Detected Intel TCO watchdog\n");
 
@@ -51,8 +52,9 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
 				   EfiPciIoWidthUint32, PMBASE_REG,
 				   1, &pmbase);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 	pmbase &= PMBASE_ADDRMASK;
 	tcobase = (pmbase & PMBASE_ADDRMASK) + 0x60;
 
@@ -60,8 +62,9 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
 				   EfiPciIoWidthUint32, PMCBASE_REG,
 				   1, &pmcbase);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 	pmcbase &= PMCBASE_ADDRMASK;
 
 	/* Enable TCO SMIs */
@@ -69,31 +72,35 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 				   EfiPciIoWidthUint32,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
 				   pmbase + SMI_EN_REG, 1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 	value |= TCO_EN;
 	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
 				   EfiPciIoWidthUint32,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
 				   pmbase + SMI_EN_REG, 1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	/* Set timer value */
 	status = uefi_call_wrapper(pci_io->Io.Read, 6, pci_io,
 				   EfiPciIoWidthUint16,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
 				   tcobase + TCO_TMR_REG, 1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 	value &= 0xfc00;
 	value |= ((timeout * 10) / 6) & 0x3ff;
 	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
 				   EfiPciIoWidthUint16,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
 				   tcobase + TCO_TMR_REG, 1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	/* Force reloading of timer value */
 	value = 1;
@@ -101,31 +108,35 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 				   EfiPciIoWidthUint16,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
 				   tcobase + TCO_RLD_REG, 1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	/* Clear NO_REBOOT flag */
 	status = uefi_call_wrapper(pci_io->Mem.Read, 6, pci_io,
 				   EfiPciIoWidthUint32,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
 				   pmcbase + PMC_REG, 1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 	value &= ~PMC_NO_REBOOT;
 	status = uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
 				   EfiPciIoWidthUint32,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
 				   pmcbase + PMC_REG, 1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 
 	/* Clear HLT flag to start timer */
 	status = uefi_call_wrapper(pci_io->Io.Read, 6, pci_io,
 				   EfiPciIoWidthUint16,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
 				   tcobase + TCO1_CNT_REG, 1, &value);
-	if (EFI_ERROR(status))
+	if (EFI_ERROR(status)) {
 		return status;
+	}
 	value &= ~TCO_TMR_HLT;
 	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
 				   EfiPciIoWidthUint16,
