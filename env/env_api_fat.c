@@ -341,6 +341,9 @@ int bgenv_set_uservar_global(char *key, uint64_t type, void *data,
 					" #%d: (%s)\n", i, strerror(-r));
 			ret = r;
 		}
+		uint32_t sum = crc32(0, (Bytef *)env->data,
+			sizeof(BG_ENVDATA) - sizeof(env->data->crc32));
+		env->data->crc32 = sum;
 		if (!bgenv_write(env)) {
 			ret = -EIO;
 			VERBOSE(stderr, "bgenv_set_uservar_global: Could not "
