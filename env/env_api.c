@@ -107,8 +107,9 @@ int ebg_env_get_ex(ebgenv_t *e, char *key, uint64_t *usertype, uint8_t *buffer,
 
 int ebg_env_set(ebgenv_t *e, char *key, char *value)
 {
-	return bgenv_set((BGENV *)e->bgenv, key, USERVAR_TYPE_DEFAULT, value,
-		         strlen(value) + 1);
+	return bgenv_set((BGENV *)e->bgenv, key, USERVAR_TYPE_DEFAULT |
+			 USERVAR_TYPE_STRING_ASCII, value,
+			 strlen(value) + 1);
 }
 
 int ebg_env_set_ex(ebgenv_t *e, char *key, uint64_t usertype, uint8_t *value,

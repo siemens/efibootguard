@@ -65,8 +65,6 @@ struct env_action {
 
 STAILQ_HEAD(stailhead, env_action) head = STAILQ_HEAD_INITIALIZER(head);
 
-static bool inhibit_global_store = false;
-
 static void journal_free_action(struct env_action *action)
 {
 	if (!action) {
@@ -116,12 +114,6 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 	ebgenv_t e;
 	char *tmp;
 
-	if (inhibit_global_store) {
-		/* If the environment is written to a file, we don't want a
-		 * global variable storage, but only into the output file */
-		action->type &= ~USERVAR_TYPE_GLOBAL;
-	}
-
 	switch (action->task) {
 	case ENV_TASK_SET:
 		VERBOSE(stdout, "Task = SET, key = %s, type = %llu, val = %s\n",
@@ -156,10 +148,7 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 		break;
 	case ENV_TASK_DEL:
 		VERBOSE(stdout, "Task = DEL, key = %s\n", action->key);
-		var = bgenv_find_uservar(env->data->userdata, action->key);
-		if (var) {
-			bgenv_del_uservar(env->data->userdata, var);
-		}
+		bgenv_set(env, action->key, action->type, "", 1);
 		break;
 	}
 }
@@ -211,7 +200,9 @@ static error_t set_uservars(char *arg)
 
 	value = strtok(NULL, "=");
 	if (value == NULL) {
-		return journal_add_action(ENV_TASK_DEL, key, 0, NULL, 0);
+		return journal_add_action(ENV_TASK_DEL, key,
+					  USERVAR_TYPE_DEFAULT |
+					  USERVAR_TYPE_DELETED, NULL, 0);
 	}
 	return journal_add_action(ENV_TASK_SET, key, USERVAR_TYPE_DEFAULT |
 				  USERVAR_TYPE_STRING_ASCII,
@@ -319,7 +310,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		break;
 	case 'f':
 		arguments->output_to_file = true;
-		inhibit_global_store = true;
 		res = asprintf(&envfilepath, "%s/%s", arg, FAT_ENV_FILENAME);
 		if (res == -1) {
 			return ENOMEM;
