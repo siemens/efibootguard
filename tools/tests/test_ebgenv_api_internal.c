@@ -404,42 +404,18 @@ START_TEST(ebgenv_api_internal_uservars)
 		}
 	}
 
-	res = bgenv_set(handle, "myvar", USERVAR_TYPE_GLOBAL, "mydata", 5);
-	ck_assert_int_eq(write_env_fake.call_count, ENV_NUM_CONFIG_PARTS);
-	ck_assert_int_eq(res, 0);
-
-	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-		data = bgenv_find_uservar((uint8_t *)&(envdata[i].userdata),
-					  "myvar");
-		ck_assert(data != NULL);
-	}
-
 	res = bgenv_set(handle, "myvar", USERVAR_TYPE_DELETED, "mydata", 5);
 	ck_assert_int_eq(res, 0);
 
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 		data = bgenv_find_uservar((uint8_t *)&(envdata[i].userdata),
 					  "myvar");
-		if (handle->data != &envdata[i]) {
-			ck_assert(data != NULL);
-		} else
-		{
+		if (handle->data == &envdata[i]) {
 			ck_assert(data == NULL);
 		}
 	}
 
 	write_env_fake.call_count = 0;
-
-	res = bgenv_set(handle, "myvar", USERVAR_TYPE_DELETED | USERVAR_TYPE_GLOBAL,
-			"mydata", 5);
-	ck_assert_int_eq(write_env_fake.call_count, ENV_NUM_CONFIG_PARTS);
-	ck_assert_int_eq(res, 0);
-
-	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-		data = bgenv_find_uservar((uint8_t *)&(envdata[i].userdata),
-					  "myvar");
-		ck_assert(data == NULL);
-	}
 
 	(void)bgenv_close(handle);
 }

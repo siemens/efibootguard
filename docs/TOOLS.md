@@ -92,7 +92,7 @@ bg_setenv --partition=1 --ustate=TESTING
 bg_setenv -x key=value
 ```
 
-This will set the variable named `key` to `value` in all environments.
+This will set the variable named `key` to `value` in the current environment.
 
 If The user wants to delete such a variable, the value after the `=` must be omitted, e.g.
 

@@ -38,13 +38,6 @@ of the environment managed by the API.
 The structure of an entry is explained in the [source code](../env/uservars.c).
 Also see the example program below.
 
-There are currently two types of user variables: Those with the flag
-USERVAR_TYPE_GLOBAL set in their data field and those without.
-
-Global variables are immune to the update process, i.e. they are stored into all
-environments. If not specifying flags manually with ebg_env_set_ex, the global
-flag is set per default.
-
 ## Example programs ##
 
 The following example program creates a new environment with the latest revision
@@ -103,23 +96,15 @@ int main(void)
 
     ebg_env_open_current(&e);
 
-    /* This automatically creates a global user variable, stored in all
-     * environments */
+    /* This automatically creates a local user variable, stored in the
+     * current environment */
     ebg_env_set(&e, "myvar", "myvalue");
 
-    /* This sets the global variable to an empty string */
+    /* This sets the variable to an empty string */
     ebg_env_set(&e, "myvar", "");
 
-    /* This creates a user variable in the current environment only */
-    ebg_env_set_ex(&e, "currentvar", USERVAR_TYPE_STRING_ASCII, "abc",
-       strlen("abc") + 1);
-
-    /* This deletes the global myvar key from all environments.
-     * Note: value must not be NULL and datalen must be greater than 0 */
-    ebg_env_set_ex(&e, "myvar", USERVAR_TYPE_DELETED | USERVAR_TYPE_GLOBAL, "", 1);
-
     /* This deletes the variable from the current environment */
-    ebg_env_set_ex(&e, "currentvar", USERVAR_TYPE_DELETED, "", 1);
+    ebg_env_set_ex(&e, "myvar", USERVAR_TYPE_DELETED, "", 1);
 
     ebg_env_close(&e);
 }
