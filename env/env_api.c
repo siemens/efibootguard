@@ -188,10 +188,14 @@ int ebg_env_setglobalstate(ebgenv_t *e, uint16_t ustate)
 		if (!env) {
 			continue;
 		}
-		env->data->ustate = ustate;
-		if (!bgenv_write(env)) {
-			(void)bgenv_close(env);
-			return -EIO;
+		if (env->data->ustate != ustate) {
+			env->data->ustate = ustate;
+			env->data->crc32 = crc32(0, (Bytef *)env->data,
+				sizeof(BG_ENVDATA) - sizeof(env->data->crc32));
+			if (!bgenv_write(env)) {
+				(void)bgenv_close(env);
+				return -EIO;
+			}
 		}
 		if (!bgenv_close(env)) {
 			return -EIO;
