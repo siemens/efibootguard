@@ -470,13 +470,13 @@ static void dump_uservars(uint8_t *udata)
 static void dump_env(BG_ENVDATA *env)
 {
 	char buffer[ENV_STRING_LENGTH];
-	printf("Values: \n");
-	printf("in_progress: %s\n", env->in_progress ? "yes" : "no");
-	printf("revision: %u\n", env->revision);
-	printf("kernel: %s\n", str16to8(buffer, env->kernelfile));
-	printf("kernelargs: %s\n", str16to8(buffer, env->kernelparams));
+	printf("Values:\n");
+	printf("in_progress:      %s\n", env->in_progress ? "yes" : "no");
+	printf("revision:         %u\n", env->revision);
+	printf("kernel:           %s\n", str16to8(buffer, env->kernelfile));
+	printf("kernelargs:       %s\n", str16to8(buffer, env->kernelparams));
 	printf("watchdog timeout: %u seconds\n", env->watchdog_timeout_sec);
-	printf("ustate: %u (%s)\n", (uint8_t)env->ustate,
+	printf("ustate:           %u (%s)\n", (uint8_t)env->ustate,
 	       ustate2str(env->ustate));
 	printf("\n");
 	printf("user variables:\n");
@@ -486,7 +486,9 @@ static void dump_env(BG_ENVDATA *env)
 
 static void update_environment(BGENV *env)
 {
-	printf("Processing journal...\n");
+	if (verbosity) {
+		printf("Processing journal...\n");
+	}
 
 	while (!STAILQ_EMPTY(&head)) {
 		struct env_action *action = STAILQ_FIRST(&head);
@@ -580,7 +582,7 @@ int main(int argc, char **argv)
 				fprintf(stderr, "Error closing output file.\n");
 				result = errno;
 			};
-			printf("Output written to %s.\n", envfilepath);
+			fprintf(stdout, "Output written to %s.\n", envfilepath);
 		} else {
 			fprintf(stderr, "Error opening output file %s (%s).\n",
 				envfilepath, strerror(errno));
@@ -668,5 +670,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Error closing environment.\n");
 		return 1;
 	}
+
+	fprintf(stdout, "Environment update was successful.\n");
+
 	return result;
 }
