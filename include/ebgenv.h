@@ -63,7 +63,7 @@ int ebg_env_open_current(ebgenv_t *e);
  *  @param key an enum constant to specify the variable
  *  @param buffer pointer to buffer containing requested value.
  *         If buffer is NULL, return needed buffer size.
- *  @return If buffer != NULL: 0 on success, errno on failure
+ *  @return If buffer != NULL: 0 on success, -errno on failure
  *          If buffer == NULL: needed buffer size, 0 if variable
  *                             is not found.
  */
@@ -95,7 +95,7 @@ int ebg_env_set_ex(ebgenv_t *e, char *key, uint64_t datatype, uint8_t *value,
  *  @param buffer to store the datatype of the value
  *  @param buffer destination for data to be stored into the variable
  *  @param maxlen size of provided buffer
- *  @return 0 on success, errno on failure
+ *  @return 0 on success, -errno on failure
  */
 int ebg_env_get_ex(ebgenv_t *e, char *key, uint64_t *datatype, uint8_t *buffer,
 		   uint32_t maxlen);
