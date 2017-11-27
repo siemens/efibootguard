@@ -191,8 +191,11 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 	/* Assume we boot with the latest configuration */
 	current_partition = latest_idx;
 
-	/* Test if this configuration is in test mode */
-	if (env[latest_idx].ustate == USTATE_TESTING) {
+	/* Test if this environment is currently 'in_progress'. If yes,
+	 * do not boot from it, instead ignore it */
+	if (env[latest_idx].in_progress == 1) {
+		current_partition = pre_latest_idx;
+	} else if (env[latest_idx].ustate == USTATE_TESTING) {
 		/* If it has already been booted, this indicates a failed
 		 * update. In this case, mark it as failed by giving a
 		 * zero-revision */
