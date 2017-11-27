@@ -311,7 +311,7 @@ int bgenv_get(BGENV *env, char *key, uint64_t *type, void *data,
 	case EBGENV_USTATE:
 		return bgenv_get_uint(buffer, type, data,
 				      env->data->ustate,
-				      USERVAR_TYPE_UINT16);
+				      USERVAR_TYPE_UINT8);
 	case EBGENV_IN_PROGRESS:
 		return bgenv_get_uint(buffer, type, data,
 				      env->data->in_progress,
