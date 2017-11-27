@@ -212,6 +212,21 @@ static error_t set_uservars(char *arg)
 				  (uint8_t *)value, strlen(value) + 1);
 }
 
+static int parse_int(char *arg)
+{
+	char *tmp;
+	int i;
+
+	errno = 0;
+	i = strtol(arg, &tmp, 10);
+	if ((errno == ERANGE && (i == LONG_MAX || i == LONG_MIN)) ||
+	    (errno != 0 && i == 0) || (tmp == arg)) {
+		errno = EINVAL;
+		return -1;
+	}
+	return i;
+}
+
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
 {
 	struct arguments *arguments = state->input;
@@ -243,10 +258,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'p':
-		errno = 0;
-		i = strtol(arg, &tmp, 10);
-		if ((errno == ERANGE && (i == LONG_MAX || i == LONG_MIN)) ||
-		    (errno != 0 && i == 0) || (tmp == arg)) {
+		i = parse_int(arg);
+		if (errno) {
 			fprintf(stderr, "Invalid number specified for -p.\n");
 			return 1;
 		}
@@ -262,10 +275,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		}
 		break;
 	case 's':
-		errno = 0;
-		i = strtol(arg, &tmp, 10);
-		if ((errno == ERANGE && (i == LONG_MAX || i == LONG_MIN)) ||
-		    (errno != 0 && i == 0) || (tmp == arg)) {
+		i = parse_int(arg);
+		if (errno) {
 			// maybe user specified an enum string
 			i = str2ustate(arg);
 			if (i == USTATE_UNKNOWN) {
@@ -288,23 +299,21 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 			}
 			e = journal_add_action(ENV_TASK_SET, "ustate", 0,
 					       (uint8_t *)tmp, strlen(tmp) + 1);
+			free(tmp);
 			VERBOSE(stdout, "Ustate set to %d (%s).\n", i,
 				ustate2str(i));
 		}
 		break;
 	case 'i':
-		errno = 0;
-		i = strtol(arg, &tmp, 10);
-		if ((errno == ERANGE && (i == LONG_MAX || i == LONG_MIN)) ||
-		    (errno != 0 && i == 0) || (tmp == arg)) {
+		i = parse_int(arg);
+		if (errno) {
 			fprintf(stderr, "Invalid value specified.\n");
 			return 1;
 		}
 		if (i < 0 || i > 1) {
-			fprintf(
-			    stderr,
-			    "Invalid value specified. Possible values: "
-			    "0 (no), 1 (yes)\n");
+			fprintf(stderr,
+				"Invalid value specified. Possible values: "
+				"0 (no), 1 (yes)\n");
 			return 1;
 		} else {
 			res = asprintf(&tmp, "%u", i);
@@ -313,27 +322,31 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 			}
 			e = journal_add_action(ENV_TASK_SET, "in_progress", 0,
 					       (uint8_t *)tmp, strlen(tmp) + 1);
+			free(tmp);
 			VERBOSE(stdout, "in_progress set to %d.\n", i);
 		}
 		break;
 	case 'r':
-		i = atoi(arg);
-		VERBOSE(stdout, "Revision is set to %d.\n", i);
+		i = parse_int(arg);
+		if (errno) {
+			fprintf(stderr, "Invalid revision specified.\n");
+			return 1;
+		}
+		VERBOSE(stdout, "Revision is set to %u.\n", (unsigned int) i);
 		e = journal_add_action(ENV_TASK_SET, "revision", 0,
 				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'w':
-		i = atoi(arg);
-		if (i != 0) {
-			VERBOSE(stdout,
-				"Setting watchdog timeout to %d seconds.\n", i);
-			e = journal_add_action(ENV_TASK_SET,
-					       "watchdog_timeout_sec", 0,
-					       (uint8_t *)arg, strlen(arg) + 1);
-		} else {
-			fprintf(stderr, "Watchdog timeout must be non-zero.\n");
+		i = parse_int(arg);
+		if (errno || i == 0) {
+			fprintf(stderr, "Invalid watchdog timeout specified.\n");
 			return 1;
 		}
+		VERBOSE(stdout,
+			"Setting watchdog timeout to %d seconds.\n", i);
+		e = journal_add_action(ENV_TASK_SET,
+				       "watchdog_timeout_sec", 0,
+				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'f':
 		arguments->output_to_file = true;
