@@ -264,7 +264,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 			return 1;
 		}
 		if (i == 0 || i == 1) {
-			printf("Updating config partition #%d\n", i);
+			fprintf(stdout, "Updating config partition #%d\n", i);
 			arguments->which_part = i;
 			part_specified = true;
 		} else {
@@ -339,7 +339,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 	case 'w':
 		i = parse_int(arg);
 		if (errno || i == 0) {
-			fprintf(stderr, "Invalid watchdog timeout specified.\n");
+			fprintf(stderr,
+				"Invalid watchdog timeout specified.\n");
 			return 1;
 		}
 		VERBOSE(stdout,
@@ -383,7 +384,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		e = set_uservars(arg);
 		break;
 	case 'V':
-		printf("EFI Boot Guard %s\n", EFIBOOTGUARD_VERSION);
+		fprintf(stdout, "EFI Boot Guard %s\n", EFIBOOTGUARD_VERSION);
 		exit(0);
 	case ARGP_KEY_ARG:
 		/* too many arguments - program terminates with call to
@@ -411,10 +412,10 @@ static void dump_uservars(uint8_t *udata)
 	while (*udata) {
 		bgenv_map_uservar(udata, &key, &type, (uint8_t **)&value,
 				  &rsize, &dsize);
-		printf("%s ", key);
+		fprintf(stdout, "%s ", key);
 		type &= USERVAR_STANDARD_TYPE_MASK;
 		if (type == USERVAR_TYPE_STRING_ASCII) {
-			printf("= %s\n", value);
+			fprintf(stdout, "= %s\n", value);
 		} else if (type >= USERVAR_TYPE_UINT8 &&
 			   type <= USERVAR_TYPE_UINT64) {
 			switch(type) {
@@ -431,7 +432,8 @@ static void dump_uservars(uint8_t *udata)
 				val_unum = *((uint64_t *) value);
 				break;
 			}
-			printf("= %llu\n", (long long unsigned int) val_unum);
+			fprintf(stdout, "= %llu\n",
+				(long long unsigned int) val_unum);
 		} else if (type >= USERVAR_TYPE_SINT8 &&
 			   type <= USERVAR_TYPE_SINT64) {
 			switch(type) {
@@ -448,18 +450,19 @@ static void dump_uservars(uint8_t *udata)
 				val_snum = *((int64_t *) value);
 				break;
 			}
-			printf("= %lld\n", (long long signed int) val_snum);
+			fprintf(stdout, "= %lld\n",
+				(long long signed int) val_snum);
 		} else {
 			switch(type) {
 			case USERVAR_TYPE_CHAR:
-				printf("= %c\n", (char) *value);
+				fprintf(stdout, "= %c\n", (char) *value);
 				break;
 			case USERVAR_TYPE_BOOL:
-				printf("= %s\n",
+				fprintf(stdout, "= %s\n",
 				       (bool) *value ? "true" : "false");
 				break;
 			default:
-				printf("( Type is not printable )\n");
+				fprintf(stdout, "( Type is not printable )\n");
 			}
 		}
 
@@ -470,24 +473,28 @@ static void dump_uservars(uint8_t *udata)
 static void dump_env(BG_ENVDATA *env)
 {
 	char buffer[ENV_STRING_LENGTH];
-	printf("Values:\n");
-	printf("in_progress:      %s\n", env->in_progress ? "yes" : "no");
-	printf("revision:         %u\n", env->revision);
-	printf("kernel:           %s\n", str16to8(buffer, env->kernelfile));
-	printf("kernelargs:       %s\n", str16to8(buffer, env->kernelparams));
-	printf("watchdog timeout: %u seconds\n", env->watchdog_timeout_sec);
-	printf("ustate:           %u (%s)\n", (uint8_t)env->ustate,
+	fprintf(stdout, "Values:\n");
+	fprintf(stdout,
+		"in_progress:      %s\n",env->in_progress ? "yes" : "no");
+	fprintf(stdout, "revision:         %u\n", env->revision);
+	fprintf(stdout,
+		"kernel:           %s\n", str16to8(buffer, env->kernelfile));
+	fprintf(stdout,
+		"kernelargs:       %s\n", str16to8(buffer, env->kernelparams));
+	fprintf(stdout,
+		"watchdog timeout: %u seconds\n", env->watchdog_timeout_sec);
+	fprintf(stdout, "ustate:           %u (%s)\n", (uint8_t)env->ustate,
 	       ustate2str(env->ustate));
-	printf("\n");
-	printf("user variables:\n");
+	fprintf(stdout, "\n");
+	fprintf(stdout, "user variables:\n");
 	dump_uservars(env->userdata);
-	printf("\n\n");
+	fprintf(stdout, "\n\n");
 }
 
 static void update_environment(BGENV *env)
 {
 	if (verbosity) {
-		printf("Processing journal...\n");
+		fprintf(stdout, "Processing journal...\n");
 	}
 
 	while (!STAILQ_EMPTY(&head)) {
@@ -507,8 +514,8 @@ static void dump_envs(void)
 {
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 		if (verbosity) {
-			printf("\n----------------------------\n");
-			printf(" Config Partition #%d ", i);
+			fprintf(stdout, "\n----------------------------\n");
+			fprintf(stdout, " Config Partition #%d ", i);
 		}
 		BGENV *env = bgenv_open_by_index(i);
 		if (env) {
@@ -624,8 +631,9 @@ int main(int argc, char **argv)
 			return 1;
 		}
 		if (verbosity) {
-			printf("Updating environment with revision %u\n",
-			       env_new->data->revision);
+			fprintf(stdout,
+				"Updating environment with revision %u\n",
+				env_new->data->revision);
 		}
 
 		if (!env_current->data || !env_new->data) {
@@ -658,8 +666,8 @@ int main(int argc, char **argv)
 	update_environment(env_new);
 
 	if (verbosity) {
-		printf("New environment data:\n");
-		printf("---------------------\n");
+		fprintf(stdout, "New environment data:\n");
+		fprintf(stdout, "---------------------\n");
 		dump_env(env_new->data);
 	}
 	if (!bgenv_write(env_new)) {
