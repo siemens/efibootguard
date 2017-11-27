@@ -80,10 +80,10 @@ int ebg_env_create_new(ebgenv_t *e)
 		}
 		BG_ENVDATA *new_data = ((BGENV *)e->bgenv)->data;
 		uint32_t new_rev = new_data->revision;
-		uint8_t new_ustate = new_data->ustate;
+		uint8_t new_in_progress = new_data->in_progress;
 		memcpy(new_data, latest_env->data, sizeof(BG_ENVDATA));
 		new_data->revision = new_rev;
-		new_data->ustate = new_ustate;
+		new_data->in_progress = new_in_progress;
 		bgenv_close(latest_env);
 	} else {
 		e->bgenv = latest_env;

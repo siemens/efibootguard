@@ -427,7 +427,7 @@ BGENV *bgenv_create_new(void)
 	memset(env_new->data, 0, sizeof(BG_ENVDATA));
 	/* update revision field and testing mode */
 	env_new->data->revision = new_rev;
-	env_new->data->ustate = 1;
+	env_new->data->in_progress = 1;
 	/* set default watchdog timeout */
 	env_new->data->watchdog_timeout_sec = 30;
 

@@ -128,12 +128,11 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 
 	ck_assert(((BGENV *)e.bgenv)->data == &envdata[0]);
 
-
-	ck_assert_int_eq(((BGENV *)e.bgenv)->data->in_progress, 0);
+	ck_assert_int_eq(((BGENV *)e.bgenv)->data->in_progress, 1);
 	ck_assert_int_eq(
 		((BGENV *)e.bgenv)->data->revision, ENV_NUM_CONFIG_PARTS+1);
 
-	ck_assert_int_eq(((BGENV *)e.bgenv)->data->ustate, USTATE_INSTALLED);
+	ck_assert_int_eq(((BGENV *)e.bgenv)->data->ustate, USTATE_OK);
 	ck_assert_int_eq(((BGENV *)e.bgenv)->data->watchdog_timeout_sec, 44);
 	(void)str16to8(buffer, ((BGENV *)e.bgenv)->data->kernelfile);
 	ck_assert_int_eq(
@@ -141,6 +140,16 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 	(void)str16to8(buffer, ((BGENV *)e.bgenv)->data->kernelparams);
 	ck_assert_int_eq(
 		strncmp(buffer, kernelparams, strlen(kernelparams) + 1), 0);
+
+	/* Test that a new creation of environment does keep the current
+	 * values if an update is already in progress
+	 */
+	ret = ebg_env_create_new(&e);
+
+	ck_assert(((BGENV *)e.bgenv)->data == &envdata[0]);
+	ck_assert_int_eq(((BGENV *)e.bgenv)->data->ustate, USTATE_OK);
+	ck_assert_int_eq(
+		((BGENV *)e.bgenv)->data->revision, ENV_NUM_CONFIG_PARTS+1);
 }
 END_TEST
 
