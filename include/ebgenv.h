@@ -35,7 +35,6 @@
 
 typedef struct {
 	void *bgenv;
-	bool ebg_new_env_created;
 } ebgenv_t;
 
 /** @brief Tell the library to output information for the user.

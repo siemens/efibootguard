@@ -65,9 +65,19 @@ int ebg_env_create_new(ebgenv_t *e)
 		return EIO;
 	}
 
-	if (!e->ebg_new_env_created) {
-		BGENV *latest_env = bgenv_open_latest();
+	BGENV *latest_env = bgenv_open_latest();
+	if (!latest_env) {
+		return EIO;
+	}
+
+	BG_ENVDATA *latest_data = ((BGENV *)latest_env)->data;
+
+	if (latest_data->in_progress != 1) {
 		e->bgenv = (void *)bgenv_create_new();
+		if (!e->bgenv) {
+			bgenv_close(latest_env);
+			return errno;
+		}
 		BG_ENVDATA *new_data = ((BGENV *)e->bgenv)->data;
 		uint32_t new_rev = new_data->revision;
 		uint8_t new_ustate = new_data->ustate;
@@ -75,11 +85,11 @@ int ebg_env_create_new(ebgenv_t *e)
 		new_data->revision = new_rev;
 		new_data->ustate = new_ustate;
 		bgenv_close(latest_env);
+	} else {
+		e->bgenv = latest_env;
 	}
 
-	e->ebg_new_env_created = e->bgenv != NULL;
-
-	return e->bgenv == NULL ? errno : 0;
+	return 0;
 }
 
 int ebg_env_open_current(ebgenv_t *e)

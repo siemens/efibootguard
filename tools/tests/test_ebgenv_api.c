@@ -92,32 +92,19 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 	char *kernelparams = "param456";
 
 	memset(&e, 0, sizeof(e));
+	memset(envdata, 0, sizeof(envdata));
+
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		envdata[i].revision = i + 1;
+	}
 
 	/* Test if ebg_env_create_new returns EIO if bgenv_init
 	 * returns false
 	 */
 	bgenv_init_fake.return_val = false;
+	bgenv_close_fake.return_val = true;
 	ret = ebg_env_create_new(&e);
 	ck_assert_int_eq(ret, EIO);
-
-	/* Test if errno is returned by ebg_env_created, if the bgenv pointer
-	 * is NULL but ebg_new_env_created is true, which is contradictory.
-	 * Also, ebg_new_env_created must be reset to false.
-	 */
-	bgenv_init_fake.return_val = true;
-	bgenv_close_fake.return_val = true;
-	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++)
-	{
-		envdata[i].revision = i;
-	}
-	e.ebg_new_env_created = true;
-	e.bgenv = NULL;
-	errno = 3044;
-
-	ret = ebg_env_create_new(&e);
-
-	ck_assert_int_eq(ret, 3044);
-	ck_assert(e.ebg_new_env_created == false);
 
 	/* Check if values of the latest environment are copied if a new
 	 * environment is created. The new environment must overwrite the
@@ -132,13 +119,20 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 	       strlen(kernelparams) * 2 + 2);
 	errno = 0;
 
+	bgenv_init_fake.return_val = true;
+	bgenv_close_fake.return_val = true;
 	ret = ebg_env_create_new(&e);
 
 	ck_assert_int_eq(errno, 0);
 	ck_assert_int_eq(ret, 0);
+
 	ck_assert(((BGENV *)e.bgenv)->data == &envdata[0]);
+
+
+	ck_assert_int_eq(((BGENV *)e.bgenv)->data->in_progress, 0);
 	ck_assert_int_eq(
-		((BGENV *)e.bgenv)->data->revision, ENV_NUM_CONFIG_PARTS);
+		((BGENV *)e.bgenv)->data->revision, ENV_NUM_CONFIG_PARTS+1);
+
 	ck_assert_int_eq(((BGENV *)e.bgenv)->data->ustate, USTATE_INSTALLED);
 	ck_assert_int_eq(((BGENV *)e.bgenv)->data->watchdog_timeout_sec, 44);
 	(void)str16to8(buffer, ((BGENV *)e.bgenv)->data->kernelfile);

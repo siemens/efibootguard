@@ -38,6 +38,9 @@ EBGENVKEY bgenv_str2enum(char *key)
 	if (strncmp(key, "ustate", strlen("ustate") + 1) == 0) {
 		return EBGENV_USTATE;
 	}
+	if (strncmp(key, "in_progress", strlen("in_progress") + 1) == 0) {
+		return EBGENV_IN_PROGRESS;
+	}
 	return EBGENV_UNKNOWN;
 }
 
@@ -311,6 +314,16 @@ int bgenv_get(BGENV *env, char *key, uint64_t *type, void *data,
 			*type = USERVAR_TYPE_UINT16;
 		}
 		break;
+	case EBGENV_IN_PROGRESS:
+		sprintf(buffer, "%u", env->data->in_progress);
+		if (!data) {
+			return strlen(buffer)+1;
+		}
+		strncpy(data, buffer, strlen(buffer)+1);
+		if (type) {
+			*type = USERVAR_TYPE_UINT8;
+		}
+		break;
 	default:
 		if (!data) {
 			return 0;
@@ -382,6 +395,18 @@ int bgenv_set(BGENV *env, char *key, uint64_t type, void *data,
 			return -EINVAL;
 		}
 		env->data->ustate = val;
+		break;
+	case EBGENV_IN_PROGRESS:
+		errno = 0;
+		val = strtol(value, &p, 10);
+		if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
+		    (errno != 0 && val == 0)) {
+			return -errno;
+		}
+		if (p == value) {
+			return -EINVAL;
+		}
+		env->data->in_progress = val;
 		break;
 	default:
 		return -EINVAL;
