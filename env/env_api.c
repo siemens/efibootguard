@@ -239,3 +239,12 @@ int ebg_env_close(ebgenv_t *e)
 	e->bgenv = NULL;
 	return 0;
 }
+
+int ebg_env_finalize_update(ebgenv_t *e) {
+	if (!e->bgenv || !((BGENV *)e->bgenv)->data) {
+		return EIO;
+	}
+	((BGENV *)e->bgenv)->data->in_progress = 0;
+	((BGENV *)e->bgenv)->data->ustate = USTATE_INSTALLED;
+	return 0;
+}

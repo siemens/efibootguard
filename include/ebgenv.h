@@ -128,4 +128,10 @@ int ebg_env_setglobalstate(ebgenv_t *e, uint16_t ustate);
  */
 int ebg_env_close(ebgenv_t *e);
 
+/** @brief Finalizes a currently running update procedure
+ *  @param e A pointer to an ebgenv_t context.
+ *  @return 0 on success, errno on failure
+ */
+int ebg_env_finalize_update(ebgenv_t *e);
+
 #endif //__EBGENV_H__
