@@ -39,6 +39,9 @@ static struct argp_option options_setenv[] = {
     {"uservar", 'x', "KEY=VAL", 0, "Set user-defined string variable. For "
 				   "setting multiple variables, use this "
 				   "option multiple times."},
+    {"in_progress", 'i', "IN_PROGRESS", 0, "Set in_progress variable to "
+					   "simulate a running update "
+					   "process."},
     {"version", 'V', 0, 0, "Print version"},
     {0}};
 
@@ -289,6 +292,30 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				ustate2str(i));
 		}
 		break;
+	case 'i':
+		errno = 0;
+		i = strtol(arg, &tmp, 10);
+		if ((errno == ERANGE && (i == LONG_MAX || i == LONG_MIN)) ||
+		    (errno != 0 && i == 0) || (tmp == arg)) {
+			fprintf(stderr, "Invalid value specified.\n");
+			return 1;
+		}
+		if (i < 0 || i > 1) {
+			fprintf(
+			    stderr,
+			    "Invalid value specified. Possible values: "
+			    "0 (no), 1 (yes)\n");
+			return 1;
+		} else {
+			res = asprintf(&tmp, "%u", i);
+			if (res == -1) {
+				return ENOMEM;
+			}
+			e = journal_add_action(ENV_TASK_SET, "in_progress", 0,
+					       (uint8_t *)tmp, strlen(tmp) + 1);
+			VERBOSE(stdout, "in_progress set to %d.\n", i);
+		}
+		break;
 	case 'r':
 		i = atoi(arg);
 		VERBOSE(stdout, "Revision is set to %d.\n", i);
@@ -431,6 +458,7 @@ static void dump_env(BG_ENVDATA *env)
 {
 	char buffer[ENV_STRING_LENGTH];
 	printf("Values: \n");
+	printf("in_progress: %s\n", env->in_progress ? "yes" : "no");
 	printf("revision: %u\n", env->revision);
 	printf("kernel: %s\n", str16to8(buffer, env->kernelfile));
 	printf("kernelargs: %s\n", str16to8(buffer, env->kernelparams));
