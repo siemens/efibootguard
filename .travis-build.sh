@@ -1,4 +1,15 @@
 #!/bin/bash
+#
+# EFI Boot Guard
+#
+# Copyright (c) Siemens AG, 2017
+#
+# Authors:
+#  Claudius Heine <ch@denx.de>
+#
+# This work is licensed under the terms of the GNU GPL, version 2.  See
+# the COPYING file in the top-level directory.
+#
 
 set -euo pipefail
 
@@ -158,4 +169,3 @@ case "$TARGET_EFFECTIVE" in
         exit -1
         ;;
 esac
-
