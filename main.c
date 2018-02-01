@@ -50,6 +50,11 @@ static EFI_STATUS scan_devices(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 	EFI_STATUS status;
 	UINT32 value;
 
+    if (timeout == 0) {
+        Print(L"Watchdog is disabled.\n");
+        return EFI_SUCCESS;
+    }
+
 	status = uefi_call_wrapper(BS->LocateHandle, 5, ByProtocol,
 				   &PciIoProtocol, NULL, &size, devices);
 	if (EFI_ERROR(status)) {
