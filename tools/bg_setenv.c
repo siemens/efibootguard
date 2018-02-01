@@ -338,7 +338,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		break;
 	case 'w':
 		i = parse_int(arg);
-		if (errno || i == 0) {
+		if (errno || i < 0) {
 			fprintf(stderr,
 				"Invalid watchdog timeout specified.\n");
 			return 1;

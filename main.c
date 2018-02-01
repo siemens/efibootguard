@@ -157,9 +157,13 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		    EFI_OUT_OF_RESOURCES);
 	}
 
-	status = scan_devices(loaded_image, bg_loader_params.timeout);
-	if (EFI_ERROR(status)) {
-		error_exit(L"Could not probe watchdog.", status);
+	if (bg_loader_params.timeout == 0) {
+		Print(L"Watchdog is disabled.\n");
+	} else {
+		status = scan_devices(loaded_image, bg_loader_params.timeout);
+		if (EFI_ERROR(status)) {
+			error_exit(L"Could not probe watchdog.", status);
+		}
 	}
 
 	/* Load and start image */
