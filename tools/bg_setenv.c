@@ -542,6 +542,14 @@ int main(int argc, char **argv)
 	bool write_mode = (bool)strstr(argv[0], "bg_setenv");
 	if (write_mode) {
 		argp = &argp_setenv;
+
+		if (argc < 2) {
+			printf("No task to perform. Please specify at least one"
+			       " optional argument. See --help for further"
+			       " information.\n");
+			return 1;
+		}
+
 	} else {
 		argp = &argp_printenv;
 		verbosity = true;
