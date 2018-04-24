@@ -8,6 +8,8 @@
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
+ *
+ * SPDX-License-Identifier:	GPL-2.0
  */
 
 #ifndef __ENV_API_H__
