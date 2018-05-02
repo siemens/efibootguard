@@ -289,6 +289,9 @@ int bgenv_get(BGENV *env, char *key, uint64_t *type, void *data,
 			uint8_t *u;
 			uint32_t size;
 			u = bgenv_find_uservar(env->data->userdata, key);
+			if (!u) {
+				return -EINVAL;
+			}
 			bgenv_map_uservar(u, NULL, NULL, NULL, NULL, &size);
 			return size;
 		}
