@@ -54,6 +54,8 @@ check_PROGRAMS = test_bgenv_init_retval \
 
 FAT_TESTLIB=libenvapi_testlib_fat.a
 
+CLEANFILES += $(FAT_TESTLIB)
+
 SRC_TEST_COMMON=test_main.c
 
 test_bgenv_init_retval_CFLAGS = $(AM_CFLAGS)
