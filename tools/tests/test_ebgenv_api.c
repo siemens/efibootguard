@@ -617,6 +617,56 @@ START_TEST(ebgenv_api_ebg_env_close)
 }
 END_TEST
 
+START_TEST(ebgenv_api_ebg_env_register_gc_var)
+{
+	ebgenv_t e;
+	int ret;
+	memset(&e, 0, sizeof(e));
+
+	bgenv_write_fake.return_val = true;
+	bgenv_close_fake.return_val = true;
+
+	bgenv_init_fake.return_val = true;
+
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		envdata[i].revision = i + 1;
+	}
+
+	ret = ebg_env_create_new(&e);
+	ck_assert_int_eq(ret, 0);
+
+	/* Create three user variables VarA, VarB and VarC */
+	ebg_env_set(&e, "VarA", "TestA");
+	ebg_env_set(&e, "VarB", "TestB");
+	ebg_env_set(&e, "VarC", "TestC");
+
+	/* Check if variables exist */
+	int res;
+	res = ebg_env_get(&e, "VarA", NULL);
+	ck_assert_int_eq(res, strlen("TestA") + 1);
+	res = ebg_env_get(&e, "VarB", NULL);
+	ck_assert_int_eq(res, strlen("TestB") + 1);
+	res = ebg_env_get(&e, "VarC", NULL);
+	ck_assert_int_eq(res, strlen("TestC") + 1);
+
+	/* Register variables for deletion */
+	ebg_env_register_gc_var(&e, "VarA");
+	ebg_env_register_gc_var(&e, "VarC");
+
+	ebg_env_finalize_update(&e);
+
+	/* Check if variables are deleted */
+	res = ebg_env_get(&e, "VarA", NULL);
+	ck_assert_int_eq(res, -EINVAL);
+	res = ebg_env_get(&e, "VarB", NULL);
+	ck_assert_int_eq(res, strlen("TestB") + 1);
+	res = ebg_env_get(&e, "VarC", NULL);
+	ck_assert_int_eq(res, -EINVAL);
+
+	ebg_env_close(&e);
+}
+END_TEST
+
 Suite *ebg_test_suite(void)
 {
 	Suite *s;
@@ -634,7 +684,8 @@ Suite *ebg_test_suite(void)
 		ebgenv_api_ebg_env_user_free,
 		ebgenv_api_ebg_env_getglobalstate,
 		ebgenv_api_ebg_env_setglobalstate,
-		ebgenv_api_ebg_env_close
+		ebgenv_api_ebg_env_close,
+		ebgenv_api_ebg_env_register_gc_var
 	};
 
 	tc_core = tcase_create("Core");
