@@ -37,6 +37,7 @@
 
 typedef struct {
 	void *bgenv;
+	void *gc_registry;
 } ebgenv_t;
 
 /** @brief Tell the library to output information for the user.
@@ -129,6 +130,13 @@ int ebg_env_setglobalstate(ebgenv_t *e, uint16_t ustate);
  *  @return 0 on success, errno on failure
  */
 int ebg_env_close(ebgenv_t *e);
+
+/** @brief Register a variable that will be deleted on finalize
+ *  @param e A pointer to an ebgenv_t context.
+ *  @param key A string containing the variable key
+ *  @return 0 on success, errno on failure
+ */
+int ebg_env_register_gc_var(ebgenv_t *e, char *key);
 
 /** @brief Finalizes a currently running update procedure
  *  @param e A pointer to an ebgenv_t context.

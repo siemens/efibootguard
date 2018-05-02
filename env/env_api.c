@@ -242,10 +242,53 @@ int ebg_env_close(ebgenv_t *e)
 	return 0;
 }
 
-int ebg_env_finalize_update(ebgenv_t *e) {
+int ebg_env_register_gc_var(ebgenv_t *e, char *key)
+{
+	GC_ITEM **pgci;
+	pgci = (GC_ITEM **)&e->gc_registry;
+
+	if (!key) {
+		return EINVAL;
+	}
+	while (*pgci) {
+		pgci = &((*pgci)->next);
+	}
+	*pgci = (GC_ITEM *)calloc(1, sizeof(GC_ITEM));
+	if (!*pgci) {
+		return ENOMEM;
+	}
+	if (asprintf(&((*pgci)->key), "%s", key) == -1) {
+		free(*pgci);
+		*pgci = NULL;
+		return ENOMEM;
+	}
+	return 0;
+}
+
+int ebg_env_finalize_update(ebgenv_t *e)
+{
 	if (!e->bgenv || !((BGENV *)e->bgenv)->data) {
 		return EIO;
 	}
+
+	GC_ITEM **pgci, *tmp;
+	uint8_t *udata;
+
+	pgci = (GC_ITEM **)&e->gc_registry;
+	udata = ((BGENV *)e->bgenv)->data->userdata;
+	while (*pgci) {
+		uint8_t *var;
+		var = bgenv_find_uservar(udata, (*pgci)->key);
+		if (var) {
+			bgenv_del_uservar(udata, var);
+		}
+		free((*pgci)->key);
+		tmp = (*pgci)->next;
+		free(*pgci);
+		*pgci = NULL;
+		pgci = &tmp;
+	}
+
 	((BGENV *)e->bgenv)->data->in_progress = 0;
 	((BGENV *)e->bgenv)->data->ustate = USTATE_INSTALLED;
 	return 0;
