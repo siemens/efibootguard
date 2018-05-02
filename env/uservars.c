@@ -106,7 +106,7 @@ int bgenv_get_uservar(uint8_t *udata, char *key, uint64_t *type, void *data,
 	uservar = bgenv_find_uservar(udata, key);
 
 	if (!uservar) {
-		return -EINVAL;
+		return -ENOENT;
 	}
 
 	bgenv_map_uservar(uservar, &lkey, &ltype, &value, NULL, &dsize);

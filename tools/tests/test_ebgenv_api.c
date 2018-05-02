@@ -657,11 +657,11 @@ START_TEST(ebgenv_api_ebg_env_register_gc_var)
 
 	/* Check if variables are deleted */
 	res = ebg_env_get(&e, "VarA", NULL);
-	ck_assert_int_eq(res, -EINVAL);
+	ck_assert_int_eq(res, -ENOENT);
 	res = ebg_env_get(&e, "VarB", NULL);
 	ck_assert_int_eq(res, strlen("TestB") + 1);
 	res = ebg_env_get(&e, "VarC", NULL);
-	ck_assert_int_eq(res, -EINVAL);
+	ck_assert_int_eq(res, -ENOENT);
 
 	ebg_env_close(&e);
 }
