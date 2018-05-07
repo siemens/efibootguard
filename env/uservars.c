@@ -78,7 +78,7 @@ void bgenv_serialize_uservar(uint8_t *p, char *key, uint64_t type, void *data,
 	uint32_t payload_size, data_size;
 
 	/* store key */
-	strncpy((char *)p, key, strlen(key) + 1);
+	strcpy((char *)p, key);
 	p += strlen(key) + 1;
 
 	/* store payload_size after key */

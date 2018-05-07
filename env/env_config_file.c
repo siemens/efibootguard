@@ -30,10 +30,9 @@ FILE *open_config_file(CONFIG_PART *cfgpart, char *mode)
 	if (!configfilepath) {
 		return NULL;
 	}
-	strncpy(configfilepath, cfgpart->mountpoint,
-		strlen(cfgpart->mountpoint) + 1);
-	strncat(configfilepath, "/", 1);
-	strncat(configfilepath, FAT_ENV_FILENAME, strlen(FAT_ENV_FILENAME));
+	strcpy(configfilepath, cfgpart->mountpoint);
+	strcat(configfilepath, "/");
+	strcat(configfilepath, FAT_ENV_FILENAME);
 	VERBOSE(stdout, "Probing config file at %s.\n", configfilepath);
 	FILE *config = fopen(configfilepath, mode);
 	free(configfilepath);

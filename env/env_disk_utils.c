@@ -35,12 +35,10 @@ char *get_mountpoint(char *devpath)
 		    (strcmp(part->mnt_fsname, devpath)) == 0) {
 			char *mntpoint;
 
-			mntpoint = malloc(strlen(part->mnt_dir) + 1);
+			mntpoint = strdup(part->mnt_dir);
 			if (!mntpoint) {
 				break;
 			}
-			strncpy(mntpoint, part->mnt_dir,
-				strlen(part->mnt_dir) + 1);
 			return mntpoint;
 		}
 	}
@@ -77,7 +75,7 @@ bool mount_partition(CONFIG_PART *cfgpart)
 		VERBOSE(stderr, "Error, out of memory.\n");
 		return false;
 	}
-	strncpy(cfgpart->mountpoint, mountpoint, strlen(mountpoint) + 1);
+	strcpy(cfgpart->mountpoint, mountpoint);
 	return true;
 }
 

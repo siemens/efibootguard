@@ -264,7 +264,7 @@ static int bgenv_get_string(char *buffer, uint64_t *type, void *data,
 	if (!data) {
 		return strlen(buffer)+1;
 	}
-	strncpy(data, buffer, strlen(buffer)+1);
+	strcpy(data, buffer);
 	if (type) {
 		*type = USERVAR_TYPE_STRING_ASCII;
 	}
