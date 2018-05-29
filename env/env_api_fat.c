@@ -370,7 +370,7 @@ int bgenv_set(BGENV *env, char *key, uint64_t type, void *data,
 	case EBGENV_REVISION:
 		val = bgenv_convert_to_long(value);
 		if (val < 0) {
-			return val;
+			return -EINVAL;
 		}
 		env->data->revision = val;
 		break;
@@ -383,21 +383,21 @@ int bgenv_set(BGENV *env, char *key, uint64_t type, void *data,
 	case EBGENV_WATCHDOG_TIMEOUT_SEC:
 		val = bgenv_convert_to_long(value);
 		if (val < 0) {
-			return val;
+			return -EINVAL;
 		}
 		env->data->watchdog_timeout_sec = val;
 		break;
 	case EBGENV_USTATE:
 		val = bgenv_convert_to_long(value);
 		if (val < 0) {
-			return val;
+			return -EINVAL;
 		}
 		env->data->ustate = val;
 		break;
 	case EBGENV_IN_PROGRESS:
 		val = bgenv_convert_to_long(value);
 		if (val < 0) {
-			return val;
+			return -EINVAL;
 		}
 		env->data->in_progress = val;
 		break;
