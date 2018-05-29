@@ -23,11 +23,11 @@ BG_STATUS save_current_config(void)
 {
 	BG_STATUS result = BG_SUCCESS;
 	EFI_STATUS efistatus;
-	UINTN numHandles = CONFIG_PARTITION_MAXCOUNT;
+	UINTN numHandles = volume_count;
 	EFI_FILE_HANDLE *roots;
 
 	roots = (EFI_FILE_HANDLE *)mmalloc(sizeof(EFI_FILE_HANDLE) *
-					   CONFIG_PARTITION_MAXCOUNT);
+					   volume_count);
 	if (!roots) {
 		Print(L"Error, could not allocate memory for config partition "
 		      L"handles.\n");
@@ -86,13 +86,13 @@ BG_STATUS save_current_config(void)
 BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 {
 	BG_STATUS result = BG_SUCCESS;
-	UINTN numHandles = CONFIG_PARTITION_MAXCOUNT;
+	UINTN numHandles = volume_count;
 	EFI_FILE_HANDLE *roots;
 	UINTN i;
 	int env_invalid[ENV_NUM_CONFIG_PARTS] = {0};
 
 	roots = (EFI_FILE_HANDLE *)mmalloc(sizeof(EFI_FILE_HANDLE) *
-					   CONFIG_PARTITION_MAXCOUNT);
+					   volume_count);
 	if (!roots) {
 		Print(L"Error, could not allocate memory for config partition "
 		      L"handles.\n");
