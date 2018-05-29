@@ -105,13 +105,18 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 		return BG_CONFIG_ERROR;
 	}
 
-	if (numHandles != ENV_NUM_CONFIG_PARTS) {
-		Print(L"Warning, unexpected number of config partitions: found "
+	if (numHandles > ENV_NUM_CONFIG_PARTS) {
+		Print(L"Error, too many config partitions found. Aborting.\n");
+		mfree(roots);
+		return BG_CONFIG_ERROR;
+	}
+
+	if (numHandles < ENV_NUM_CONFIG_PARTS) {
+		Print(L"Warning, too few config partitions: found: "
 		      L"%d, but expected %d.\n",
 		      numHandles, ENV_NUM_CONFIG_PARTS);
 		/* Don't treat this as error because we may still be able to
-		 * find a
-		 * valid config */
+		 * find a valid config */
 		result = BG_CONFIG_PARTIALLY_CORRUPTED;
 	}
 
