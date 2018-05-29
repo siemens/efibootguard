@@ -56,7 +56,7 @@ CHAR16 *get_volume_label(EFI_FILE_HANDLE fh)
 	UINTN fsis;
 	EFI_STATUS status;
 
-	fsi = AllocatePool(MAX_INFO_SIZE);
+	fsi = mmalloc(MAX_INFO_SIZE);
 	if (fsi == NULL) {
 		return NULL;
 	}
@@ -64,7 +64,7 @@ CHAR16 *get_volume_label(EFI_FILE_HANDLE fh)
 	status =
 	    uefi_call_wrapper(fh->GetInfo, 4, fh, &fsiGuid, &fsis, (VOID *)fsi);
 	if (EFI_ERROR(status) || fsis == 0) {
-		FreePool(fsi);
+		mfree(fsi);
 		return NULL;
 	}
 	return fsi->VolumeLabel;
@@ -123,6 +123,8 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 
 	for (index = 0; index < handleCount; index++) {
 		EFI_FILE_IO_INTERFACE *fs = NULL;
+		CHAR16 *devpathstr;
+
 		status =
 		    uefi_call_wrapper(BS->HandleProtocol, 3, handles[index],
 				      &sfspGuid, (VOID **)&fs);
@@ -148,6 +150,8 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 			    L"skipping.\n");
 			continue;
 		}
+		devpathstr = DevicePathToStr(devpath);
+
 		(*volumes)[rootCount].root = tmp;
 		(*volumes)[rootCount].devpath = devpath;
 		(*volumes)[rootCount].fslabel =
@@ -155,8 +159,10 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 		(*volumes)[rootCount].fscustomlabel =
 		    get_volume_custom_label((*volumes)[rootCount].root);
 		Print(L"Volume %d: %s, LABEL=%s, CLABEL=%s\n", rootCount,
-		      DevicePathToStr(devpath), (*volumes)[rootCount].fslabel,
+		      devpathstr, (*volumes)[rootCount].fslabel,
 		      (*volumes)[rootCount].fscustomlabel);
+
+		mfree(devpathstr);
 		rootCount++;
 	}
 	*count = rootCount;
@@ -247,10 +253,21 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 	CHAR16 *pathprefix = DevicePathToStr(devpath);
 	fullpath = mmalloc(sizeof(CHAR16) *
 			   (StrLen(pathprefix) + StrLen(payloadpath) + 1));
+
 	StrCpy(fullpath, pathprefix);
 	StrCat(fullpath, payloadpath + prefixlen + 3);
 	Print(L"Full path for kernel is: %s\n", fullpath);
 
-	return AppendDevicePath(
-	    devpath, FileDevicePath(NULL, payloadpath + prefixlen + 3));
+	mfree(fullpath);
+	mfree(pathprefix);
+
+	EFI_DEVICE_PATH *filedevpath;
+	EFI_DEVICE_PATH *appendeddevpath;
+
+	filedevpath = FileDevicePath(NULL, payloadpath + prefixlen + 3);
+	appendeddevpath = AppendDevicePath(devpath, filedevpath);
+
+	mfree(filedevpath);
+
+	return appendeddevpath;
 }

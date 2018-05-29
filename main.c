@@ -175,6 +175,8 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		error_exit(L"Could not load specified kernel image.", status);
 	}
 
+	mfree(payload_dev_path);
+
 	status =
 	    uefi_call_wrapper(BS->OpenProtocol, 6, payload_handle,
 			      &LoadedImageProtocol, (VOID **)&loaded_image,
