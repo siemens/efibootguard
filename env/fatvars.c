@@ -51,10 +51,8 @@ BG_STATUS save_current_config(void)
 	}
 
 	EFI_FILE_HANDLE fh = NULL;
-	efistatus = uefi_call_wrapper(
-	    roots[current_partition]->Open, 5, roots[current_partition], &fh,
-	    ENV_FILE_NAME, EFI_FILE_MODE_WRITE | EFI_FILE_MODE_READ,
-	    EFI_FILE_ARCHIVE | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM);
+	efistatus = open_cfg_file(roots[current_partition], &fh,
+				  EFI_FILE_MODE_WRITE | EFI_FILE_MODE_READ);
 	if (EFI_ERROR(efistatus)) {
 		Print(L"Error, could not open environment file on system "
 		      L"partition %d: %r\n",
@@ -75,7 +73,7 @@ BG_STATUS save_current_config(void)
 		result = BG_CONFIG_ERROR;
 	}
 
-	if (EFI_ERROR(uefi_call_wrapper(fh->Close, 1, fh))) {
+	if (EFI_ERROR(close_cfg_file(roots[current_partition], fh))) {
 		Print(L"Error, could not close environment config file.\n");
 		result = BG_CONFIG_ERROR;
 	}
@@ -123,26 +121,21 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 	/* Load all config data */
 	for (i = 0; i < numHandles; i++) {
 		EFI_FILE_HANDLE fh = NULL;
-		if (EFI_ERROR(uefi_call_wrapper(
-			roots[i]->Open, 5, roots[i], &fh, ENV_FILE_NAME,
-			EFI_FILE_MODE_READ,
-			EFI_FILE_READ_ONLY | EFI_FILE_ARCHIVE |
-			    EFI_FILE_HIDDEN | EFI_FILE_SYSTEM))) {
+		if (EFI_ERROR(open_cfg_file(roots[i], &fh,
+			                    EFI_FILE_MODE_READ))) {
 			Print(L"Warning, could not open environment file on "
 			      L"config partition %d\n",
 			      i);
 			result = BG_CONFIG_PARTIALLY_CORRUPTED;
 			continue;
 		}
-
 		UINTN readlen = sizeof(BG_ENVDATA);
-		if (EFI_ERROR(uefi_call_wrapper(fh->Read, 3, fh, &readlen,
-						(VOID *)&env[i]))) {
+		if (EFI_ERROR(read_cfg_file(fh, &readlen, (VOID *)&env[i]))) {
 			Print(L"Error reading environment from config "
 			      L"partition %d.\n",
 			      i);
 			env_invalid[i] = 1;
-			if (EFI_ERROR(uefi_call_wrapper(fh->Close, 1, fh))) {
+			if (EFI_ERROR(close_cfg_file(roots[i], fh))) {
 				Print(L"Error, could not close environment "
 				      L"config file.\n");
 			}
