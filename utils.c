@@ -271,3 +271,28 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 
 	return appendeddevpath;
 }
+
+CHAR16 *GetBootMediumPath(CHAR16 *input)
+{
+	CHAR16 *dst;
+	UINTN len;
+
+	len = StrLen(input);
+
+	dst = mmalloc((len + 1) * sizeof(CHAR16));
+	if (!dst) {
+		return NULL;
+	}
+
+	StrCpy(dst, input);
+
+	for (UINTN i = len; i > 0; i--)
+	{
+		if (dst[i * sizeof(CHAR16)] == L'/') {
+			dst[i * sizeof(CHAR16)] = L'\0';
+			break;
+		}
+	}
+
+	return dst;
+}
