@@ -42,5 +42,6 @@ EFI_STATUS close_volumes(VOLUME_DESC *volumes, UINTN count);
 EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 					  CHAR16 *payloadpath);
 CHAR16 *GetBootMediumPath(CHAR16 *input);
+BOOLEAN IsOnBootDevice(EFI_DEVICE_PATH *dp);
 
 #endif // __H_UTILS__

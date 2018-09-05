@@ -16,6 +16,24 @@
 #include <bootguard.h>
 #include <utils.h>
 
+BOOLEAN IsOnBootDevice(EFI_DEVICE_PATH *dp)
+{
+	extern CHAR16 *boot_device_path;
+	CHAR16 *device_path, *tmp;
+	BOOLEAN result = FALSE;
+
+	tmp = DevicePathToStr(dp);
+	device_path = GetBootMediumPath(tmp);
+	mfree(tmp);
+
+	if (StrCmp(device_path, boot_device_path) == 0) {
+		result = TRUE;
+	}
+	mfree(device_path);
+
+	return result;
+}
+
 uint32_t calc_crc32(void *data, int32_t size)
 {
 	uint32_t crc;

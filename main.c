@@ -24,6 +24,7 @@
 
 extern const unsigned long init_array_start[];
 extern const unsigned long init_array_end[];
+extern CHAR16 *boot_device_path;
 
 static EFI_STATUS probe_watchdog(EFI_LOADED_IMAGE *loaded_image,
 				 EFI_PCI_IO *pci_io, UINT16 pci_vendor_id,
@@ -105,6 +106,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	EFI_STATUS status;
 	BG_STATUS bg_status;
 	BG_LOADER_PARAMS bg_loader_params;
+	CHAR16 *tmp;
 
 	ZeroMem(&bg_loader_params, sizeof(bg_loader_params));
 
@@ -122,6 +124,11 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 			   L"information.",
 			   status);
 	}
+
+	tmp = DevicePathToStr(DevicePathFromHandle(loaded_image->DeviceHandle));
+	boot_device_path = GetBootMediumPath(tmp);
+	mfree(tmp);
+	Print(L"Boot device: %s\n", boot_device_path);
 
 	status = get_volumes(&volumes, &volume_count);
 	if (EFI_ERROR(status)) {
@@ -176,6 +183,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	}
 
 	mfree(payload_dev_path);
+	mfree(boot_device_path);
 
 	status =
 	    uefi_call_wrapper(BS->OpenProtocol, 6, payload_handle,
