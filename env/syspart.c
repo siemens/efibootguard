@@ -62,29 +62,29 @@ static void swap_uintn(UINTN *a, UINTN *b)
 
 UINTN filter_cfg_parts(UINTN *config_volumes, UINTN numHandles)
 {
-	BOOLEAN use_envs_on_bootdevice_only = FALSE;
+	BOOLEAN use_envs_on_bootmedium_only = FALSE;
 
 	Print(L"Config filter: \n");
 	for (UINTN index = 0; index < numHandles; index++) {
 		VOLUME_DESC *v = &volumes[config_volumes[index]];
 
-		if (IsOnBootDevice(v->devpath)) {
-			use_envs_on_bootdevice_only = TRUE;
+		if (IsOnBootMedium(v->devpath)) {
+			use_envs_on_bootmedium_only = TRUE;
 		};
 	}
 
-	if (!use_envs_on_bootdevice_only) {
+	if (!use_envs_on_bootmedium_only) {
 		// nothing to do
 		return numHandles;
 	}
 
-	Print(L"Booting with environments from boot device only.\n");
+	Print(L"Booting with environments from boot medium only.\n");
 	UINTN num_sorted = 0;
 	for (UINTN j = 0; j < numHandles; j++) {
 		UINTN cvi = config_volumes[j];
 		VOLUME_DESC *v = &volumes[cvi];
 
-		if (IsOnBootDevice(v->devpath)) {
+		if (IsOnBootMedium(v->devpath)) {
 			swap_uintn(&config_volumes[j],
 				   &config_volumes[num_sorted++]);
 		} else {

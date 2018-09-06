@@ -16,9 +16,9 @@
 #include <bootguard.h>
 #include <utils.h>
 
-BOOLEAN IsOnBootDevice(EFI_DEVICE_PATH *dp)
+BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 {
-	extern CHAR16 *boot_device_path;
+	extern CHAR16 *boot_medium_path;
 	CHAR16 *device_path, *tmp;
 	BOOLEAN result = FALSE;
 
@@ -26,7 +26,7 @@ BOOLEAN IsOnBootDevice(EFI_DEVICE_PATH *dp)
 	device_path = GetBootMediumPath(tmp);
 	mfree(tmp);
 
-	if (StrCmp(device_path, boot_device_path) == 0) {
+	if (StrCmp(device_path, boot_medium_path) == 0) {
 		result = TRUE;
 	}
 	mfree(device_path);
@@ -177,7 +177,7 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 		(*volumes)[rootCount].fscustomlabel =
 		    get_volume_custom_label((*volumes)[rootCount].root);
 		Print(L"Volume %d: ", rootCount);
-		if (IsOnBootDevice(devpath)) {
+		if (IsOnBootMedium(devpath)) {
 			Print(L"(On boot medium) ");
 		}
 		Print(L"%s, LABEL=%s, CLABEL=%s\n",
