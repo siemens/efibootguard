@@ -311,8 +311,8 @@ CHAR16 *GetBootMediumPath(CHAR16 *input)
 
 	for (UINTN i = len; i > 0; i--)
 	{
-		if (dst[i * sizeof(CHAR16)] == L'/') {
-			dst[i * sizeof(CHAR16)] = L'\0';
+		if (dst[i] == L'/') {
+			dst[i] = L'\0';
 			break;
 		}
 	}
