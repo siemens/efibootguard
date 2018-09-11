@@ -270,16 +270,17 @@ static bool check_partition_table(PedDevice *dev)
 	VERBOSE(stdout, "Checking %s\n", dev->path);
 	fd = open(dev->path, O_RDONLY);
 	if (fd < 0) {
-		VERBOSE(stderr, "Error opening block device.\n");
+		VERBOSE(stderr, "Cannot open block device, skipping...\n");
 		return false;
 	}
 	if (read(fd, &mbr, sizeof(mbr)) != sizeof(mbr)) {
-		VERBOSE(stderr, "Error reading mbr on %s.\n", dev->path);
+		VERBOSE(stderr, "Cannot read MBR on %s, skipping...\n",
+			dev->path);
 		close(fd);
 		return false;
 	};
 	if (mbr.mbrsignature != 0xaa55) {
-		VERBOSE(stderr, "Error, MBR has wrong signature.\n");
+		VERBOSE(stderr, "No valid MBR signature found, skipping...\n");
 		close(fd);
 		return false;
 	}
