@@ -75,12 +75,14 @@ static char *type_to_name(char t)
 static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
 				PedFileSystemType *pfst, uint32_t i)
 {
-	if (strcmp(GPT_PARTITION_GUID_FAT_NTFS, GUID_to_str(e->type_GUID)) !=
-		0 &&
-	    strcmp(GPT_PARTITION_GUID_ESP, GUID_to_str(e->type_GUID)) != 0) {
+	char *guid_str = GUID_to_str(e->type_GUID);
+	if (strcmp(GPT_PARTITION_GUID_FAT_NTFS, guid_str) != 0 &&
+	    strcmp(GPT_PARTITION_GUID_ESP, guid_str) != 0) {
 		if (asprintf(&pfst->name, "%s", "not supported") == -1) {
 			goto error_asprintf;
 		}
+		VERBOSE(stderr, "GPT entry has unsupported GUID: %s\n",
+			guid_str);
 		return true;
 	}
 	VERBOSE(stdout, "GPT Partition #%u is FAT/NTFS.\n", i);
