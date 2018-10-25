@@ -17,7 +17,7 @@
 #
 
 AC_INIT([efibootguard],
-	[0.1.0],
+	[m4_esyscmd_s([cat VERSION])],
 	[],
 	[efibootguard],
 	[])
