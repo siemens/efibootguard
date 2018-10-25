@@ -43,5 +43,6 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 					  CHAR16 *payloadpath);
 CHAR16 *GetBootMediumPath(CHAR16 *input);
 BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp);
+VOID Color(EFI_SYSTEM_TABLE *system_table, char fgcolor, char bgcolor);
 
 #endif // __H_UTILS__

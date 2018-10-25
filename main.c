@@ -21,6 +21,7 @@
 #include <bootguard.h>
 #include <configuration.h>
 #include "version.h"
+#include "utils.h"
 
 extern const unsigned long init_array_start[];
 extern const unsigned long init_array_end[];
@@ -113,7 +114,9 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	this_image = image_handle;
 	InitializeLib(this_image, system_table);
 
+	Color(system_table, 3, 0);
 	Print(L"\nEFI Boot Guard %s\n", L""EFIBOOTGUARD_VERSION);
+	Color(system_table, 7, 0);
 
 	status =
 	    uefi_call_wrapper(BS->OpenProtocol, 6, this_image,
