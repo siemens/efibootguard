@@ -39,6 +39,7 @@ char *get_mountpoint(char *devpath)
 			if (!mntpoint) {
 				break;
 			}
+			endmntent(mtab);
 			return mntpoint;
 		}
 	}
