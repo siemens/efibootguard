@@ -22,6 +22,7 @@ const char *tmp_mnt_dir = "/tmp/mnt-XXXXXX";
 
 char *get_mountpoint(char *devpath)
 {
+	char *mntpoint = NULL;
 	struct mntent *part;
 	FILE *mtab;
 
@@ -33,19 +34,13 @@ char *get_mountpoint(char *devpath)
 	while ((part = getmntent(mtab)) != NULL) {
 		if ((part->mnt_fsname != NULL) &&
 		    (strcmp(part->mnt_fsname, devpath)) == 0) {
-			char *mntpoint;
-
 			mntpoint = strdup(part->mnt_dir);
-			if (!mntpoint) {
-				break;
-			}
-			endmntent(mtab);
-			return mntpoint;
+			break;
 		}
 	}
 	endmntent(mtab);
 
-	return NULL;
+	return mntpoint;
 }
 
 bool mount_partition(CONFIG_PART *cfgpart)
