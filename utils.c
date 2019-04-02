@@ -322,6 +322,6 @@ CHAR16 *GetBootMediumPath(CHAR16 *input)
 
 VOID Color(EFI_SYSTEM_TABLE *system_table, char fgcolor, char bgcolor)
 {
-	EFI_SIMPLE_TEXT_OUT_PROTOCOL *con = system_table->ConOut;
+	SIMPLE_TEXT_OUTPUT_INTERFACE *con = system_table->ConOut;
 	(VOID)uefi_call_wrapper(con->SetAttribute, 3, con, (bgcolor << 8) | fgcolor);
 }
