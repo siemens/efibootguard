@@ -18,6 +18,7 @@
 
 #define PCI_DEVICE_ID_INTEL_BAYTRAIL	0x0f1c
 #define PCI_DEVICE_ID_INTEL_WPT_LP	0x9cc3
+#define PCI_DEVICE_ID_INTEL_APL	0x5ae8
 
 #define PMBASE_REG			0x40
 # define PMBASE_ADDRMASK		0xff00
@@ -44,7 +45,8 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL ||
 	    (pci_device_id != PCI_DEVICE_ID_INTEL_BAYTRAIL &&
-	     pci_device_id != PCI_DEVICE_ID_INTEL_WPT_LP)) {
+	     pci_device_id != PCI_DEVICE_ID_INTEL_WPT_LP &&
+	     pci_device_id != PCI_DEVICE_ID_INTEL_APL)) {
 		return EFI_UNSUPPORTED;
 	}
 
