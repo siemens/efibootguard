@@ -30,8 +30,9 @@ The following watchdog drivers are implemented:
 * Intel TCO
 * Intel i6300esb
 
-Currently, it is not possible to disable the watchdog initialization. If no
-working watchdog is found, the boot process fails.
+Note that if no working watchdog is found, the boot process deliberately fails.
+That said, setting a watchdog timeout of `0` allows to boot nonetheless without
+a working watchdog, e.g., for testing purposes.
 
 ## Configuration ##
 
