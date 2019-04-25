@@ -44,7 +44,8 @@ bool probe_config_partitions(CONFIG_PART *cfgpart)
 				part = ped_disk_next_partition(pd, part);
 				continue;
 			}
-			if (strncmp("/dev/mmcblk", dev->path, 11) == 0) {
+			if (strncmp("/dev/mmcblk", dev->path, 11) == 0 ||
+			    strncmp("/dev/nvme", dev->path, 9) == 0) {
 				(void)snprintf(devpath, 4096, "%sp%u",
 					       dev->path, part->num);
 			} else {
