@@ -115,7 +115,7 @@ newaction_nomem:
 
 static void journal_process_action(BGENV *env, struct env_action *action)
 {
-	uint8_t *var;
+	
 	ebgenv_t e;
 	char *tmp;
 
