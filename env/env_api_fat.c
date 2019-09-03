@@ -351,7 +351,6 @@ int bgenv_set(BGENV *env, char *key, uint64_t type, void *data,
 {
 	EBGENVKEY e;
 	int val;
-	char *p;
 	char *value = (char *)data;
 
 	if (!key || !data || datalen == 0) {
