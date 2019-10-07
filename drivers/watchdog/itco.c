@@ -97,7 +97,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 		return status;
 	}
 	value &= 0xfc00;
-	value |= ((timeout * 10) / 6) & 0x3ff;
+	value |= timeout & 0x3ff;
 	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
 				   EfiPciIoWidthUint16,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
