@@ -58,6 +58,4 @@ typedef struct _BG_LOADER_PARAMS {
 	UINTN timeout;
 } BG_LOADER_PARAMS;
 
-extern EFI_HANDLE this_image;
-
 #endif // __H_BOOTGUARD__
