@@ -229,7 +229,7 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 	LABELMODE lm = NOLABEL;
 	/* Check if payload path contains a
 	 * L:LABEL: item to specify a FAT partition or a
-	 * C:LABEL: to specify a costum labeled FAT partition */
+	 * C:LABEL: to specify a custom labeled FAT partition */
 	if (StrnCmp(payloadpath, L"L:", 2) == 0) {
 		lm = DOSFSLABEL;
 	} else if (StrnCmp(payloadpath, L"C:", 2) == 0) {
