@@ -251,11 +251,9 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 			switch (lm) {
 			case DOSFSLABEL:
 				src = volumes[v].fslabel;
-				Print(L"Using DOSFS Label Mode...\n");
 				break;
 			case CUSTOMLABEL:
 				src = volumes[v].fscustomlabel;
-				Print(L"Using CUSTOM Label Mode...\n");
 				break;
 			default:
 				src = NULL;
