@@ -17,9 +17,6 @@
 #include <efilib.h>
 #include <pci/header.h>
 
-#define PMBASE_ADDRMASK		0x0000ff80
-#define PMCBASE_ADDRMASK	0xfffffe00
-
 #define SMI_TCO_MASK		(1 << 13)
 
 #define TCO_RLD_REG		0x00
@@ -27,57 +24,113 @@
 #define TCO_TMR_HLT_MASK	(1 << 11)
 #define TCO_TMR_REG		0x12
 
-#define PMC_NO_REBOOT_MASK	(1 << 4)
-
 enum iTCO_chipsets {
 	ITCO_INTEL_APL = 0,
 	ITCO_INTEL_BAYTRAIL,
 	ITCO_INTEL_WPT_LP,
 	ITCO_INTEL_ICH9,
+	ITCO_INTEL_LPC_LP,
 };
+
+enum iTCO_versions {
+	ITCO_V1 = 1,
+	ITCO_V2,
+	ITCO_V3,
+	ITCO_V4,
+	ITCO_V5,
+};
+
+typedef struct {
+	UINT32 pm_base;
+	UINT32 pm_base_addr_mask;
+	UINT32 pmc_base_reg;
+	UINT32 pmc_reg;
+	UINT32 smi_reg;
+	UINT32 pmc_no_reboot_mask;
+	UINT32 pmc_base_addr_mask;
+} iTCO_regs;
 
 typedef struct {
 	CHAR16 name[16];
 	UINT32 pci_id;
-	UINT32 pmbase;
-	UINT32 pmcbasereg;
-	UINT32 pmcreg;
-	UINT32 smireg;
+	iTCO_regs* regs;
+	UINT32 itco_version;
 } iTCO_info;
+
+static iTCO_regs iTCO_version_regs[] = {
+    [ITCO_V1] =
+	{
+	    /* Not implemented yet */
+	},
+    [ITCO_V2] =
+	{
+	    .pmc_base_reg = 0xf0,		/* RCBABASE_REG */
+	    .pmc_reg = 0x3410,			/* GCS_REG */
+	    .smi_reg = 0x30,
+	    .pmc_no_reboot_mask = (1 << 5),	/* GCS_NO_REBOOT */
+	    .pmc_base_addr_mask = 0xffffc000,	/* RCBABASE_ADDRMASK */
+	    .pm_base_addr_mask = 0x0000ff80,
+	},
+    [ITCO_V3] =
+	{
+	    .pmc_base_reg = 0x44,
+	    .pmc_reg = 0x08,
+	    .smi_reg = 0x30,
+	    .pmc_no_reboot_mask = (1 << 4),
+	    .pmc_base_addr_mask = 0xfffffe00,
+	    .pm_base_addr_mask = 0x0000ff80,
+	},
+    [ITCO_V4] =
+	{
+	    /* Not implemented yet */
+	},
+    [ITCO_V5] =
+	{
+	    .pmc_base_reg = 0x10,
+	    .pmc_reg = 0x1008,
+	    .smi_reg = 0x40,
+	    .pm_base = 0x400,
+	    .pmc_no_reboot_mask = (1 << 4),
+	    .pmc_base_addr_mask = 0xfffffe00,
+	    .pm_base_addr_mask = 0x0000ff80,
+	},
+};
 
 static iTCO_info iTCO_chipset_info[] = {
     [ITCO_INTEL_APL] =
 	{
 	    .name = L"Apollo Lake",
 	    .pci_id = 0x5ae8,
-	    .pmcbasereg = 0x10,
-	    .pmcreg = 0x1008,
-	    .smireg = 0x40,
-	    .pmbase = 0x400,
+	    .regs = &iTCO_version_regs[ITCO_V5],
+	    .itco_version = ITCO_V5,
 	},
     [ITCO_INTEL_BAYTRAIL] =
 	{
 	    .name = L"Baytrail",
 	    .pci_id = 0x0f1c,
-	    .pmcbasereg = 0x44,
-	    .pmcreg = 0x08,
-	    .smireg = 0x30,
+	    .regs = &iTCO_version_regs[ITCO_V3],
+	    .itco_version = ITCO_V3,
 	},
     [ITCO_INTEL_WPT_LP] =
 	{
 	    .name = L"Wildcat",
 	    .pci_id = 0x9cc3,
-	    .pmcbasereg = 0x44,
-	    .pmcreg = 0x08,
-	    .smireg = 0x30,
+	    .regs = &iTCO_version_regs[ITCO_V3],
+	    .itco_version = ITCO_V3,
 	},
     [ITCO_INTEL_ICH9] =
 	{
 	    .name = L"ICH9", /* QEmu machine q35 */
 	    .pci_id = 0x2918,
-	    .pmcbasereg = 0x44,
-	    .pmcreg = 0x08,
-	    .smireg = 0x30,
+	    .regs = &iTCO_version_regs[ITCO_V3],
+	    .itco_version = ITCO_V3,
+	},
+    [ITCO_INTEL_LPC_LP] =
+	{
+	    .name = L"Lynx Point",
+	    .pci_id = 0x8c4e,
+	    .regs = &iTCO_version_regs[ITCO_V2],
+	    .itco_version = ITCO_V2,
 	},
 };
 
@@ -94,49 +147,53 @@ static BOOLEAN itco_supported(UINT16 pci_device_id, UINT8 *index)
 	return FALSE;
 }
 
-static UINT32 get_pmbase(EFI_PCI_IO *pci_io, iTCO_info *itco)
+static UINTN get_timeout_value(UINT32 iTCO_version, UINTN seconds){
+	return iTCO_version > ITCO_V2 ? seconds : ((seconds * 10 ) / 6);
+}
+
+static UINT32 get_pm_base(EFI_PCI_IO *pci_io, iTCO_info *itco)
 {
-	UINT32 pmbase;
+	UINT32 pm_base;
 	EFI_STATUS status;
 
-	if (itco->pmbase) {
-		return itco->pmbase & PMBASE_ADDRMASK;
+	if (itco->regs->pm_base) {
+		return itco->regs->pm_base & itco->regs->pm_base_addr_mask;
 	}
 
 	status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
-				   EfiPciIoWidthUint32, 0x40, 1, &pmbase);
+				   EfiPciIoWidthUint32, 0x40, 1, &pm_base);
 	if (EFI_ERROR(status)) {
-		Print(L"Error reading PMBASE: %r\n", status);
+		Print(L"Error reading PM_BASE: %r\n", status);
 		return 0;
 	}
-	return pmbase & PMBASE_ADDRMASK;
+	return pm_base & itco->regs->pm_base_addr_mask;
 }
 
 static EFI_STATUS update_no_reboot_flag(EFI_PCI_IO *pci_io, iTCO_info *itco)
 {
 	EFI_STATUS status;
-	UINT32 pmcbase, value;
+	UINT32 pmc_base, value;
 
 	status =
 	    uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io, EfiPciIoWidthUint32,
-			      itco->pmcbasereg, 1, &pmcbase);
+			      itco->regs->pmc_base_reg, 1, &pmc_base);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
-	pmcbase &= PMCBASE_ADDRMASK;
+	pmc_base &= itco->regs->pmc_base_addr_mask;
 
 	status = uefi_call_wrapper(pci_io->Mem.Read, 6, pci_io,
 				   EfiPciIoWidthUint32,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   pmcbase + itco->pmcreg, 1, &value);
+				   pmc_base + itco->regs->pmc_reg, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
-	value &= ~PMC_NO_REBOOT_MASK;
+	value &= ~itco->regs->pmc_no_reboot_mask;
 	status = uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
 				   EfiPciIoWidthUint32,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   pmcbase + itco->pmcreg, 1, &value);
+				   pmc_base + itco->regs->pmc_reg, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
@@ -165,9 +222,9 @@ static EFI_STATUS update_no_reboot_flag_apl(__attribute__((unused))
 
 	/* Get PMC_BASE from PMC Controller Register. */
 	volatile UINT8 *reg =
-	    (volatile UINT8 *)apl_mmcfg_address(0, 13, 1, (UINTN)itco->pmcreg);
+	    (volatile UINT8 *)apl_mmcfg_address(0, 13, 1, (UINTN)itco->regs->pmc_reg);
 	UINT8 value = *reg;
-	value &= ~PMC_NO_REBOOT_MASK;
+	value &= ~itco->regs->pmc_no_reboot_mask;
 	*reg = value;
 
 	if (p2sbvisible) {
@@ -183,7 +240,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 {
 	UINT8 itco_chip;
 	iTCO_info *itco;
-	UINT32 pmbase, tcobase, value;
+	UINT32 pm_base, tco_base, value;
 	EFI_STATUS status;
 
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL ||
@@ -195,16 +252,16 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	Print(L"Detected Intel TCO %s watchdog\n", itco->name);
 
 	/* Get PMBASE and TCOBASE */
-	if ((pmbase = get_pmbase(pci_io, itco)) == 0) {
+	if ((pm_base = get_pm_base(pci_io, itco)) == 0) {
 		return EFI_UNSUPPORTED;
 	}
-	tcobase = pmbase + 0x60;
+	tco_base = pm_base + 0x60;
 
 	/* Enable TCO SMIs */
 	status = uefi_call_wrapper(pci_io->Io.Read, 6, pci_io,
 				   EfiPciIoWidthUint32,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   pmbase + itco->smireg, 1, &value);
+				   pm_base + itco->regs->smi_reg, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
@@ -212,7 +269,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
 				   EfiPciIoWidthUint32,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   pmbase + itco->smireg, 1, &value);
+				   pm_base + itco->regs->smi_reg, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
@@ -221,16 +278,16 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	status = uefi_call_wrapper(pci_io->Io.Read, 6, pci_io,
 				   EfiPciIoWidthUint16,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   tcobase + TCO_TMR_REG, 1, &value);
+				   tco_base + TCO_TMR_REG, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
 	value &= 0xfc00;
-	value |= timeout & 0x3ff;
+	value |= get_timeout_value(itco->itco_version, timeout) & 0x3ff;
 	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
 				   EfiPciIoWidthUint16,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   tcobase + TCO_TMR_REG, 1, &value);
+				   tco_base + TCO_TMR_REG, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
@@ -240,18 +297,18 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
 				   EfiPciIoWidthUint16,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   tcobase + TCO_RLD_REG, 1, &value);
+				   tco_base + TCO_RLD_REG, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
 
 	/* Clear NO_REBOOT flag */
-	switch (itco_chip) {
-	case ITCO_INTEL_APL:
+	switch (itco->itco_version) {
+	case ITCO_V5:
 		status = update_no_reboot_flag_apl(pci_io, itco);
 		break;
-	case ITCO_INTEL_BAYTRAIL:
-	case ITCO_INTEL_WPT_LP:
+	case ITCO_V3:
+	case ITCO_V2:
 		status = update_no_reboot_flag(pci_io, itco);
 		break;
 	}
@@ -263,7 +320,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	status = uefi_call_wrapper(pci_io->Io.Read, 6, pci_io,
 				   EfiPciIoWidthUint16,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   tcobase + TCO1_CNT_REG, 1, &value);
+				   tco_base + TCO1_CNT_REG, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
@@ -271,7 +328,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
 				   EfiPciIoWidthUint16,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   tcobase + TCO1_CNT_REG, 1, &value);
+				   tco_base + TCO1_CNT_REG, 1, &value);
 
 	return status;
 }
