@@ -148,7 +148,7 @@ static BOOLEAN itco_supported(UINT16 pci_device_id, UINT8 *index)
 }
 
 static UINTN get_timeout_value(UINT32 iTCO_version, UINTN seconds){
-	return iTCO_version > ITCO_V2 ? seconds : ((seconds * 10 ) / 6);
+	return iTCO_version == ITCO_V3 ? seconds : ((seconds * 10 ) / 6);
 }
 
 static UINT32 get_pm_base(EFI_PCI_IO *pci_io, iTCO_info *itco)
