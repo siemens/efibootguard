@@ -30,6 +30,7 @@ enum iTCO_chipsets {
 	ITCO_INTEL_WPT_LP,
 	ITCO_INTEL_ICH9,
 	ITCO_INTEL_LPC_LP,
+	ITCO_INTEL_WBG,
 };
 
 enum iTCO_versions {
@@ -129,6 +130,13 @@ static iTCO_info iTCO_chipset_info[] = {
 	{
 	    .name = L"Lynx Point",
 	    .pci_id = 0x8c4e,
+	    .regs = &iTCO_version_regs[ITCO_V2],
+	    .itco_version = ITCO_V2,
+	},
+    [ITCO_INTEL_WBG] =
+	{
+	    .name = L"Wellsburg",
+	    .pci_id = 0x8d44,
 	    .regs = &iTCO_version_regs[ITCO_V2],
 	    .itco_version = ITCO_V2,
 	},
