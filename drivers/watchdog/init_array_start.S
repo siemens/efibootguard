@@ -13,5 +13,7 @@
  */
 
 .section .init_array
+/* align to 4K so that signing tools will not stumble over this section */
+.align 0x1000
 .global init_array_start
 init_array_start:
