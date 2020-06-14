@@ -269,22 +269,21 @@ int ebg_env_finalize_update(ebgenv_t *e)
 		return EIO;
 	}
 
-	GC_ITEM **pgci, *tmp;
+	GC_ITEM *pgci, *tmp;
 	uint8_t *udata;
 
-	pgci = (GC_ITEM **)&e->gc_registry;
+	pgci = (GC_ITEM *)e->gc_registry;
 	udata = ((BGENV *)e->bgenv)->data->userdata;
-	while (*pgci) {
+	while (pgci) {
 		uint8_t *var;
-		var = bgenv_find_uservar(udata, (*pgci)->key);
+		var = bgenv_find_uservar(udata, pgci->key);
 		if (var) {
 			bgenv_del_uservar(udata, var);
 		}
-		free((*pgci)->key);
-		tmp = (*pgci)->next;
-		free(*pgci);
-		*pgci = NULL;
-		pgci = &tmp;
+		free(pgci->key);
+		tmp = pgci->next;
+		free(pgci);
+		pgci = tmp;
 	}
 
 	((BGENV *)e->bgenv)->data->in_progress = 0;
