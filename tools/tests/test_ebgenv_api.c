@@ -572,7 +572,8 @@ START_TEST(ebgenv_api_ebg_env_close)
 	e.bgenv = calloc(1, sizeof(BGENV));
 	ck_assert(e.bgenv != NULL);
 
-	((BGENV *)e.bgenv)->data = calloc(1, sizeof(BG_ENVDATA));
+	void *data = calloc(1, sizeof(BG_ENVDATA));
+	((BGENV *)e.bgenv)->data = data;
 	bgenv_write_fake.return_val = false;
 	ret = ebg_env_close(&e);
 
@@ -580,15 +581,16 @@ START_TEST(ebgenv_api_ebg_env_close)
 
 	/* Test if ebg_env_close is successful if all prerequisites are met
 	 */
+	e.bgenv = calloc(1, sizeof(BGENV));
+	ck_assert(e.bgenv != NULL);
+	((BGENV *)e.bgenv)->data = data;
 	bgenv_write_fake.return_val = true;
-	BGENV *save_ptr = e.bgenv;
 	ret = ebg_env_close(&e);
 
 	ck_assert_int_eq(ret, 0);
 	ck_assert(e.bgenv == NULL);
 
-	free(save_ptr->data);
-	free(save_ptr);
+	free(data);
 }
 END_TEST
 
