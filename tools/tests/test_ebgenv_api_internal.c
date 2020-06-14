@@ -419,7 +419,7 @@ START_TEST(ebgenv_api_internal_uservars)
 
 	write_env_fake.call_count = 0;
 
-	(void)bgenv_close(handle);
+	bgenv_close(handle);
 }
 END_TEST
 

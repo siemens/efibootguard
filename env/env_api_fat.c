@@ -232,13 +232,9 @@ BG_ENVDATA *bgenv_read(BGENV *env)
  * are redesigned.
  */
 __attribute((noinline))
-bool bgenv_close(BGENV *env)
+void bgenv_close(BGENV *env)
 {
-	if (env) {
-		free(env);
-		return true;
-	}
-	return false;
+	free(env);
 }
 
 static int bgenv_get_uint(char *buffer, uint64_t *type, void *data,
@@ -418,9 +414,7 @@ BGENV *bgenv_create_new(void)
 
 	int new_rev = env_latest->data->revision + 1;
 
-	if (!bgenv_close(env_latest)) {
-		goto create_new_io_error;
-	}
+	bgenv_close(env_latest);
 
 	env_new = bgenv_open_oldest();
 	if (!env_new) {

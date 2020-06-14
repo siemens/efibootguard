@@ -656,9 +656,7 @@ int main(int argc, char **argv)
 		       sizeof(BG_ENVDATA));
 		env_new->data->revision = env_current->data->revision + 1;
 
-		if (!bgenv_close(env_current)) {
-			fprintf(stderr, "Error closing environment.\n");
-		}
+		bgenv_close(env_current);
 	} else {
 		if (part_specified) {
 			env_new = bgenv_open_by_index(arguments.which_part);
@@ -683,10 +681,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Error storing environment.\n");
 		return 1;
 	}
-	if (!bgenv_close(env_new)) {
-		fprintf(stderr, "Error closing environment.\n");
-		return 1;
-	}
+	bgenv_close(env_new);
 
 	fprintf(stdout, "Environment update was successful.\n");
 

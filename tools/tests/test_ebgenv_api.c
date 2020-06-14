@@ -29,12 +29,11 @@ Suite *ebg_test_suite(void);
 extern bool write_env(CONFIG_PART *part, BG_ENVDATA *env);
 extern bool bgenv_write(BGENV *);
 extern bool bgenv_init(void);
-extern bool bgenv_close(BGENV *);
+extern void bgenv_close(BGENV *);
 extern BGENV *bgenv_create_new(void);
 
 FAKE_VALUE_FUNC(bool, bgenv_init);
 FAKE_VALUE_FUNC(bool, bgenv_write, BGENV *);
-FAKE_VALUE_FUNC(bool, bgenv_close, BGENV *);
 
 int __real_bgenv_set(BGENV *, char *, uint64_t, void *, uint32_t);
 int __wrap_bgenv_set(BGENV *, char *, uint64_t, void *, uint32_t);
@@ -104,7 +103,6 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 	 * returns false
 	 */
 	bgenv_init_fake.return_val = false;
-	bgenv_close_fake.return_val = true;
 	ret = ebg_env_create_new(&e);
 	ck_assert_int_eq(ret, EIO);
 
@@ -122,7 +120,6 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 	errno = 0;
 
 	bgenv_init_fake.return_val = true;
-	bgenv_close_fake.return_val = true;
 	ret = ebg_env_create_new(&e);
 
 	ck_assert_int_eq(errno, 0);
@@ -527,7 +524,6 @@ START_TEST(ebgenv_api_ebg_env_setglobalstate)
 	envdata[1].ustate = USTATE_FAILED;
 
 	bgenv_write_fake.return_val = true;
-	bgenv_close_fake.return_val = true;
 
 	ret = ebg_env_setglobalstate(&e, USTATE_OK);
 
@@ -550,17 +546,6 @@ START_TEST(ebgenv_api_ebg_env_setglobalstate)
 	 * fails
 	 */
 	bgenv_write_fake.return_val = false;
-	bgenv_close_fake.return_val = true;
-
-	ret = ebg_env_setglobalstate(&e, USTATE_OK);
-
-	ck_assert_int_eq(ret, -EIO);
-
-	/* Test if ebg_env_setglobalstate fails and returns EIO if bgenv_close
-	 * fails
-	 */
-	bgenv_write_fake.return_val = true;
-	bgenv_close_fake.return_val = false;
 
 	ret = ebg_env_setglobalstate(&e, USTATE_OK);
 
@@ -589,15 +574,6 @@ START_TEST(ebgenv_api_ebg_env_close)
 
 	((BGENV *)e.bgenv)->data = calloc(1, sizeof(BG_ENVDATA));
 	bgenv_write_fake.return_val = false;
-	bgenv_close_fake.return_val = true;
-	ret = ebg_env_close(&e);
-
-	ck_assert_int_eq(ret, EIO);
-
-	/* Test if ebg_env_close fails and returns EIO if bgenv_close fails.
-	 */
-	bgenv_write_fake.return_val = true;
-	bgenv_close_fake.return_val = false;
 	ret = ebg_env_close(&e);
 
 	ck_assert_int_eq(ret, EIO);
@@ -605,7 +581,6 @@ START_TEST(ebgenv_api_ebg_env_close)
 	/* Test if ebg_env_close is successful if all prerequisites are met
 	 */
 	bgenv_write_fake.return_val = true;
-	bgenv_close_fake.return_val = true;
 	BGENV *save_ptr = e.bgenv;
 	ret = ebg_env_close(&e);
 
@@ -624,7 +599,6 @@ START_TEST(ebgenv_api_ebg_env_register_gc_var)
 	memset(&e, 0, sizeof(e));
 
 	bgenv_write_fake.return_val = true;
-	bgenv_close_fake.return_val = true;
 
 	bgenv_init_fake.return_val = true;
 

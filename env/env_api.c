@@ -160,7 +160,7 @@ uint16_t ebg_env_getglobalstate(ebgenv_t *e)
 		    env->data->ustate == USTATE_FAILED) {
 			res = 3;
 		}
-		(void)bgenv_close(env);
+		bgenv_close(env);
 		if (res == 3) {
 			return res;
 		}
@@ -205,19 +205,19 @@ int ebg_env_setglobalstate(ebgenv_t *e, uint16_t ustate)
 			env->data->crc32 = crc32(0, (Bytef *)env->data,
 				sizeof(BG_ENVDATA) - sizeof(env->data->crc32));
 			if (!bgenv_write(env)) {
-				(void)bgenv_close(env);
+				bgenv_close(env);
 				return -EIO;
 			}
 		}
-		if (!bgenv_close(env)) {
-			return -EIO;
-		}
+		bgenv_close(env);
 	}
 	return 0;
 }
 
 int ebg_env_close(ebgenv_t *e)
 {
+	int res = 0;
+
 	/* if no environment is open, just return EIO */
 	if (!e->bgenv) {
 		return EIO;
@@ -232,14 +232,11 @@ int ebg_env_close(ebgenv_t *e)
 		  sizeof(BG_ENVDATA) - sizeof(env_current->data->crc32));
 	/* save */
 	if (!bgenv_write(env_current)) {
-		(void)bgenv_close(env_current);
-		return EIO;
+		res = EIO;
 	}
-	if (!bgenv_close(env_current)) {
-		return EIO;
-	}
+	bgenv_close(env_current);
 	e->bgenv = NULL;
-	return 0;
+	return res;
 }
 
 int ebg_env_register_gc_var(ebgenv_t *e, char *key)

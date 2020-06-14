@@ -84,7 +84,7 @@ extern BGENV *bgenv_open_oldest(void);
 extern BGENV *bgenv_open_latest(void);
 extern bool bgenv_write(BGENV *env);
 extern BG_ENVDATA *bgenv_read(BGENV *env);
-extern bool bgenv_close(BGENV *env);
+extern void bgenv_close(BGENV *env);
 
 extern BGENV *bgenv_create_new(void);
 extern int bgenv_get(BGENV *env, char *key, uint64_t *type, void *data,
