@@ -618,6 +618,7 @@ int main(int argc, char **argv)
 	dump_envs();
 
 	if (!write_mode) {
+		bgenv_finalize();
 		return 0;
 	}
 
@@ -631,13 +632,16 @@ int main(int argc, char **argv)
 		if (!env_current) {
 			fprintf(stderr, "Failed to retrieve latest environment."
 					"\n");
-			return 1;
+			result = 1;
+			goto cleanup;
 		}
 		env_new = bgenv_open_oldest();
 		if (!env_new) {
 			fprintf(stderr, "Failed to retrieve oldest environment."
 					"\n");
-			return 1;
+			bgenv_close(env_current);
+			result = 1;
+			goto cleanup;
 		}
 		if (verbosity) {
 			fprintf(stdout,
@@ -647,9 +651,9 @@ int main(int argc, char **argv)
 
 		if (!env_current->data || !env_new->data) {
 			fprintf(stderr, "Invalid environment data pointer.\n");
-			bgenv_close(env_new);
 			bgenv_close(env_current);
-			return 1;
+			result = 1;
+			goto cleanup;
 		}
 
 		memcpy((char *)env_new->data, (char *)env_current->data,
@@ -666,7 +670,8 @@ int main(int argc, char **argv)
 		if (!env_new) {
 			fprintf(stderr, "Failed to retrieve environment by "
 					"index.\n");
-			return 1;
+			result = 1;
+			goto cleanup;
 		}
 	}
 
@@ -679,11 +684,13 @@ int main(int argc, char **argv)
 	}
 	if (!bgenv_write(env_new)) {
 		fprintf(stderr, "Error storing environment.\n");
-		return 1;
+		result = 1;
+	} else {
+		fprintf(stdout, "Environment update was successful.\n");
 	}
+
+cleanup:
 	bgenv_close(env_new);
-
-	fprintf(stdout, "Environment update was successful.\n");
-
+	bgenv_finalize();
 	return result;
 }

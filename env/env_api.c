@@ -236,6 +236,7 @@ int ebg_env_close(ebgenv_t *e)
 	}
 	bgenv_close(env_current);
 	e->bgenv = NULL;
+	bgenv_finalize();
 	return res;
 }
 

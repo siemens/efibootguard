@@ -79,6 +79,7 @@ extern char *str16to8(char *buffer, wchar_t *src);
 extern wchar_t *str8to16(wchar_t *buffer, char *src);
 
 extern bool bgenv_init(void);
+extern void bgenv_finalize(void);
 extern BGENV *bgenv_open_by_index(uint32_t index);
 extern BGENV *bgenv_open_oldest(void);
 extern BGENV *bgenv_open_latest(void);

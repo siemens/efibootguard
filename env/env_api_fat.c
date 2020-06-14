@@ -128,10 +128,13 @@ bool write_env(CONFIG_PART *part, BG_ENVDATA *env)
 CONFIG_PART config_parts[ENV_NUM_CONFIG_PARTS];
 BG_ENVDATA envdata[ENV_NUM_CONFIG_PARTS];
 
-bool bgenv_init()
+static bool initialized;
+
+bool bgenv_init(void)
 {
-	memset((void *)&config_parts, 0,
-	       sizeof(CONFIG_PART) * ENV_NUM_CONFIG_PARTS);
+	if (initialized) {
+		return true;
+	}
 	/* enumerate all config partitions */
 	if (!probe_config_partitions(config_parts)) {
 		VERBOSE(stderr, "Error finding config partitions.\n");
@@ -149,7 +152,22 @@ bool bgenv_init()
 			    sizeof(BG_ENVDATA) - sizeof(envdata[i].crc32));
 		}
 	}
+	initialized = true;
 	return true;
+}
+
+void bgenv_finalize(void)
+{
+	if (!initialized) {
+		return;
+	}
+	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
+		free(config_parts[i].devpath);
+		config_parts[i].devpath = NULL;
+		free(config_parts[i].mountpoint);
+		config_parts[i].mountpoint = NULL;
+	}
+	initialized = false;
 }
 
 BGENV *bgenv_open_by_index(uint32_t index)
