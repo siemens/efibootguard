@@ -109,19 +109,9 @@ fake_mountpoint_error:
 
 bool __wrap_probe_config_file(CONFIG_PART *cp)
 {
-	bool ret;
 	probe_config_file_call_count++;
 
-	if (asprintf(&cp->mountpoint, "tmpdir") == -1) {
-		cp->not_mounted = true;
-		cp->mountpoint = NULL;
-		return false;
-	}
-	cp->not_mounted = false;
-	ret =  __real_probe_config_file(cp);
-
-	free(cp->mountpoint);
-	return ret;
+	return  __real_probe_config_file(cp);
 }
 
 void delete_temp_files(void)
