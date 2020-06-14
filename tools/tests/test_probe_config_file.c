@@ -167,6 +167,8 @@ START_TEST(env_api_fat_test_probe_config_file)
 	ck_assert_int_eq(probe_config_file_call_count, ENV_NUM_CONFIG_PARTS);
 	ck_assert_int_eq(get_mountpoint_fake.call_count, ENV_NUM_CONFIG_PARTS);
 	ck_assert(result == true);
+
+	bgenv_finalize();
 }
 END_TEST
 

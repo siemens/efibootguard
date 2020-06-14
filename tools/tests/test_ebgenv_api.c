@@ -140,6 +140,8 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 	ck_assert_int_eq(
 		strncmp(buffer, kernelparams, strlen(kernelparams) + 1), 0);
 
+	(void)ebg_env_close(&e);
+
 	/* Test that a new creation of environment does keep the current
 	 * values if an update is already in progress
 	 */
@@ -155,6 +157,8 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 	ck_assert_int_eq(ret, 0);
 	ck_assert_int_eq(((BGENV *)e.bgenv)->data->ustate, USTATE_INSTALLED);
 	ck_assert_int_eq(((BGENV *)e.bgenv)->data->in_progress, 0);
+
+	(void)ebg_env_close(&e);
 }
 END_TEST
 
