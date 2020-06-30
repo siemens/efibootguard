@@ -4,7 +4,7 @@ A bootloader based on UEFI.
 
 Provides the following functionality:
 * Arm a hardware watchdog prior to loading an OS
-* Provides a simple update mechanism with fail-save algorithm
+* Provides a simple update mechanism with fail-safe algorithm
 
 ## Development ##
 
@@ -49,4 +49,4 @@ See `Installation And Usage` for further information.
 * [API Library](docs/API.md)
 * [Compilation Instructions](docs/COMPILE.md)
 * [Installation And Usage](docs/USAGE.md)
-* [Future Work](docs/TODO.md)
+* [System Recovery](docs/RECOVERY.md)
