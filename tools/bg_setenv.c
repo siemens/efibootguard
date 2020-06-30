@@ -622,7 +622,7 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	BGENV *env_new;
+	BGENV *env_new = NULL;
 	BGENV *env_current;
 
 	if (auto_update) {
