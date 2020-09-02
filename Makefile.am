@@ -123,6 +123,7 @@ efi_loadername = efibootguard$(MACHINE_TYPE_NAME).efi
 
 efi_sources = \
 	drivers/watchdog/init_array_start.S \
+	drivers/watchdog/amdfch_wdt.c \
 	drivers/watchdog/i6300esb.c \
 	drivers/watchdog/atom-quark.c \
 	drivers/watchdog/itco.c \
