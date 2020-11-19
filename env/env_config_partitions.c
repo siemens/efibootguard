@@ -45,6 +45,7 @@ bool probe_config_partitions(CONFIG_PART *cfgpart)
 				continue;
 			}
 			if (strncmp("/dev/mmcblk", dev->path, 11) == 0 ||
+			    strncmp("/dev/loop", dev->path, 9) == 0 ||
 			    strncmp("/dev/nvme", dev->path, 9) == 0) {
 				(void)snprintf(devpath, 4096, "%sp%u",
 					       dev->path, part->num);
