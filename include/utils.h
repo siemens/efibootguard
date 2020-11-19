@@ -20,9 +20,6 @@
 
 #define MAX_INFO_SIZE 1024
 
-#define sleep(X)							      \
-	uefi_call_wrapper(BS->Stall, 1, (X) * 1000 * 1000l)
-
 typedef struct _VOLUME_DESC {
 	EFI_DEVICE_PATH *devpath;
 	CHAR16 *fslabel;
