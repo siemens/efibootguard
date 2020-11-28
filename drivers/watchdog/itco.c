@@ -222,9 +222,9 @@ static EFI_STATUS update_no_reboot_flag_apl(__attribute__((unused))
 					    iTCO_info *itco)
 {
 	/* Unhide the P2SB device if it's hidden. */
-	BOOLEAN p2sbvisible =
-	    *(volatile UINT16 *)apl_mmcfg_address(0, 13, 0, 0) != 0xFFFF;
-	if (!p2sbvisible) {
+	BOOLEAN p2sb_hidden =
+	    *(volatile UINT16 *)apl_mmcfg_address(0, 13, 0, 0) == 0xffff;
+	if (p2sb_hidden) {
 		*(volatile UINT8 *)apl_mmcfg_address(0, 13, 0, 0xE1) = 0;
 	}
 
@@ -235,7 +235,7 @@ static EFI_STATUS update_no_reboot_flag_apl(__attribute__((unused))
 	value &= ~itco->regs->pmc_no_reboot_mask;
 	*reg = value;
 
-	if (p2sbvisible) {
+	if (p2sb_hidden) {
 		*(volatile UINT8 *)apl_mmcfg_address(0, 13, 0, 0xE1) = 1;
 	}
 
