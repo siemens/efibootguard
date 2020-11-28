@@ -121,11 +121,13 @@ install-exec-hook:
 #
 efi_loadername = efibootguard$(MACHINE_TYPE_NAME).efi
 
+# NOTE: ipc4x7e_wdt.c must be *before* itco.c
 efi_sources = \
 	drivers/watchdog/init_array_start.S \
 	drivers/watchdog/amdfch_wdt.c \
 	drivers/watchdog/i6300esb.c \
 	drivers/watchdog/atom-quark.c \
+	drivers/watchdog/ipc4x7e_wdt.c \
 	drivers/watchdog/itco.c \
 	drivers/watchdog/init_array_end.S \
 	env/syspart.c \
