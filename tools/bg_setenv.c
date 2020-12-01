@@ -53,7 +53,6 @@ static struct argp_option options_printenv[] = {
 };
 
 struct arguments {
-	bool output_to_file;
 	int which_part;
 };
 
@@ -351,7 +350,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'f':
-		arguments->output_to_file = true;
 		res = asprintf(&envfilepath, "%s/%s", arg, FAT_ENV_FILENAME);
 		if (res == -1) {
 			return ENOMEM;
@@ -557,7 +555,6 @@ int main(int argc, char **argv)
 	}
 
 	struct arguments arguments;
-	arguments.output_to_file = false;
 	arguments.which_part = 0;
 
 	STAILQ_INIT(&head);
@@ -573,7 +570,7 @@ int main(int argc, char **argv)
 	/* arguments are parsed, journal is filled */
 
 	/* is output to file ? */
-	if (arguments.output_to_file) {
+	if (envfilepath) {
 		/* execute journal and write to file */
 		BGENV env;
 		BG_ENVDATA data;
