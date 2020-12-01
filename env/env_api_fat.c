@@ -67,7 +67,8 @@ bool read_env(CONFIG_PART *part, BG_ENVDATA *env)
 			part->mountpoint);
 	}
 	FILE *config;
-	if (!(config = open_config_file(part, "rb"))) {
+	config = open_config_file(part, "rb");
+	if (!config) {
 		return false;
 	}
 	bool result = true;
@@ -104,7 +105,8 @@ bool write_env(CONFIG_PART *part, BG_ENVDATA *env)
 			part->mountpoint);
 	}
 	FILE *config;
-	if (!(config = open_config_file(part, "wb"))) {
+	config = open_config_file(part, "wb");
+	if (!config) {
 		VERBOSE(stderr, "Could not open config file for writing.\n");
 		return false;
 	}
