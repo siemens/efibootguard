@@ -20,37 +20,37 @@
 #include "version.h"
 
 static char doc[] =
-    "bg_setenv/bg_printenv - Environment tool for the EFI Boot Guard";
+	"bg_setenv/bg_printenv - Environment tool for the EFI Boot Guard";
 
 static struct argp_option options_setenv[] = {
 	{"kernel", 'k', "KERNEL", 0, "Set kernel to load"},
 	{"args", 'a', "KERNEL_ARGS", 0, "Set kernel arguments"},
-	{"part", 'p', "ENV_PART", 0, "Set environment partition to update. "
-				 "If no partition is specified, the one "
-				 "with the smallest revision value "
-				 "above zero is updated."},
+	{"part", 'p', "ENV_PART", 0,
+	 "Set environment partition to update. If no partition is specified, "
+	 "the one with the smallest revision value above zero is updated."},
 	{"revision", 'r', "REVISION", 0, "Set revision value"},
 	{"ustate", 's', "USTATE", 0, "Set update status for environment"},
-	{"filepath", 'f', "ENVFILE_DIR", 0, "Output environment to file. Expects "
-					"an output path where the file name "
-					"is automatically appended."},
+	{"filepath", 'f', "ENVFILE_DIR", 0,
+	 "Output environment to file. Expects an output path where the file "
+	 "name is automatically appended."},
 	{"watchdog", 'w', "WATCHDOG_TIMEOUT", 0, "Watchdog timeout in seconds"},
 	{"confirm", 'c', 0, 0, "Confirm working environment"},
 	{"update", 'u', 0, 0, "Automatically update oldest revision"},
 	{"verbose", 'v', 0, 0, "Be verbose"},
-	{"uservar", 'x', "KEY=VAL", 0, "Set user-defined string variable. For "
-				   "setting multiple variables, use this "
-				   "option multiple times."},
-	{"in_progress", 'i', "IN_PROGRESS", 0, "Set in_progress variable to "
-					   "simulate a running update "
-					   "process."},
+	{"uservar", 'x', "KEY=VAL", 0,
+	 "Set user-defined string variable. For setting multiple variables, "
+	 "use this option multiple times."},
+	{"in_progress", 'i', "IN_PROGRESS", 0,
+	 "Set in_progress variable to simulate a running update process."},
 	{"version", 'V', 0, 0, "Print version"},
-	{0}};
+	{}
+};
 
 static struct argp_option options_printenv[] = {
-    {"verbose", 'v', 0, 0, "Be verbose"},
-    {"version", 'V', 0, 0, "Print version"},
-    {0}};
+	{"verbose", 'v', 0, 0, "Be verbose"},
+	{"version", 'V', 0, 0, "Print version"},
+	{}
+};
 
 struct arguments {
 	bool output_to_file;
@@ -134,7 +134,7 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 			t = strtol(arg, &tmp, 10);
 			if ((errno == ERANGE && (t == LONG_MAX ||
 			                         t == LONG_MIN)) ||
-                             (errno != 0 && t == 0) || (tmp == arg)) {
+			    (errno != 0 && t == 0) || tmp == arg) {
 				fprintf(stderr, "Invalid value for ustate: %s",
 						(char *)action->data);
 				return;
