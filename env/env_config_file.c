@@ -18,7 +18,18 @@
 #include "env_disk_utils.h"
 #include "env_config_file.h"
 
-FILE *open_config_file(CONFIG_PART *cfgpart, char *mode)
+FILE *open_config_file(char *configfilepath, char *mode)
+{
+	VERBOSE(stdout, "Probing config file at %s.\n", configfilepath);
+	FILE *config = fopen(configfilepath, mode);
+	if (config) {
+		return config;
+	} else {
+		return NULL;
+	}
+}
+
+FILE *open_config_file_from_part(CONFIG_PART *cfgpart, char *mode)
 {
 	char *configfilepath;
 
@@ -33,8 +44,7 @@ FILE *open_config_file(CONFIG_PART *cfgpart, char *mode)
 	strcpy(configfilepath, cfgpart->mountpoint);
 	strcat(configfilepath, "/");
 	strcat(configfilepath, FAT_ENV_FILENAME);
-	VERBOSE(stdout, "Probing config file at %s.\n", configfilepath);
-	FILE *config = fopen(configfilepath, mode);
+	FILE *config = open_config_file(configfilepath, mode);
 	free(configfilepath);
 	return config;
 }
@@ -74,7 +84,7 @@ bool probe_config_file(CONFIG_PART *cfgpart)
 			cfgpart->devpath, cfgpart->mountpoint);
 		bool result = false;
 		FILE *config;
-		if (!(config = open_config_file(cfgpart, "rb"))) {
+		if (!(config = open_config_file_from_part(cfgpart, "rb"))) {
 			printf_debug(
 			    "Could not open config file on partition %s.\n",
 			    FAT_ENV_FILENAME);

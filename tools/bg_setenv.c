@@ -18,6 +18,7 @@
 #include "ebgenv.h"
 #include "uservars.h"
 #include "version.h"
+#include "env_config_file.h"
 
 static char doc[] =
 	"bg_setenv/bg_printenv - Environment tool for the EFI Boot Guard";
@@ -47,12 +48,16 @@ static struct argp_option options_setenv[] = {
 };
 
 static struct argp_option options_printenv[] = {
+	{"filepath", 'f', "ENVFILE", 0,
+	 "Read environment from file. Expects a valid EFI Boot Guard "
+	 "environment file."},
 	{"verbose", 'v', 0, 0, "Be verbose"},
 	{"version", 'V', 0, 0, "Print version"},
 	{}
 };
 
 struct arguments {
+	bool printenv;
 	int which_part;
 };
 
@@ -350,9 +355,16 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'f':
-		res = asprintf(&envfilepath, "%s/%s", arg, FAT_ENV_FILENAME);
-		if (res == -1) {
-			return ENOMEM;
+		if (arguments->printenv) {
+			res = asprintf(&envfilepath, "%s", arg);
+			if (res == -1) {
+				return ENOMEM;
+			}
+		} else {
+			res = asprintf(&envfilepath, "%s/%s", arg, FAT_ENV_FILENAME);
+			if (res == -1) {
+				return ENOMEM;
+			}
 		}
 		break;
 	case 'c':
@@ -531,6 +543,45 @@ static void dump_envs(void)
 	}
 }
 
+static bool get_env(char *configfilepath, BG_ENVDATA *data)
+{
+	FILE *config;
+	bool result = true;
+
+	if (!(config = open_config_file(configfilepath, "rb"))) {
+		return false;
+	}
+
+	if (!(fread(data, sizeof(BG_ENVDATA), 1, config) == 1)) {
+		VERBOSE(stderr, "Error reading environment data from %s\n",
+			configfilepath);
+		if (feof(config)) {
+			VERBOSE(stderr, "End of file encountered.\n");
+		}
+		result = false;
+	}
+
+	if (close_config_file(config)) {
+		VERBOSE(stderr,
+			"Error closing environment file after reading.\n");
+	};
+	return result;
+}
+
+static int printenv_from_file(char *envfilepath) {
+	int success = 0;
+	BG_ENVDATA data;
+
+	success = get_env(envfilepath, &data);
+	if (success) {
+		dump_env(&data);
+		return 0;
+	} else {
+		fprintf(stderr, "Error reading environment file.\n");
+		return 1;
+	}
+}
+
 static int dumpenv_to_file(char *envfilepath) {
 	/* execute journal and write to file */
 	int result = 0;
@@ -591,6 +642,7 @@ int main(int argc, char **argv)
 	}
 
 	struct arguments arguments;
+	arguments.printenv = !write_mode;
 	arguments.which_part = 0;
 
 	STAILQ_INIT(&head);
@@ -605,9 +657,13 @@ int main(int argc, char **argv)
 
 	/* arguments are parsed, journal is filled */
 
-	/* is output to file ? */
+	/* is output to file or input from file ? */
 	if (envfilepath) {
-		result = dumpenv_to_file(envfilepath);
+		if (write_mode) {
+			result = dumpenv_to_file(envfilepath);
+		} else {
+			result = printenv_from_file(envfilepath);
+		}
 		free(envfilepath);
 		return result;
 	}
