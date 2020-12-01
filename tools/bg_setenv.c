@@ -531,6 +531,42 @@ static void dump_envs(void)
 	}
 }
 
+static int dumpenv_to_file(char *envfilepath) {
+	/* execute journal and write to file */
+	int result = 0;
+	BGENV env;
+	BG_ENVDATA data;
+
+	memset(&env, 0, sizeof(BGENV));
+	memset(&data, 0, sizeof(BG_ENVDATA));
+	env.data = &data;
+
+	update_environment(&env);
+	if (verbosity) {
+		dump_env(env.data);
+	}
+	FILE *of = fopen(envfilepath, "wb");
+	if (of) {
+		if (fwrite(&data, sizeof(BG_ENVDATA), 1, of) != 1) {
+			fprintf(stderr,
+				"Error writing to output file: %s\n",
+				strerror(errno));
+			result = errno;
+		}
+		if (fclose(of)) {
+			fprintf(stderr, "Error closing output file.\n");
+			result = errno;
+		};
+		fprintf(stdout, "Output written to %s.\n", envfilepath);
+	} else {
+		fprintf(stderr, "Error opening output file %s (%s).\n",
+			envfilepath, strerror(errno));
+		result = 1;
+	}
+
+	return result;
+}
+
 int main(int argc, char **argv)
 {
 	static struct argp argp_setenv = {options_setenv, parse_opt, NULL, doc};
@@ -571,39 +607,9 @@ int main(int argc, char **argv)
 
 	/* is output to file ? */
 	if (envfilepath) {
-		/* execute journal and write to file */
-		BGENV env;
-		BG_ENVDATA data;
-
-		memset(&env, 0, sizeof(BGENV));
-		memset(&data, 0, sizeof(BG_ENVDATA));
-		env.data = &data;
-
-		update_environment(&env);
-		if (verbosity) {
-			dump_env(env.data);
-		}
-		FILE *of = fopen(envfilepath, "wb");
-		if (of) {
-			if (fwrite(&data, sizeof(BG_ENVDATA), 1, of) != 1) {
-				fprintf(stderr,
-					"Error writing to output file: %s\n",
-					strerror(errno));
-				result = errno;
-			}
-			if (fclose(of)) {
-				fprintf(stderr, "Error closing output file.\n");
-				result = errno;
-			};
-			fprintf(stdout, "Output written to %s.\n", envfilepath);
-		} else {
-			fprintf(stderr, "Error opening output file %s (%s).\n",
-				envfilepath, strerror(errno));
-			result = 1;
-		}
+		result = dumpenv_to_file(envfilepath);
 		free(envfilepath);
-
-		return 0;
+		return result;
 	}
 
 	/* not in file mode */
