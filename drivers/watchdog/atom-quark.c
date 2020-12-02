@@ -21,7 +21,7 @@
 #define PCI_DEVICE_ID_INTEL_QUARK_X1000	0x095e
 
 #define WDTBA_REG			0x84
-# define WDTBA_ENABLED			(1 << 31)
+# define WDTBA_ENABLED			(1U << 31)
 # define WDTBA_ADDRMASK			0xffc0
 
 #define TIMER1_REG			0x00
