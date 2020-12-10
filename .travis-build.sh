@@ -63,7 +63,7 @@ enter_build()
 install_cppcheck()
 {
     git clone https://github.com/danmar/cppcheck.git
-    git -C cppcheck checkout 1.80
+    git -C cppcheck checkout 2.3
     make -C cppcheck SRCDIR=build \
                      CFGDIR=/opt/cppcheck/cfg \
                      PREFIX=/opt/cppcheck \
