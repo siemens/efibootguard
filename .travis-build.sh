@@ -143,7 +143,7 @@ case "$TARGET_EFFECTIVE" in
                   -I /usr/include/x86_64-linux-gnu \
                   -I /usr/lib/gcc/x86_64-linux-gnu/4.8/include"
 
-        cpp_conf="-U__WINT_TYPE__"
+        cpp_conf="-U__WINT_TYPE__ -U__GNUC__"
         # Exit code '1' is returned if arguments are not valid or if no input
         # files are provided. Compare 'cppcheck --help'.
         exec /opt/cppcheck/bin/cppcheck -f -q --error-exitcode=2 \
