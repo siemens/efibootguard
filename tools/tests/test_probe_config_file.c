@@ -48,40 +48,40 @@ STAILQ_HEAD(stailhead, fake_env_file_path) head = STAILQ_HEAD_INITIALIZER(head);
 char *get_mountpoint_custom_fake(char *devpath)
 {
 	char *buff = NULL;
-	char *tmpdir = NULL;
-	char *tmpfile = NULL;
+	char *tempdir = NULL;
+	char *tempfile = NULL;
 
-	if (asprintf(&tmpdir, "%s", fake_mountpoint) == -1) {
-		tmpdir = NULL;
+	if (asprintf(&tempdir, "%s", fake_mountpoint) == -1) {
+		tempdir = NULL;
 		goto fake_mountpoint_error;
 	}
 
-	tmpdir = mkdtemp(tmpdir);
-	if (!tmpdir) {
+	tempdir = mkdtemp(tempdir);
+	if (!tempdir) {
 		goto fake_mountpoint_error;
 	}
 
-	if (asprintf(&buff, "%s", tmpdir) == -1) {
+	if (asprintf(&buff, "%s", tempdir) == -1) {
 		buff = NULL;
 		goto fake_mountpoint_error;
 	}
 
-	if (asprintf(&tmpfile, "%s/%s", tmpdir, FAT_ENV_FILENAME) == -1) {
-		tmpfile = NULL;
+	if (asprintf(&tempfile, "%s/%s", tempdir, FAT_ENV_FILENAME) == -1) {
+		tempfile = NULL;
 		goto fake_mountpoint_error;
 	}
 
 	/* create a fake environment file
 	 */
-	FILE *temp_env_file = fopen(tmpfile, "w");
+	FILE *temp_env_file = fopen(tempfile, "w");
 
 	BG_ENVDATA env_data;
 	memset(&env_data, 0, sizeof(BG_ENVDATA));
 	fwrite(&env_data, sizeof(BG_ENVDATA), 1, temp_env_file);
 	fclose(temp_env_file);
 
-	free(tmpfile);
-	free(tmpdir);
+	free(tempfile);
+	free(tempdir);
 
 	struct fake_env_file_path *fefp;
 	fefp = malloc(sizeof(struct fake_env_file_path));
@@ -103,7 +103,7 @@ char *get_mountpoint_custom_fake(char *devpath)
 fake_mountpoint_error:
 	free(fefp);
 	free(buff);
-	free(tmpdir);
+	free(tempdir);
 	return NULL;
 }
 

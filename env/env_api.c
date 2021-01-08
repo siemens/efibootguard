@@ -148,7 +148,7 @@ uint16_t ebg_env_getglobalstate(ebgenv_t *e)
 
 	/* find all environments with revision 0 */
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-		BGENV *env = bgenv_open_by_index(i);
+		env = bgenv_open_by_index(i);
 
 		if (!env) {
 			continue;

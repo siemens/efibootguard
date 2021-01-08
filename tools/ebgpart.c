@@ -393,13 +393,13 @@ static int scan_devdir(unsigned int fmajor, unsigned int fminor, char *fullname,
 		}
 		(void)snprintf(fullname, maxlen, "%s/%s", DEVDIR,
 			       devfile->d_name);
-		struct stat fstat;
-		if (stat(fullname, &fstat) == -1) {
+		struct stat statbuf;
+		if (stat(fullname, &statbuf) == -1) {
 			VERBOSE(stderr, "stat failed on %s\n", fullname);
 			break;
 		}
-		if (major(fstat.st_rdev) == fmajor &&
-		    minor(fstat.st_rdev) == fminor) {
+		if (major(statbuf.st_rdev) == fmajor &&
+		    minor(statbuf.st_rdev) == fminor) {
 			VERBOSE(stdout, "Node found: %s\n", fullname);
 			result = 0;
 			break;
@@ -462,8 +462,8 @@ void ped_device_probe_all(void)
 		/* Check if this file is really in the dev directory */
 		(void)snprintf(fullname, sizeof(fullname), "%s/%s", DEVDIR,
 			 sysblockfile->d_name);
-		struct stat fstat;
-		if (stat(fullname, &fstat) == -1) {
+		struct stat statbuf;
+		if (stat(fullname, &statbuf) == -1) {
 			/* Node with same name not found in /dev, thus search
 			* for node with identical Major and Minor revision */
 			if (scan_devdir(fmajor, fminor, fullname,
