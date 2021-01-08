@@ -64,8 +64,8 @@ install_cppcheck()
 {
     git clone https://github.com/danmar/cppcheck.git
     git -C cppcheck checkout 2.3
-    make -C cppcheck SRCDIR=build \
-                     CFGDIR=/opt/cppcheck/cfg \
+    make -C cppcheck MATCHCOMPILER=yes \
+                     FILESDIR=/opt/cppcheck \
                      PREFIX=/opt/cppcheck \
                      HAVE_RULES=no install -j2 || \
             return -1
