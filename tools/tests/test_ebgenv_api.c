@@ -147,6 +147,7 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 	 */
 	ret = ebg_env_create_new(&e);
 
+	ck_assert_int_eq(ret, 0);
 	ck_assert(((BGENV *)e.bgenv)->data == &envdata[0]);
 	ck_assert_int_eq(((BGENV *)e.bgenv)->data->ustate, USTATE_OK);
 	ck_assert_int_eq(

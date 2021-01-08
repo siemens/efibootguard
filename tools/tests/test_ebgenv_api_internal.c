@@ -306,10 +306,14 @@ START_TEST(ebgenv_api_internal_bgenv_get)
 	/* Test if bgenv_get returns the correct value
 	 */
 	res = bgenv_get(handle, "kernelfile", NULL, buffera, res);
+	ck_assert_int_eq(res, 0);
 	ck_assert_int_eq(strcmp(buffera, test_strings[0]), 0);
 
 	res = bgenv_get(handle, "kernelparams", NULL, NULL, 1000);
+	ck_assert_int_eq(res, strlen(test_strings[1]) + 1);
+
 	res = bgenv_get(handle, "kernelparams", NULL, buffera, res);
+	ck_assert_int_eq(res, 0);
 	ck_assert_int_eq(strcmp(buffera, test_strings[1]), 0);
 
 	free(handle);
