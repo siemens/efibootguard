@@ -127,6 +127,10 @@ case "$TARGET_EFFECTIVE" in
         suppress+=" --suppress=unusedFunction:tools/tests/test_ebgenv_api.c"
         # EFI uses void* as ImageBase needed for further calculations
         suppress+=" --suppress=arithOperationsOnVoidPointer:main.c"
+        # False positive on init_array iteration
+        suppress+=" --suppress=comparePointers:main.c"
+        # False positive on constructors, first hit
+        suppress+=" --suppress=unusedFunction:drivers/watchdog/amdfch_wdt.c"
 
         enable="--enable=warning \
                 --enable=style \
