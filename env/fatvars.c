@@ -111,6 +111,8 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 		goto lc_cleanup;
 	}
 
+	result = BG_SUCCESS;
+
 	if (numHandles < ENV_NUM_CONFIG_PARTS) {
 		Print(L"Warning, too few config partitions: found: "
 		      L"%d, but expected %d.\n",
@@ -227,7 +229,6 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 	Print(L" args: %s\n", bglp->payload_options);
 	Print(L" timeout: %d seconds\n", bglp->timeout);
 
-	result = BG_SUCCESS;
 lc_cleanup:
 	mfree(config_volumes);
 	return result;
