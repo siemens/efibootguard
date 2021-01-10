@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #define FAT_ENV_FILENAME "BGENV.DAT"
 #define ENV_STRING_LENGTH 255
 
