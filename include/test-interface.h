@@ -12,8 +12,7 @@
  * SPDX-License-Identifier:	GPL-2.0
  */
 
-#ifndef __TEST_INTERFACE_H__
-#define __TEST_INTERFACE_H__
+#pragma once
 
 #include "env_api.h"
 
@@ -25,5 +24,3 @@ bool probe_config_partitions(CONFIG_PART *cfgparts);
 bool mount_partition(CONFIG_PART *cfgpart);
 
 EBGENVKEY bgenv_str2enum(char *key);
-
-#endif // __TEST_INTERFACE_H__

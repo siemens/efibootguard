@@ -12,8 +12,7 @@
  * SPDX-License-Identifier:	GPL-2.0
  */
 
-#ifndef __H_BOOTGUARD__
-#define __H_BOOTGUARD__
+#pragma once
 
 #if defined(__GNUC__)
 #define __noreturn __attribute__((noreturn))
@@ -57,5 +56,3 @@ typedef struct _BG_LOADER_PARAMS {
 	CHAR16 *payload_options;
 	UINTN timeout;
 } BG_LOADER_PARAMS;
-
-#endif // __H_BOOTGUARD__

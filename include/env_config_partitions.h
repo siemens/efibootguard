@@ -12,9 +12,6 @@
  * SPDX-License-Identifier:	GPL-2.0
  */
 
-#ifndef __ENV_CONFIG_PARTITIONS_H__
-#define __ENV_CONFIG_PARTITIONS_H__
+#pragma once
 
 bool probe_config_partitions(CONFIG_PART *cfgpart);
-
-#endif // __ENV_CONFIG_PARTITIONS_H__

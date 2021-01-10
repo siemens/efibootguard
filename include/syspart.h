@@ -12,8 +12,7 @@
  * SPDX-License-Identifier:	GPL-2.0
  */
 
-#ifndef __H_SYSPART__
-#define __H_SYSPART__
+#pragma once
 
 #include <efi.h>
 #include <efilib.h>
@@ -34,5 +33,3 @@
 
 EFI_STATUS enumerate_cfg_parts(UINTN *config_volumes, UINTN *maxHandles);
 UINTN filter_cfg_parts(UINTN *config_volumes, UINTN maxHandles);
-
-#endif // __H_SYSPART__

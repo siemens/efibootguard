@@ -12,8 +12,7 @@
  * SPDX-License-Identifier:	GPL-2.0
  */
 
-#ifndef __H_ENV_DATA__
-#define __H_ENV_DATA__
+#pragma once
 
 #define FAT_ENV_FILENAME "BGENV.DAT"
 #define ENV_STRING_LENGTH 255
@@ -44,5 +43,3 @@ struct _BG_ENVDATA {
 #pragma pack(pop)
 
 typedef struct _BG_ENVDATA BG_ENVDATA;
-
-#endif // __H_ENV_DATA__

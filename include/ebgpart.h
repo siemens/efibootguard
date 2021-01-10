@@ -16,8 +16,7 @@
  * partition tables.
  */
 
-#ifndef __EBGPART_H__
-#define __EBGPART_H__
+#pragma once
 
 #ifndef _LARGEFILE64_SOURCE
 #define _LARGEFILE64_SOURCE
@@ -140,5 +139,3 @@ PedPartition *ped_disk_next_partition(const PedDisk *pd,
 				      const PedPartition *part);
 
 void ebgpart_beverbose(bool v);
-
-#endif // __EBGPART_H__

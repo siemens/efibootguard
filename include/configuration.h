@@ -12,8 +12,7 @@
  * SPDX-License-Identifier:	GPL-2.0
  */
 
-#ifndef __H_CONFIG__
-#define __H_CONFIG__
+#pragma once
 
 #include <efi.h>
 #include <efilib.h>
@@ -23,5 +22,3 @@
 
 BG_STATUS load_config(BG_LOADER_PARAMS *bg_loader_params);
 BG_STATUS save_config(BG_LOADER_PARAMS *bg_loader_params);
-
-#endif // __H_CONFIG__

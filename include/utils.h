@@ -13,8 +13,7 @@
  * SPDX-License-Identifier:	GPL-2.0
  */
 
-#ifndef __H_UTILS__
-#define __H_UTILS__
+#pragma once
 
 #include "bootguard.h"
 
@@ -56,5 +55,3 @@ VOID PrintC(const UINT8 color, const CHAR16 *fmt, ...);
 
 #define INFO(fmt, ...)                                                         \
 	PrintC(EFI_LIGHTGRAY, fmt, ##__VA_ARGS__)
-
-#endif // __H_UTILS__

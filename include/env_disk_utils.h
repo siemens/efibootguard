@@ -12,11 +12,8 @@
  * SPDX-License-Identifier:	GPL-2.0
  */
 
-#ifndef __ENV_DISK_UTILS_H__
-#define __ENV_DISK_UTILS_H__
+#pragma once
 
 char *get_mountpoint(char *devpath);
 bool mount_partition(CONFIG_PART *cfgpart);
 void unmount_partition(CONFIG_PART *cfgpart);
-
-#endif // __ENV_DISK_UTILS_H__

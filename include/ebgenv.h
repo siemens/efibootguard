@@ -14,8 +14,7 @@
  *
  */
 
-#ifndef __EBGENV_H__
-#define __EBGENV_H__
+#pragma once
 
 #include <errno.h>
 
@@ -143,5 +142,3 @@ int ebg_env_register_gc_var(ebgenv_t *e, char *key);
  *  @return 0 on success, errno on failure
  */
 int ebg_env_finalize_update(ebgenv_t *e);
-
-#endif //__EBGENV_H__

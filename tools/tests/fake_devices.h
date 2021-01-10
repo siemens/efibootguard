@@ -12,8 +12,7 @@
  * SPDX-License-Identifier:	GPL-2.0
  */
 
-#ifndef __FAKE_DEVICES_H__
-#define __FAKE_DEVICES_H__
+#pragma once
 
 #include <ebgpart.h>
 
@@ -26,5 +25,3 @@ void remove_fake_partitions(int n);
 void free_fake_devices(void);
 
 PedDevice *ped_device_get_next_custom_fake(const PedDevice *dev);
-
-#endif // __FAKE_DEVICES_H__
