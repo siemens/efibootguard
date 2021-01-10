@@ -13,6 +13,7 @@
  */
 
 #include <bootguard.h>
+#include <utils.h>
 #include <syspart.h>
 #include <envdata.h>
 

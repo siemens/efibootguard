@@ -13,6 +13,7 @@
  */
 
 #include "bootguard.h"
+#include "utils.h"
 
 EFI_HANDLE this_image;
 

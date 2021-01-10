@@ -15,7 +15,8 @@
 
 #pragma once
 
-#include "bootguard.h"
+#include <efi.h>
+#include <efilib.h>
 
 #define MAX_INFO_SIZE 1024
 
@@ -25,6 +26,9 @@ typedef struct _VOLUME_DESC {
 	CHAR16 *fscustomlabel;
 	EFI_FILE_HANDLE root;
 } VOLUME_DESC;
+
+extern VOLUME_DESC *volumes;
+extern UINTN volume_count;
 
 typedef enum { DOSFSLABEL, CUSTOMLABEL, NOLABEL } LABELMODE;
 

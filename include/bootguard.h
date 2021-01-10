@@ -15,9 +15,6 @@
 #pragma once
 
 #include <efi.h>
-#include <efilib.h>
-#include <efiprot.h>
-#include <utils.h>
 
 /* The following definitions regarding status and error constants are
  * implemented the same way the corresponding gnu-efi constants are
@@ -37,9 +34,6 @@ typedef int BG_STATUS;
 #define ENV_FILE_NAME L"BGENV.DAT"
 
 extern EFI_HANDLE this_image;
-
-extern VOLUME_DESC *volumes;
-extern UINTN volume_count;
 
 typedef struct _BG_LOADER_PARAMS {
 	CHAR16 *payload_path;
