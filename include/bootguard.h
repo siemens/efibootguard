@@ -14,16 +14,6 @@
 
 #pragma once
 
-#if defined(__GNUC__)
-#define __noreturn __attribute__((noreturn))
-#define unreachable() __builtin_unreachable()
-#else
-#define __noreturn /**/
-#define unreachable()                                                          \
-	do {                                                                   \
-	} while (1)
-#endif
-
 #include <efi.h>
 #include <efilib.h>
 #include <efiprot.h>

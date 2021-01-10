@@ -55,12 +55,12 @@ uint32_t calc_crc32(void *data, int32_t size)
 	return crc;
 }
 
-void __noreturn error_exit(CHAR16 *message, EFI_STATUS status)
+void __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status)
 {
 	ERROR(L"%s ( %r )\n", message, status);
 	uefi_call_wrapper(BS->Stall, 1, 3 * 1000 * 1000);
 	uefi_call_wrapper(BS->Exit, 4, this_image, status, 0, NULL);
-	unreachable();
+	__builtin_unreachable();
 }
 
 VOID *mmalloc(UINTN bytes)

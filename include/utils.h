@@ -29,7 +29,7 @@ typedef struct _VOLUME_DESC {
 typedef enum { DOSFSLABEL, CUSTOMLABEL, NOLABEL } LABELMODE;
 
 uint32_t calc_crc32(void *data, int32_t size);
-void __noreturn error_exit(CHAR16 *message, EFI_STATUS status);
+void __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status);
 VOID *mmalloc(UINTN bytes);
 EFI_STATUS mfree(VOID *p);
 CHAR16 *get_volume_label(EFI_FILE_HANDLE fh);
