@@ -75,8 +75,7 @@ static EFI_STATUS scan_devices(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 					   this_image, NULL,
 					   EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 		if (EFI_ERROR(status)) {
-			error_exit(L"Could not open PciIoProtocol while "
-				   L"probing watchdogs.",
+			error_exit(L"Could not open PciIoProtocol while probing watchdogs.",
 				   status);
 		}
 
@@ -84,8 +83,7 @@ static EFI_STATUS scan_devices(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 					   EfiPciIoWidthUint32, PCI_VENDOR_ID,
 					   1, &value);
 		if (EFI_ERROR(status)) {
-			error_exit(L"Could not read from PCI device while "
-				   L"probing watchdogs.",
+			error_exit(L"Could not read from PCI device while probing watchdogs.",
 				   status);
 		}
 
@@ -121,8 +119,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 			      &LoadedImageProtocol, (VOID **)&loaded_image,
 			      this_image, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 	if (EFI_ERROR(status)) {
-		error_exit(L"Could not open LoadedImageProtocol to get image "
-			   L"information.",
+		error_exit(L"Could not open LoadedImageProtocol to get image information.",
 			   status);
 	}
 
@@ -143,18 +140,15 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	if (BG_ERROR(bg_status)) {
 		switch (bg_status) {
 		case BG_CONFIG_ERROR:
-			error_exit(
-			    L"Fatal error: Environment not set, could not "
-			    L"load config.",
-			    EFI_ABORTED);
+			error_exit(L"Fatal error: Environment not set, could not load config.",
+				   EFI_ABORTED);
 			break;
 		case BG_CONFIG_PARTIALLY_CORRUPTED:
 			WARNING(L"Config is partially corrupted. Please check.\n"
 			        L"EFI Boot Guard will try to boot.\n");
 			break;
 		default:
-			error_exit(L"Fatal error: Unknown error occured while "
-				   L"loading config.",
+			error_exit(L"Fatal error: Unknown error occured while loading config.",
 				   EFI_ABORTED);
 		}
 	}
@@ -191,8 +185,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 			      &LoadedImageProtocol, (VOID **)&loaded_image,
 			      this_image, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 	if (EFI_ERROR(status)) {
-		error_exit(L"Could not open LoadedImageProtocol to set kernel "
-			   L"load options.",
+		error_exit(L"Could not open LoadedImageProtocol to set kernel load options.",
 			   status);
 	}
 
