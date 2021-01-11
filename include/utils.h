@@ -1,7 +1,7 @@
 /*
  * EFI Boot Guard
  *
- * Copyright (c) Siemens AG, 2017
+ * Copyright (c) Siemens AG, 2017-2021
  *
  * Authors:
  *  Jan Kiszka <jan.kiszka@siemens.com>
@@ -40,6 +40,21 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 					  CHAR16 *payloadpath);
 CHAR16 *GetBootMediumPath(CHAR16 *input);
 BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp);
-VOID Color(EFI_SYSTEM_TABLE *system_table, char fgcolor, char bgcolor);
+
+VOID PrintC(const UINT8 color, const CHAR16 *fmt, ...);
+#define ERROR(fmt, ...)                                                        \
+	do {                                                                   \
+		PrintC(EFI_LIGHTRED, L"ERROR: ");                              \
+		PrintC(EFI_LIGHTGRAY, fmt, ##__VA_ARGS__);                     \
+	} while (0)
+
+#define WARNING(fmt, ...)                                                      \
+	do {                                                                   \
+		PrintC(EFI_YELLOW, L"WARNING: ");                              \
+		PrintC(EFI_LIGHTGRAY, fmt, ##__VA_ARGS__);                     \
+	} while (0)
+
+#define INFO(fmt, ...)                                                         \
+	PrintC(EFI_LIGHTGRAY, fmt, ##__VA_ARGS__)
 
 #endif // __H_UTILS__

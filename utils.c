@@ -16,6 +16,19 @@
 #include <bootguard.h>
 #include <utils.h>
 
+VOID PrintC(const UINT8 color, const CHAR16 *fmt, ...)
+{
+	INT32 attr = ST->ConOut->Mode->Attribute;
+	(VOID)uefi_call_wrapper(ST->ConOut->SetAttribute, 2, ST->ConOut, color);
+
+	va_list args;
+	va_start(args, fmt);
+	(VOID)VPrint(fmt, args);
+	va_end(args);
+
+	(VOID)uefi_call_wrapper(ST->ConOut->SetAttribute, 2, ST->ConOut, attr);
+}
+
 BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 {
 	extern CHAR16 *boot_medium_path;
@@ -44,7 +57,7 @@ uint32_t calc_crc32(void *data, int32_t size)
 
 void __noreturn error_exit(CHAR16 *message, EFI_STATUS status)
 {
-	Print(L"%s ( %r )\n", message, status);
+	ERROR(L"%s ( %r )\n", message, status);
 	uefi_call_wrapper(BS->Stall, 1, 3 * 1000 * 1000);
 	uefi_call_wrapper(BS->Exit, 4, this_image, status, 0, NULL);
 	unreachable();
@@ -121,21 +134,21 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 	EFI_FILE_HANDLE tmp;
 
 	if (!volumes || !count) {
-		Print(L"Invalid volume enumeration.\n");
+		ERROR(L"Invalid volume enumeration.\n");
 		return EFI_INVALID_PARAMETER;
 	}
 
 	status = uefi_call_wrapper(BS->LocateHandleBuffer, 5, ByProtocol,
 				   &sfspGuid, NULL, &handleCount, &handles);
 	if (EFI_ERROR(status)) {
-		Print(L"Could not locate handle buffer.\n");
+		ERROR(L"Could not locate handle buffer.\n");
 		return EFI_OUT_OF_RESOURCES;
 	}
-	Print(L"Found %d handles for file IO\n\n", handleCount);
+	INFO(L"Found %d handles for file IO\n\n", handleCount);
 
 	*volumes = (VOLUME_DESC *)mmalloc(sizeof(VOLUME_DESC) * handleCount);
 	if (!*volumes) {
-		Print(L"Could not allocate memory for volume descriptors.\n");
+		ERROR(L"Could not allocate memory for volume descriptors.\n");
 		return EFI_OUT_OF_RESOURCES;
 	}
 
@@ -148,24 +161,20 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 				      &sfspGuid, (VOID **)&fs);
 		if (EFI_ERROR(status)) {
 			/* skip failed handle and continue enumerating */
-			Print(L"File IO handle %d does not support "
-			      L"SIMPLE_FILE_SYSTEM_PROTOCOL, skipping.\n",
+			ERROR(L"File IO handle %d does not support SIMPLE_FILE_SYSTEM_PROTOCOL, skipping.\n",
 			      index);
 			continue;
 		}
 		status = uefi_call_wrapper(fs->OpenVolume, 2, fs, &tmp);
 		if (EFI_ERROR(status)) {
 			/* skip failed handle and continue enumerating */
-			Print(L"Could not open file system for IO handle %d, "
-			      L"skipping.\n",
+			ERROR(L"Could not open file system for IO handle %d, skipping.\n",
 			      index);
 			continue;
 		}
 		EFI_DEVICE_PATH *devpath = DevicePathFromHandle(handles[index]);
 		if (devpath == NULL) {
-			Print(
-			    L"Could not get device path for config partition, "
-			    L"skipping.\n");
+			ERROR(L"Could not get device path for config partition, skipping.\n");
 			continue;
 		}
 		devpathstr = DevicePathToStr(devpath);
@@ -176,11 +185,11 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 		    get_volume_label((*volumes)[rootCount].root);
 		(*volumes)[rootCount].fscustomlabel =
 		    get_volume_custom_label((*volumes)[rootCount].root);
-		Print(L"Volume %d: ", rootCount);
+		INFO(L"Volume %d: ", rootCount);
 		if (IsOnBootMedium(devpath)) {
-			Print(L"(On boot medium) ");
+			PrintC(EFI_LIGHTGRAY, L"(On boot medium) ");
 		}
-		Print(L"%s, LABEL=%s, CLABEL=%s\n",
+		PrintC(EFI_LIGHTGRAY, L"%s, LABEL=%s, CLABEL=%s\n",
 		      devpathstr, (*volumes)[rootCount].fslabel,
 		      (*volumes)[rootCount].fscustomlabel);
 
@@ -198,20 +207,20 @@ EFI_STATUS close_volumes(VOLUME_DESC *volumes, UINTN count)
 	UINTN i;
 
 	if (!volumes) {
-		Print(L"Invalid parameter for closing volumes.\n");
+		ERROR(L"Invalid parameter for closing volumes.\n");
 		return EFI_INVALID_PARAMETER;
 	}
 	for (i = 0; i < count; i++) {
 		EFI_STATUS status;
 
 		if (!volumes[i].root) {
-			Print(L"Error, invalid handle for volume %d.\n", i);
+			ERROR(L"Invalid handle for volume %d.\n", i);
 			result = EFI_INVALID_PARAMETER;
 		}
 		status = uefi_call_wrapper(volumes[i].root->Close, 1,
 					   volumes[i].root);
 		if (EFI_ERROR(status)) {
-			Print(L"Could not close volume %d.\n", i);
+			ERROR(L"Could not close volume %d.\n", i);
 			result = EFI_DEVICE_ERROR;
 		}
 	}
@@ -277,7 +286,7 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 
 	StrCpy(fullpath, pathprefix);
 	StrCat(fullpath, payloadpath + prefixlen + 3);
-	Print(L"Full path for kernel is: %s\n", fullpath);
+	INFO(L"Full path for kernel is: %s\n", fullpath);
 
 	mfree(fullpath);
 	mfree(pathprefix);
@@ -316,10 +325,4 @@ CHAR16 *GetBootMediumPath(CHAR16 *input)
 	}
 
 	return dst;
-}
-
-VOID Color(EFI_SYSTEM_TABLE *system_table, char fgcolor, char bgcolor)
-{
-	SIMPLE_TEXT_OUTPUT_INTERFACE *con = system_table->ConOut;
-	(VOID)uefi_call_wrapper(con->SetAttribute, 3, con, (bgcolor << 8) | fgcolor);
 }

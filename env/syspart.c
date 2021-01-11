@@ -24,7 +24,7 @@ EFI_STATUS enumerate_cfg_parts(UINTN *config_volumes, UINTN *numHandles)
 	UINTN rootCount = 0;
 
 	if (!config_volumes || !numHandles) {
-		Print(L"Invalid parameter in system partition enumeration.\n");
+		ERROR(L"Invalid parameter in system partition enumeration.\n");
 		return EFI_INVALID_PARAMETER;
 	}
 	for (UINTN index = 0; index < volume_count && rootCount < *numHandles;
@@ -36,19 +36,18 @@ EFI_STATUS enumerate_cfg_parts(UINTN *config_volumes, UINTN *numHandles)
 		status = open_cfg_file(volumes[index].root, &fh,
 				       EFI_FILE_MODE_READ);
 		if (status == EFI_SUCCESS) {
-			Print(L"Config file found on volume %d.\n", index);
+			INFO(L"Config file found on volume %d.\n", index);
 			config_volumes[rootCount] = index;
 			rootCount++;
 			status = close_cfg_file(volumes[index].root, fh);
 			if (EFI_ERROR(status)) {
-				Print(L"Could not close config file on "
-				      L"partition %d.\n",
+				ERROR(L"Could not close config file on partition %d.\n",
 				      index);
 			}
 		}
 	}
 	*numHandles = rootCount;
-	Print(L"%d config partitions detected.\n", rootCount);
+	INFO(L"%d config partitions detected.\n", rootCount);
 	return EFI_SUCCESS;
 }
 
@@ -64,7 +63,7 @@ UINTN filter_cfg_parts(UINTN *config_volumes, UINTN numHandles)
 {
 	BOOLEAN use_envs_on_bootmedium_only = FALSE;
 
-	Print(L"Config filter: \n");
+	INFO(L"Config filter: \n");
 	for (UINTN index = 0; index < numHandles; index++) {
 		VOLUME_DESC *v = &volumes[config_volumes[index]];
 
@@ -78,7 +77,7 @@ UINTN filter_cfg_parts(UINTN *config_volumes, UINTN numHandles)
 		return numHandles;
 	}
 
-	Print(L"Booting with environments from boot medium only.\n");
+	INFO(L"Booting with environments from boot medium only.\n");
 	UINTN num_sorted = 0;
 	for (UINTN j = 0; j < numHandles; j++) {
 		UINTN cvi = config_volumes[j];
@@ -88,7 +87,7 @@ UINTN filter_cfg_parts(UINTN *config_volumes, UINTN numHandles)
 			swap_uintn(&config_volumes[j],
 				   &config_volumes[num_sorted++]);
 		} else {
-			Print(L"Ignoring config on volume #%d\n", cvi);
+			WARNING(L"Ignoring config on volume #%d\n", cvi);
 		}
 	}
 

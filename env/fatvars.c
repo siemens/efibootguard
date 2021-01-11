@@ -28,21 +28,19 @@ BG_STATUS save_current_config(void)
 
 	config_volumes = (UINTN *)mmalloc(sizeof(UINTN) *  volume_count);
 	if (!config_volumes) {
-		Print(L"Error, could not allocate memory for config partition "
-		      L"mapping.\n");
+		ERROR(L"Could not allocate memory for config partition mapping.\n");
 		return result;
 	}
 
 	if (EFI_ERROR(enumerate_cfg_parts(config_volumes, &numHandles))) {
-		Print(L"Error, could not enumerate config partitions.\n");
+		ERROR(L"Could not enumerate config partitions.\n");
 		goto scc_cleanup;
 	}
 
 	numHandles = filter_cfg_parts(config_volumes, numHandles);
 
 	if (numHandles != ENV_NUM_CONFIG_PARTS) {
-		Print(L"Error, unexpected number of config partitions: found "
-		      L"%d, but expected %d.\n",
+		ERROR(L"Unexpected number of config partitions: found %d, but expected %d.\n",
 		      numHandles, ENV_NUM_CONFIG_PARTS);
 		/* In case of saving, this must be treated as error, to not
 		 * overwrite another partition's config file. */
@@ -54,8 +52,7 @@ BG_STATUS save_current_config(void)
 	efistatus = open_cfg_file(v->root, &fh, EFI_FILE_MODE_WRITE |
 				  EFI_FILE_MODE_READ);
 	if (EFI_ERROR(efistatus)) {
-		Print(L"Error, could not open environment file on system "
-		      L"partition %d: %r\n",
+		ERROR(L"Could not open environment file on system partition %d: %r\n",
 		      current_partition, efistatus);
 		goto scc_cleanup;
 	}
@@ -68,13 +65,13 @@ BG_STATUS save_current_config(void)
 	efistatus = uefi_call_wrapper(fh->Write, 3, fh, &writelen,
 				      (VOID *)&env[current_partition]);
 	if (EFI_ERROR(efistatus)) {
-		Print(L"Error writing environment to file: %r\n", efistatus);
+		ERROR(L"Cannot write environment to file: %r\n", efistatus);
 		(VOID) close_cfg_file(v->root, fh);
 		goto scc_cleanup;
 	}
 
 	if (EFI_ERROR(close_cfg_file(v->root, fh))) {
-		Print(L"Error, could not close environment config file.\n");
+		ERROR(L"Could not close environment config file.\n");
 		goto scc_cleanup;
 	}
 
@@ -94,29 +91,27 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 
 	config_volumes = (UINTN *)mmalloc(sizeof(UINTN) * volume_count);
 	if (!config_volumes) {
-		Print(L"Error, could not allocate memory for config partition "
-		      L"mapping.\n");
+		ERROR(L"Could not allocate memory for config partition mapping.\n");
 		return result;
 	}
 
 	if (EFI_ERROR(enumerate_cfg_parts(config_volumes, &numHandles))) {
-		Print(L"Error, could not enumerate config partitions.\n");
+		ERROR(L"Could not enumerate config partitions.\n");
 		goto lc_cleanup;
 	}
 
 	numHandles = filter_cfg_parts(config_volumes, numHandles);
 
 	if (numHandles > ENV_NUM_CONFIG_PARTS) {
-		Print(L"Error, too many config partitions found. Aborting.\n");
+		ERROR(L"Too many config partitions found. Aborting.\n");
 		goto lc_cleanup;
 	}
 
 	result = BG_SUCCESS;
 
 	if (numHandles < ENV_NUM_CONFIG_PARTS) {
-		Print(L"Warning, too few config partitions: found: "
-		      L"%d, but expected %d.\n",
-		      numHandles, ENV_NUM_CONFIG_PARTS);
+		WARNING(L"Too few config partitions: found: %d, but expected %d.\n",
+			numHandles, ENV_NUM_CONFIG_PARTS);
 		/* Don't treat this as error because we may still be able to
 		 * find a valid config */
 		result = BG_CONFIG_PARTIALLY_CORRUPTED;
@@ -128,21 +123,17 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 		VOLUME_DESC *v = &volumes[config_volumes[i]];
 		if (EFI_ERROR(open_cfg_file(v->root, &fh,
 					    EFI_FILE_MODE_READ))) {
-			Print(L"Warning, could not open environment file on "
-			      L"config partition %d\n",
-			      i);
+			WARNING(L"Could not open environment file on config partition %d\n",
+				i);
 			result = BG_CONFIG_PARTIALLY_CORRUPTED;
 			continue;
 		}
 		UINTN readlen = sizeof(BG_ENVDATA);
 		if (EFI_ERROR(read_cfg_file(fh, &readlen, (VOID *)&env[i]))) {
-			Print(L"Error reading environment from config "
-			      L"partition %d.\n",
-			      i);
+			ERROR(L"Cannot read environment from config partition %d.\n", i);
 			env_invalid[i] = 1;
 			if (EFI_ERROR(close_cfg_file(v->root, fh))) {
-				Print(L"Error, could not close environment "
-				      L"config file.\n");
+				ERROR(L"Could not close environment config file.\n");
 			}
 			result = BG_CONFIG_PARTIALLY_CORRUPTED;
 			continue;
@@ -151,11 +142,10 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 		uint32_t crc32 = calc_crc32(&env[i], sizeof(BG_ENVDATA) -
 							 sizeof(env[i].crc32));
 		if (crc32 != env[i].crc32) {
-			Print(L"CRC32 error in environment data on config "
-			      L"partition %d.\n",
+			ERROR(L"CRC32 error in environment data on config partition %d.\n",
 			      i);
-			Print(L"calculated: %lx\n", crc32);
-			Print(L"stored: %lx\n", env[i].crc32);
+			INFO(L"calculated: %lx\n", crc32);
+			INFO(L"stored: %lx\n", env[i].crc32);
 			/* Don't treat this as fatal error because we may still
 			 * have
 			 * valid environments */
@@ -164,8 +154,7 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 		}
 
 		if (EFI_ERROR(close_cfg_file(v->root, fh))) {
-			Print(L"Error, could not close environment config "
-			      L"file.\n");
+			ERROR(L"Could not close environment config file.\n");
 			/* Don't abort, so we may still be able to boot a
 			 * config */
 			result = BG_CONFIG_PARTIALLY_CORRUPTED;
@@ -222,12 +211,11 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 	    StrDuplicate(env[current_partition].kernelparams);
 	bglp->timeout = env[current_partition].watchdog_timeout_sec;
 
-	Print(L"Config Revision: %d:\n", latest_rev);
-	Print(L" ustate: %d\n",
-	      env[current_partition].ustate);
-	Print(L" kernel: %s\n", bglp->payload_path);
-	Print(L" args: %s\n", bglp->payload_options);
-	Print(L" timeout: %d seconds\n", bglp->timeout);
+	INFO(L"Config Revision: %d:\n", latest_rev);
+	INFO(L" ustate: %d\n", env[current_partition].ustate);
+	INFO(L" kernel: %s\n", bglp->payload_path);
+	INFO(L" args: %s\n", bglp->payload_options);
+	INFO(L" timeout: %d seconds\n", bglp->timeout);
 
 lc_cleanup:
 	mfree(config_volumes);

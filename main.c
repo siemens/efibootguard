@@ -114,9 +114,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	this_image = image_handle;
 	InitializeLib(this_image, system_table);
 
-	Color(system_table, 3, 0);
-	Print(L"\nEFI Boot Guard %s\n", L""EFIBOOTGUARD_VERSION);
-	Color(system_table, 7, 0);
+	PrintC(EFI_CYAN, L"\nEFI Boot Guard %s\n", L"" EFIBOOTGUARD_VERSION);
 
 	status =
 	    uefi_call_wrapper(BS->OpenProtocol, 6, this_image,
@@ -131,7 +129,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	tmp = DevicePathToStr(DevicePathFromHandle(loaded_image->DeviceHandle));
 	boot_medium_path = GetBootMediumPath(tmp);
 	mfree(tmp);
-	Print(L"Boot medium: %s\n", boot_medium_path);
+	INFO(L"Boot medium: %s\n", boot_medium_path);
 
 	status = get_volumes(&volumes, &volume_count);
 	if (EFI_ERROR(status)) {
@@ -139,7 +137,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 			   status);
 	}
 
-	Print(L"Loading configuration...\n");
+	INFO(L"Loading configuration...\n");
 
 	bg_status = load_config(&bg_loader_params);
 	if (BG_ERROR(bg_status)) {
@@ -151,8 +149,8 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 			    EFI_ABORTED);
 			break;
 		case BG_CONFIG_PARTIALLY_CORRUPTED:
-			Print(L"Config is partially corrupted. Please check.\n"
-			      L"efibootguard will try to boot.\n");
+			WARNING(L"Config is partially corrupted. Please check.\n"
+			        L"EFI Boot Guard will try to boot.\n");
 			break;
 		default:
 			error_exit(L"Fatal error: Unknown error occured while "
@@ -170,7 +168,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	}
 
 	if (bg_loader_params.timeout == 0) {
-		Print(L"Watchdog is disabled.\n");
+		WARNING(L"Watchdog is disabled.\n");
 	} else {
 		status = scan_devices(loaded_image, bg_loader_params.timeout);
 		if (EFI_ERROR(status)) {
@@ -202,8 +200,8 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	loaded_image->LoadOptionsSize =
 	    (StrLen(bg_loader_params.payload_options) + 1) * sizeof(CHAR16);
 
-	Print(L"Starting %s with watchdog set to %d seconds\n",
-	      bg_loader_params.payload_path, bg_loader_params.timeout);
+	INFO(L"Starting %s with watchdog set to %d seconds ...\n",
+	     bg_loader_params.payload_path, bg_loader_params.timeout);
 
 	return uefi_call_wrapper(BS->StartImage, 3, payload_handle, 0, 0);
 }
