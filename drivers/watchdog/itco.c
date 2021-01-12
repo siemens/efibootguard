@@ -18,6 +18,7 @@
 #include <pci/header.h>
 
 #define TCO_RLD_REG		0x00
+#define TCO1_CNT_NO_REBOOT	(1 << 0)
 #define TCO1_CNT_REG		0x08
 #define TCO_TMR_HLT_MASK	(1 << 11)
 #define TCO_TMR_REG		0x12
@@ -29,6 +30,7 @@ enum iTCO_chipsets {
 	ITCO_INTEL_ICH9,
 	ITCO_INTEL_LPC_LP,
 	ITCO_INTEL_WBG,
+	ITCO_INTEL_EHL,
 };
 
 enum iTCO_versions {
@@ -37,6 +39,7 @@ enum iTCO_versions {
 	ITCO_V3,
 	ITCO_V4,
 	ITCO_V5,
+	ITCO_V6,
 };
 
 typedef struct {
@@ -88,6 +91,10 @@ static iTCO_regs iTCO_version_regs[] = {
 	    .pmc_no_reboot_mask = (1 << 4),
 	    .pmc_base_addr_mask = 0xfffffe00,
 	},
+    [ITCO_V6] =
+	{
+	    .tco_base = 0x400,
+	},
 };
 
 static iTCO_info iTCO_chipset_info[] = {
@@ -133,6 +140,13 @@ static iTCO_info iTCO_chipset_info[] = {
 	    .regs = &iTCO_version_regs[ITCO_V2],
 	    .itco_version = ITCO_V2,
 	},
+    [ITCO_INTEL_EHL] =
+	{
+	    .name = L"Elkhart Lake",
+	    .pci_id = 0x4b23,
+	    .regs = &iTCO_version_regs[ITCO_V6],
+	    .itco_version = ITCO_V6,
+	},
 };
 
 static BOOLEAN itco_supported(UINT16 pci_device_id, UINT8 *index)
@@ -170,7 +184,32 @@ static UINT32 get_tco_base(EFI_PCI_IO *pci_io, iTCO_info *itco)
 	return (pm_base & itco->regs->pm_base_addr_mask) + 0x60;
 }
 
-static EFI_STATUS update_no_reboot_flag(EFI_PCI_IO *pci_io, iTCO_info *itco)
+static EFI_STATUS update_no_reboot_flag_cnt(EFI_PCI_IO *pci_io,
+					    UINT32 tco_base)
+{
+	EFI_STATUS status;
+	UINT32 value;
+
+	status = uefi_call_wrapper(pci_io->Io.Read, 6, pci_io,
+				   EfiPciIoWidthUint16,
+				   EFI_PCI_IO_PASS_THROUGH_BAR,
+				   tco_base + TCO1_CNT_REG, 1, &value);
+	if (EFI_ERROR(status)) {
+		return status;
+	}
+	value &= ~TCO1_CNT_NO_REBOOT;
+	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
+				   EfiPciIoWidthUint16,
+				   EFI_PCI_IO_PASS_THROUGH_BAR,
+				   tco_base + TCO1_CNT_REG, 1, &value);
+	if (EFI_ERROR(status)) {
+		return status;
+	}
+	return status;
+}
+
+static EFI_STATUS update_no_reboot_flag_mem(EFI_PCI_IO *pci_io,
+					    iTCO_info *itco)
 {
 	EFI_STATUS status;
 	UINT32 pmc_base, value;
@@ -288,12 +327,15 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 
 	/* Clear NO_REBOOT flag */
 	switch (itco->itco_version) {
+	case ITCO_V6:
+		status = update_no_reboot_flag_cnt(pci_io, tco_base);
+		break;
 	case ITCO_V5:
 		status = update_no_reboot_flag_apl(pci_io, itco);
 		break;
 	case ITCO_V3:
 	case ITCO_V2:
-		status = update_no_reboot_flag(pci_io, itco);
+		status = update_no_reboot_flag_mem(pci_io, itco);
 		break;
 	}
 	if (EFI_ERROR(status)) {
