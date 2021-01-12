@@ -17,8 +17,6 @@
 #include <efilib.h>
 #include <pci/header.h>
 
-#define SMI_TCO_MASK		(1 << 13)
-
 #define TCO_RLD_REG		0x00
 #define TCO1_CNT_REG		0x08
 #define TCO_TMR_HLT_MASK	(1 << 11)
@@ -46,7 +44,6 @@ typedef struct {
 	UINT32 pm_base_addr_mask;
 	UINT32 pmc_base_reg;
 	UINT32 pmc_reg;
-	UINT32 smi_reg;
 	UINT32 pmc_no_reboot_mask;
 	UINT32 pmc_base_addr_mask;
 } iTCO_regs;
@@ -67,7 +64,6 @@ static iTCO_regs iTCO_version_regs[] = {
 	{
 	    .pmc_base_reg = 0xf0,		/* RCBABASE_REG */
 	    .pmc_reg = 0x3410,			/* GCS_REG */
-	    .smi_reg = 0x30,
 	    .pmc_no_reboot_mask = (1 << 5),	/* GCS_NO_REBOOT */
 	    .pmc_base_addr_mask = 0xffffc000,	/* RCBABASE_ADDRMASK */
 	    .pm_base_addr_mask = 0x0000ff80,
@@ -76,7 +72,6 @@ static iTCO_regs iTCO_version_regs[] = {
 	{
 	    .pmc_base_reg = 0x44,
 	    .pmc_reg = 0x08,
-	    .smi_reg = 0x30,
 	    .pmc_no_reboot_mask = (1 << 4),
 	    .pmc_base_addr_mask = 0xfffffe00,
 	    .pm_base_addr_mask = 0x0000ff80,
@@ -89,7 +84,6 @@ static iTCO_regs iTCO_version_regs[] = {
 	{
 	    .pmc_base_reg = 0x10,
 	    .pmc_reg = 0x1008,
-	    .smi_reg = 0x40,
 	    .pm_base = 0x400,
 	    .pmc_no_reboot_mask = (1 << 4),
 	    .pmc_base_addr_mask = 0xfffffe00,
@@ -264,23 +258,6 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 		return EFI_UNSUPPORTED;
 	}
 	tco_base = pm_base + 0x60;
-
-	/* Enable TCO SMIs */
-	status = uefi_call_wrapper(pci_io->Io.Read, 6, pci_io,
-				   EfiPciIoWidthUint32,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   pm_base + itco->regs->smi_reg, 1, &value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
-	value |= SMI_TCO_MASK;
-	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
-				   EfiPciIoWidthUint32,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   pm_base + itco->regs->smi_reg, 1, &value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
 
 	/* Set timer value */
 	status = uefi_call_wrapper(pci_io->Io.Read, 6, pci_io,
