@@ -40,7 +40,7 @@ enum iTCO_versions {
 };
 
 typedef struct {
-	UINT32 pm_base;
+	UINT32 tco_base;
 	UINT32 pm_base_addr_mask;
 	UINT32 pmc_base_reg;
 	UINT32 pmc_reg;
@@ -84,10 +84,9 @@ static iTCO_regs iTCO_version_regs[] = {
 	{
 	    .pmc_base_reg = 0x10,
 	    .pmc_reg = 0x1008,
-	    .pm_base = 0x400,
+	    .tco_base = 0x460,
 	    .pmc_no_reboot_mask = (1 << 4),
 	    .pmc_base_addr_mask = 0xfffffe00,
-	    .pm_base_addr_mask = 0x0000ff80,
 	},
 };
 
@@ -153,13 +152,13 @@ static UINTN get_timeout_value(UINT32 iTCO_version, UINTN seconds){
 	return iTCO_version == ITCO_V3 ? seconds : ((seconds * 10 ) / 6);
 }
 
-static UINT32 get_pm_base(EFI_PCI_IO *pci_io, iTCO_info *itco)
+static UINT32 get_tco_base(EFI_PCI_IO *pci_io, iTCO_info *itco)
 {
 	UINT32 pm_base;
 	EFI_STATUS status;
 
-	if (itco->regs->pm_base) {
-		return itco->regs->pm_base & itco->regs->pm_base_addr_mask;
+	if (itco->regs->tco_base) {
+		return itco->regs->tco_base;
 	}
 
 	status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
@@ -168,7 +167,7 @@ static UINT32 get_pm_base(EFI_PCI_IO *pci_io, iTCO_info *itco)
 		Print(L"Error reading PM_BASE: %r\n", status);
 		return 0;
 	}
-	return pm_base & itco->regs->pm_base_addr_mask;
+	return (pm_base & itco->regs->pm_base_addr_mask) + 0x60;
 }
 
 static EFI_STATUS update_no_reboot_flag(EFI_PCI_IO *pci_io, iTCO_info *itco)
@@ -242,7 +241,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 {
 	UINT8 itco_chip;
 	iTCO_info *itco;
-	UINT32 pm_base, tco_base, value;
+	UINT32 tco_base, value;
 	EFI_STATUS status;
 
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL ||
@@ -253,11 +252,11 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 
 	Print(L"Detected Intel TCO %s watchdog\n", itco->name);
 
-	/* Get PMBASE and TCOBASE */
-	if ((pm_base = get_pm_base(pci_io, itco)) == 0) {
+	/* Get TCOBASE */
+	tco_base = get_tco_base(pci_io, itco);
+	if (!tco_base) {
 		return EFI_UNSUPPORTED;
 	}
-	tco_base = pm_base + 0x60;
 
 	/* Set timer value */
 	status = uefi_call_wrapper(pci_io->Io.Read, 6, pci_io,
