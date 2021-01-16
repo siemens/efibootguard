@@ -112,6 +112,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	this_image = image_handle;
 	InitializeLib(this_image, system_table);
 
+	(VOID)uefi_call_wrapper(ST->ConOut->ClearScreen, 2, ST->ConOut);
 	PrintC(EFI_CYAN, L"\nEFI Boot Guard %s\n", L"" EFIBOOTGUARD_VERSION);
 
 	status =
