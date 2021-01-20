@@ -13,6 +13,7 @@
  */
 
 #include <sys/queue.h>
+#include <sys/stat.h>
 
 #include "env_api.h"
 #include "ebgenv.h"
@@ -31,9 +32,9 @@ static struct argp_option options_setenv[] = {
 	 "the one with the smallest revision value above zero is updated."},
 	{"revision", 'r', "REVISION", 0, "Set revision value"},
 	{"ustate", 's', "USTATE", 0, "Set update status for environment"},
-	{"filepath", 'f', "ENVFILE_DIR", 0,
-	 "Output environment to file. Expects an output path where the file "
-	 "name is automatically appended."},
+	{"filepath", 'f', "ENVFILE", 0,
+	 "Output environment to file. Expects an output file name, "
+	 "usually called BGENV.DAT."},
 	{"watchdog", 'w', "WATCHDOG_TIMEOUT", 0, "Watchdog timeout in seconds"},
 	{"confirm", 'c', 0, 0, "Confirm working environment"},
 	{"update", 'u', 0, 0, "Automatically update oldest revision"},
@@ -355,14 +356,29 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'f':
-		if (arguments->printenv) {
-			res = asprintf(&envfilepath, "%s", arg);
-			if (res == -1) {
-				return ENOMEM;
+		free(envfilepath);
+		envfilepath = NULL;
+
+		/* compat mode, permitting "bg_setenv -f <dir>" */
+		if (!arguments->printenv) {
+			struct stat sb;
+
+			res = stat(arg, &sb);
+			if (res == 0 && S_ISDIR(sb.st_mode)) {
+				fprintf(stderr,
+					"WARNING: Using -f to specify only the "
+					"ouptut directory is deprecated.\n");
+				res = asprintf(&envfilepath, "%s/%s", arg,
+					       FAT_ENV_FILENAME);
+				if (res == -1) {
+					return ENOMEM;
+				}
 			}
-		} else {
-			res = asprintf(&envfilepath, "%s/%s", arg, FAT_ENV_FILENAME);
-			if (res == -1) {
+		}
+
+		if (!envfilepath) {
+			envfilepath = strdup(arg);
+			if (!envfilepath) {
 				return ENOMEM;
 			}
 		}
