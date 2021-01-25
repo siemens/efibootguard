@@ -18,7 +18,7 @@ For sending patches, please refer to the mailing list and `CONTRIBUTING.md` in
 the source tree.
 
 Continuous integration:
-* [Travis CI](https://travis-ci.org/siemens/efibootguard):
+* [Travis CI](https://travis-ci.com/siemens/efibootguard):
   * Master branch: ![](https://img.shields.io/travis/siemens/efibootguard/master.svg)
   * Next branch: ![](https://img.shields.io/travis/siemens/efibootguard/next.svg)
 * Coverity: ![](https://img.shields.io/coverity/scan/13885.svg)
@@ -29,6 +29,8 @@ The following watchdog drivers are implemented:
 * Intel Quark
 * Intel TCO
 * Intel i6300esb
+* AMD FCH
+* Siemens SIMATIC IPC4x7E
 
 Note that if no working watchdog is found, the boot process deliberately fails.
 That said, setting a watchdog timeout of `0` allows to boot nonetheless without
