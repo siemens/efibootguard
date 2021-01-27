@@ -32,7 +32,6 @@ extern UINTN volume_count;
 
 typedef enum { DOSFSLABEL, CUSTOMLABEL, NOLABEL } LABELMODE;
 
-uint32_t calc_crc32(void *data, int32_t size);
 void __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status);
 CHAR16 *get_volume_label(EFI_FILE_HANDLE fh);
 EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count);

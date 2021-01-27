@@ -49,14 +49,6 @@ BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 	return result;
 }
 
-uint32_t calc_crc32(void *data, int32_t size)
-{
-	uint32_t crc;
-
-	uefi_call_wrapper(BS->CalculateCrc32, 3, data, size, &crc);
-	return crc;
-}
-
 void __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status)
 {
 	ERROR(L"%s ( %r )\n", message, status);
