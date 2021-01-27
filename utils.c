@@ -39,12 +39,12 @@ BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 
 	tmp = DevicePathToStr(dp);
 	device_path = GetBootMediumPath(tmp);
-	mfree(tmp);
+	FreePool(tmp);
 
 	if (StrCmp(device_path, boot_medium_path) == 0) {
 		result = TRUE;
 	}
-	mfree(device_path);
+	FreePool(device_path);
 
 	return result;
 }
@@ -65,11 +65,6 @@ void __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status)
 	__builtin_unreachable();
 }
 
-EFI_STATUS mfree(VOID *p)
-{
-	return uefi_call_wrapper(BS->FreePool, 1, p);
-}
-
 CHAR16 *get_volume_label(EFI_FILE_HANDLE fh)
 {
 	EFI_FILE_SYSTEM_INFO *fsi;
@@ -85,7 +80,7 @@ CHAR16 *get_volume_label(EFI_FILE_HANDLE fh)
 	status =
 	    uefi_call_wrapper(fh->GetInfo, 4, fh, &fsiGuid, &fsis, (VOID *)fsi);
 	if (EFI_ERROR(status) || fsis == 0) {
-		mfree(fsi);
+		FreePool(fsi);
 		return NULL;
 	}
 	return fsi->VolumeLabel;
@@ -183,7 +178,7 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 		      devpathstr, (*volumes)[rootCount].fslabel,
 		      (*volumes)[rootCount].fscustomlabel);
 
-		mfree(devpathstr);
+		FreePool(devpathstr);
 
 		rootCount++;
 	}
@@ -214,7 +209,7 @@ EFI_STATUS close_volumes(VOLUME_DESC *volumes, UINTN count)
 			result = EFI_DEVICE_ERROR;
 		}
 	}
-	mfree(volumes);
+	FreePool(volumes);
 	return result;
 }
 
@@ -278,8 +273,8 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 	StrCat(fullpath, payloadpath + prefixlen + 3);
 	INFO(L"Full path for kernel is: %s\n", fullpath);
 
-	mfree(fullpath);
-	mfree(pathprefix);
+	FreePool(fullpath);
+	FreePool(pathprefix);
 
 	EFI_DEVICE_PATH *filedevpath;
 	EFI_DEVICE_PATH *appendeddevpath;
@@ -287,7 +282,7 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 	filedevpath = FileDevicePath(NULL, payloadpath + prefixlen + 3);
 	appendeddevpath = AppendDevicePath(devpath, filedevpath);
 
-	mfree(filedevpath);
+	FreePool(filedevpath);
 
 	return appendeddevpath;
 }

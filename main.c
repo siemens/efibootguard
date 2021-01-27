@@ -126,7 +126,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 
 	tmp = DevicePathToStr(DevicePathFromHandle(loaded_image->DeviceHandle));
 	boot_medium_path = GetBootMediumPath(tmp);
-	mfree(tmp);
+	FreePool(tmp);
 	INFO(L"Boot medium: %s\n", boot_medium_path);
 
 	status = get_volumes(&volumes, &volume_count);
@@ -178,8 +178,8 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		error_exit(L"Could not load specified kernel image.", status);
 	}
 
-	mfree(payload_dev_path);
-	mfree(boot_medium_path);
+	FreePool(payload_dev_path);
+	FreePool(boot_medium_path);
 
 	status =
 	    uefi_call_wrapper(BS->OpenProtocol, 6, payload_handle,

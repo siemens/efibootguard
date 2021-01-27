@@ -34,7 +34,6 @@ typedef enum { DOSFSLABEL, CUSTOMLABEL, NOLABEL } LABELMODE;
 
 uint32_t calc_crc32(void *data, int32_t size);
 void __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status);
-EFI_STATUS mfree(VOID *p);
 CHAR16 *get_volume_label(EFI_FILE_HANDLE fh);
 EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count);
 EFI_STATUS close_volumes(VOLUME_DESC *volumes, UINTN count);

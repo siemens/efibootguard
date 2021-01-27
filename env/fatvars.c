@@ -80,7 +80,7 @@ BG_STATUS save_current_config(void)
 
 	result = BG_SUCCESS;
 scc_cleanup:
-	mfree(config_volumes);
+	FreePool(config_volumes);
 	return result;
 }
 
@@ -221,7 +221,7 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 	INFO(L" timeout: %d seconds\n", bglp->timeout);
 
 lc_cleanup:
-	mfree(config_volumes);
+	FreePool(config_volumes);
 	return result;
 }
 
