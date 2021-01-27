@@ -12,6 +12,8 @@
  * SPDX-License-Identifier:	GPL-2.0
  */
 
+#include <efi.h>
+#include <efilib.h>
 #include <bootguard.h>
 #include <utils.h>
 #include <syspart.h>
@@ -27,7 +29,7 @@ BG_STATUS save_current_config(void)
 	UINTN numHandles = volume_count;
 	UINTN *config_volumes;
 
-	config_volumes = (UINTN *)mmalloc(sizeof(UINTN) *  volume_count);
+	config_volumes = (UINTN *)AllocatePool(sizeof(UINTN) *  volume_count);
 	if (!config_volumes) {
 		ERROR(L"Could not allocate memory for config partition mapping.\n");
 		return result;
@@ -90,7 +92,7 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 	UINTN i;
 	int env_invalid[ENV_NUM_CONFIG_PARTS] = {0};
 
-	config_volumes = (UINTN *)mmalloc(sizeof(UINTN) * volume_count);
+	config_volumes = (UINTN *)AllocatePool(sizeof(UINTN) * volume_count);
 	if (!config_volumes) {
 		ERROR(L"Could not allocate memory for config partition mapping.\n");
 		return result;

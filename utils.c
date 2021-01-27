@@ -13,6 +13,8 @@
  * SPDX-License-Identifier:	GPL-2.0
  */
 
+#include <efi.h>
+#include <efilib.h>
 #include <bootguard.h>
 #include <utils.h>
 
@@ -63,18 +65,6 @@ void __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status)
 	__builtin_unreachable();
 }
 
-VOID *mmalloc(UINTN bytes)
-{
-	EFI_STATUS status;
-	VOID *p;
-	status = uefi_call_wrapper(BS->AllocatePool, 3, EfiBootServicesData,
-				   bytes, (VOID **)&p);
-	if (EFI_ERROR(status)) {
-		return NULL;
-	}
-	return p;
-}
-
 EFI_STATUS mfree(VOID *p)
 {
 	return uefi_call_wrapper(BS->FreePool, 1, p);
@@ -87,7 +77,7 @@ CHAR16 *get_volume_label(EFI_FILE_HANDLE fh)
 	UINTN fsis;
 	EFI_STATUS status;
 
-	fsi = mmalloc(MAX_INFO_SIZE);
+	fsi = AllocatePool(MAX_INFO_SIZE);
 	if (fsi == NULL) {
 		return NULL;
 	}
@@ -105,7 +95,7 @@ CHAR16 *get_volume_custom_label(EFI_FILE_HANDLE fh)
 {
 	EFI_STATUS status;
 	EFI_FILE_HANDLE tmp;
-	CHAR16 *buffer = mmalloc(64);
+	CHAR16 *buffer = AllocatePool(64);
 	UINTN buffsize = 63;
 
 	status = uefi_call_wrapper(
@@ -146,7 +136,7 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 	}
 	INFO(L"Found %d handles for file IO\n\n", handleCount);
 
-	*volumes = (VOLUME_DESC *)mmalloc(sizeof(VOLUME_DESC) * handleCount);
+	*volumes = (VOLUME_DESC *)AllocatePool(sizeof(VOLUME_DESC) * handleCount);
 	if (!*volumes) {
 		ERROR(L"Could not allocate memory for volume descriptors.\n");
 		return EFI_OUT_OF_RESOURCES;
@@ -281,7 +271,7 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 	}
 
 	CHAR16 *pathprefix = DevicePathToStr(devpath);
-	fullpath = mmalloc(sizeof(CHAR16) *
+	fullpath = AllocatePool(sizeof(CHAR16) *
 			   (StrLen(pathprefix) + StrLen(payloadpath) + 1));
 
 	StrCpy(fullpath, pathprefix);
@@ -309,7 +299,7 @@ CHAR16 *GetBootMediumPath(CHAR16 *input)
 
 	len = StrLen(input);
 
-	dst = mmalloc((len + 1) * sizeof(CHAR16));
+	dst = AllocatePool((len + 1) * sizeof(CHAR16));
 	if (!dst) {
 		return NULL;
 	}
