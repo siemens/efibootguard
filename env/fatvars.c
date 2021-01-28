@@ -23,7 +23,7 @@
 static int current_partition = 0;
 static BG_ENVDATA env[ENV_NUM_CONFIG_PARTS];
 
-BG_STATUS save_current_config(VOID)
+static BG_STATUS save_current_config(VOID)
 {
 	BG_STATUS result = BG_CONFIG_ERROR;
 	EFI_STATUS efistatus;
