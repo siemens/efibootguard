@@ -51,7 +51,7 @@ EFI_STATUS enumerate_cfg_parts(UINTN *config_volumes, UINTN *numHandles)
 	return EFI_SUCCESS;
 }
 
-static void swap_uintn(UINTN *a, UINTN *b)
+static VOID swap_uintn(UINTN *a, UINTN *b)
 {
 	UINTN tmp;
 	tmp = *a;

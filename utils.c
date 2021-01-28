@@ -49,7 +49,7 @@ BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 	return result;
 }
 
-void __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status)
+VOID __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status)
 {
 	ERROR(L"%s ( %r )\n", message, status);
 	(VOID)uefi_call_wrapper(BS->Stall, 1, 3 * 1000 * 1000);
@@ -96,7 +96,7 @@ CHAR16 *get_volume_custom_label(EFI_FILE_HANDLE fh)
 		return NULL;
 	}
 	buffer[buffsize] = L'\0';
-	(void)uefi_call_wrapper(fh->Close, 1, tmp);
+	(VOID)uefi_call_wrapper(fh->Close, 1, tmp);
 	return buffer;
 }
 
