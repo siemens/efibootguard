@@ -195,5 +195,5 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	INFO(L"Starting %s with watchdog set to %d seconds ...\n",
 	     bg_loader_params.payload_path, bg_loader_params.timeout);
 
-	return uefi_call_wrapper(BS->StartImage, 3, payload_handle, 0, 0);
+	return uefi_call_wrapper(BS->StartImage, 3, payload_handle, NULL, NULL);
 }
