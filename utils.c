@@ -51,7 +51,7 @@ BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 
 VOID __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status)
 {
-	ERROR(L"%s ( %r )\n", message, status);
+	ERROR(L"%s (%r).\n", message, status);
 	(VOID)uefi_call_wrapper(BS->Stall, 1, 3 * 1000 * 1000);
 	(VOID)uefi_call_wrapper(BS->Exit, 4, this_image, status, 0, NULL);
 	__builtin_unreachable();

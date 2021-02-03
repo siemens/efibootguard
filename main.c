@@ -75,7 +75,7 @@ static EFI_STATUS scan_devices(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 					   this_image, NULL,
 					   EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 		if (EFI_ERROR(status)) {
-			error_exit(L"Could not open PciIoProtocol while probing watchdogs.",
+			error_exit(L"Cannot open PciIoProtocol while probing watchdogs",
 				   status);
 		}
 
@@ -83,7 +83,7 @@ static EFI_STATUS scan_devices(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 					   EfiPciIoWidthUint32, PCI_VENDOR_ID,
 					   1, &value);
 		if (EFI_ERROR(status)) {
-			error_exit(L"Could not read from PCI device while probing watchdogs.",
+			error_exit(L"Cannot read from PCI device while probing watchdogs",
 				   status);
 		}
 
@@ -120,7 +120,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 			      &LoadedImageProtocol, (VOID **)&loaded_image,
 			      this_image, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 	if (EFI_ERROR(status)) {
-		error_exit(L"Could not open LoadedImageProtocol to get image information.",
+		error_exit(L"Cannot open LoadedImageProtocol to get image information",
 			   status);
 	}
 
@@ -131,8 +131,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 
 	status = get_volumes(&volumes, &volume_count);
 	if (EFI_ERROR(status)) {
-		error_exit(L"Could not get volumes installed on system.\n",
-			   status);
+		error_exit(L"Cannot get volumes installed on system", status);
 	}
 
 	INFO(L"Loading configuration...\n");
@@ -141,7 +140,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	if (BG_ERROR(bg_status)) {
 		switch (bg_status) {
 		case BG_CONFIG_ERROR:
-			error_exit(L"Fatal error: Environment not set, could not load config.",
+			error_exit(L"Environment not set, cannot load config",
 				   EFI_ABORTED);
 			break;
 		case BG_CONFIG_PARTIALLY_CORRUPTED:
@@ -149,7 +148,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 			        L"EFI Boot Guard will try to boot.\n");
 			break;
 		default:
-			error_exit(L"Fatal error: Unknown error occured while loading config.",
+			error_exit(L"Unknown error occured while loading config",
 				   EFI_ABORTED);
 		}
 	}
@@ -157,9 +156,8 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	payload_dev_path = FileDevicePathFromConfig(
 	    loaded_image->DeviceHandle, bg_loader_params.payload_path);
 	if (!payload_dev_path) {
-		error_exit(
-		    L"Could not convert payload file path to device path.",
-		    EFI_OUT_OF_RESOURCES);
+		error_exit(L"Cannot convert payload file path to device path",
+			   EFI_OUT_OF_RESOURCES);
 	}
 
 	if (bg_loader_params.timeout == 0) {
@@ -167,7 +165,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	} else {
 		status = scan_devices(loaded_image, bg_loader_params.timeout);
 		if (EFI_ERROR(status)) {
-			error_exit(L"Could not probe watchdog.", status);
+			error_exit(L"Cannot probe watchdog", status);
 		}
 	}
 
@@ -175,7 +173,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	status = uefi_call_wrapper(BS->LoadImage, 6, TRUE, this_image,
 				   payload_dev_path, NULL, 0, &payload_handle);
 	if (EFI_ERROR(status)) {
-		error_exit(L"Could not load specified kernel image.", status);
+		error_exit(L"Cannot load specified kernel image", status);
 	}
 
 	FreePool(payload_dev_path);
@@ -186,7 +184,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 			      &LoadedImageProtocol, (VOID **)&loaded_image,
 			      this_image, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 	if (EFI_ERROR(status)) {
-		error_exit(L"Could not open LoadedImageProtocol to set kernel load options.",
+		error_exit(L"Cannot open LoadedImageProtocol to set kernel load options",
 			   status);
 	}
 
