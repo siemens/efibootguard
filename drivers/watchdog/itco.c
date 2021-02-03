@@ -100,21 +100,21 @@ static iTCO_regs iTCO_version_regs[] = {
 static iTCO_info iTCO_chipset_info[] = {
     [ITCO_INTEL_APL] =
 	{
-	    .name = L"Apollo Lake",
+	    .name = L"Apollo Lake SoC",
 	    .pci_id = 0x5ae8,
 	    .regs = &iTCO_version_regs[ITCO_V5],
 	    .itco_version = ITCO_V5,
 	},
     [ITCO_INTEL_BAYTRAIL] =
 	{
-	    .name = L"Baytrail",
+	    .name = L"Bay Trail SoC",
 	    .pci_id = 0x0f1c,
 	    .regs = &iTCO_version_regs[ITCO_V3],
 	    .itco_version = ITCO_V3,
 	},
     [ITCO_INTEL_WPT_LP] =
 	{
-	    .name = L"Wildcat",
+	    .name = L"Wildcat Point_LP",
 	    .pci_id = 0x9cc3,
 	    .regs = &iTCO_version_regs[ITCO_V3],
 	    .itco_version = ITCO_V3,
