@@ -86,7 +86,8 @@ libebgenv_a_CPPFLAGS = \
 	-I$(top_srcdir)/tools
 
 libebgenv_a_CFLAGS = \
-	$(AM_CFLAGS)
+	$(AM_CFLAGS) \
+	-fPIC
 
 pkginclude_HEADERS = \
 	include/ebgenv.h
