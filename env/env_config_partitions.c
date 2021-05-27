@@ -53,16 +53,11 @@ bool probe_config_partitions(CONFIG_PART *cfgpart)
 				(void)snprintf(devpath, 4096, "%s%u",
 					       dev->path, part->num);
 			}
+			cfgpart[count].devpath = strdup(devpath);
 			if (!cfgpart[count].devpath) {
-				cfgpart[count].devpath =
-				    malloc(strlen(devpath) + 1);
-				if (!cfgpart[count].devpath) {
-					VERBOSE(stderr, "Out of memory.");
-					return false;
-				}
+				VERBOSE(stderr, "Out of memory.");
+				return false;
 			}
-			strncpy(cfgpart[count].devpath, devpath,
-				strlen(devpath) + 1);
 			if (probe_config_file(&cfgpart[count])) {
 				printf_debug("%s", "Environment file found.\n");
 				if (count >= ENV_NUM_CONFIG_PARTS) {
