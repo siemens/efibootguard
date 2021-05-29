@@ -28,6 +28,7 @@ enum iTCO_chipsets {
 	ITCO_INTEL_BAYTRAIL,
 	ITCO_INTEL_WPT_LP,
 	ITCO_INTEL_ICH9,
+	ITCO_INTEL_LPC_NM10,
 	ITCO_INTEL_LPC_LP,
 	ITCO_INTEL_WBG,
 	ITCO_INTEL_EHL,
@@ -125,6 +126,13 @@ static iTCO_info iTCO_chipset_info[] = {
 	    .pci_id = 0x2918,
 	    .regs = &iTCO_version_regs[ITCO_V3],
 	    .itco_version = ITCO_V3,
+	},
+    [ITCO_INTEL_LPC_NM10] =
+	{
+	    .name = L"NM10",
+	    .pci_id = 0x27bc,
+	    .regs = &iTCO_version_regs[ITCO_V2],
+	    .itco_version = ITCO_V2,
 	},
     [ITCO_INTEL_LPC_LP] =
 	{
