@@ -17,6 +17,7 @@
 #include <efilib.h>
 #include <pci/header.h>
 #include <sys/io.h>
+#include <mmio.h>
 
 #define PCI_DEVICE_ID_INTEL_SUNRISEPOINT_H_LPC	0xa150
 
@@ -113,22 +114,21 @@ static UINTN mmcfg_address(UINTN bus, UINTN device, UINTN function,
 static UINT64 get_sbreg_rba(VOID)
 {
 	BOOLEAN p2sb_hidden =
-	    *(volatile UINT16 *)mmcfg_address(0, 0x1f, 1, P2SB_PCIID) == 0xffff;
+		readw(mmcfg_address(0, 0x1f, 1, P2SB_PCIID)) == 0xffff;
 	UINT32 lo, hi;
 	UINT64 sbreg;
 
 	/* Unhide the P2SB device if it's hidden. */
 	if (p2sb_hidden) {
-		*(volatile UINT32 *)mmcfg_address(0, 0x1f, 1, P2SB_CTRL) = 0;
+		writel(0, mmcfg_address(0, 0x1f, 1, P2SB_CTRL));
 	}
 
-	lo = *(volatile UINT32 *)mmcfg_address(0, 0x1f, 1, P2SB_SBREG_BAR);
-	hi = *(volatile UINT32 *)mmcfg_address(0, 0x1f, 1, P2SB_SBREG_BARH);
+	lo = readl(mmcfg_address(0, 0x1f, 1, P2SB_SBREG_BAR));
+	hi = readl(mmcfg_address(0, 0x1f, 1, P2SB_SBREG_BARH));
 	sbreg = (lo & 0xff000000) | ((UINT64)hi << 32);
 
 	if (p2sb_hidden) {
-		*(volatile UINT32 *)mmcfg_address(0, 0x1f, 1, P2SB_CTRL) =
-			P2SB_CFG_HIDE;
+		writel(P2SB_CFG_HIDE, mmcfg_address(0, 0x1f, 1, P2SB_CTRL));
 	}
 
 	return sbreg;
@@ -141,7 +141,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	SMBIOS_STRUCTURE_TABLE *smbios_table;
 	SMBIOS_STRUCTURE_POINTER smbios_struct;
 	EFI_STATUS status;
-	volatile UINT32 *pad_cfg;
+	UINTN pad_cfg;
 	UINT8 val;
 
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL ||
@@ -169,10 +169,9 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 		 * Drive SAFE_EN_N low to allow that watchdog can trigger a
 		 * hard reset.
 		 */
-		pad_cfg = (volatile UINT32 *)(get_sbreg_rba() +
-					      (GPIO_COMMUNITY0_PORT_ID << 16) +
-					      PAD_CFG_DW0_GPP_A_23);
-		*pad_cfg &= ~PAD_CFG_GPIOTXSTATE;
+		pad_cfg = get_sbreg_rba() + (GPIO_COMMUNITY0_PORT_ID << 16) +
+			PAD_CFG_DW0_GPP_A_23;
+		writel(readl(pad_cfg) & ~PAD_CFG_GPIOTXSTATE, pad_cfg);
 
 		if (timeout <= 2) {
 			val = 0 << SIMATIC_WD_SCALER_SHIFT;
