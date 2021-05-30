@@ -15,6 +15,7 @@
 #include <efi.h>
 #include <efilib.h>
 #include <pci/header.h>
+#include <sys/io.h>
 
 #define PCI_DEVICE_ID_INTEL_ITC		0x8186
 #define PCI_DEVICE_ID_INTEL_CENTERTON	0x0c60
@@ -33,58 +34,29 @@
 # define LOCK_WDT_LOCK			(1 << 0)
 # define LOCK_WDT_ENABLE		(1 << 1)
 
-static EFI_STATUS unlock_timer_regs(EFI_PCI_IO *pci_io, UINT32 wdt_base)
+static void unlock_timer_regs(UINT32 wdt_base)
 {
-	EFI_STATUS status;
-	UINT32 value;
-
-	value = 0x80;
-	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
-				   EfiPciIoWidthUint8,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   wdt_base + RELOAD0_REG, 1, &value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
-
-	value = 0x86;
-	return uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
-				 EfiPciIoWidthUint8,
-				 EFI_PCI_IO_PASS_THROUGH_BAR,
-				 wdt_base + RELOAD0_REG, 1, &value);
+	outb(0x80, wdt_base + RELOAD0_REG);
+	outb(0x86, wdt_base + RELOAD0_REG);
 }
 
-static EFI_STATUS write_timer_regs(EFI_PCI_IO *pci_io, UINT32 wdt_base,
-				   UINT32 timer, UINT32 value)
+static void write_timer_regs(UINT32 wdt_base, UINT32 timer, UINT32 value)
 {
 	for (unsigned int n = 0; n < 3; n++) {
-		EFI_STATUS status;
+		unlock_timer_regs(wdt_base);
 
-		status = unlock_timer_regs(pci_io, wdt_base);
-		if (EFI_ERROR(status)) {
-			return status;
-		}
-
-		status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
-					   EfiPciIoWidthUint8,
-					   EFI_PCI_IO_PASS_THROUGH_BAR,
-					   wdt_base + timer, 1, &value);
-		if (EFI_ERROR(status)) {
-			return status;
-		}
+		outb((UINT8)value, wdt_base + timer);
 
 		value >>= 8;
 		timer++;
 	}
-
-	return EFI_SUCCESS;
 }
 
 static EFI_STATUS __attribute__((constructor))
 init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
      UINTN timeout)
 {
-	UINT32 wdt_base, value;
+	UINT32 wdt_base;
 	EFI_STATUS status;
 
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL ||
@@ -109,32 +81,13 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 
 	Print(L"Detected Intel Atom/Quark watchdog\n");
 
-	value = ((timeout * 1000000000ULL) >> 15) / 30;
-	status = write_timer_regs(pci_io, wdt_base, TIMER1_REG, value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
+	write_timer_regs(wdt_base, TIMER1_REG,
+			 ((timeout * 1000000000ULL) >> 15) / 30);
+	write_timer_regs(wdt_base, TIMER2_REG, 0);
 
-	value = 0;
-	status = write_timer_regs(pci_io, wdt_base, TIMER2_REG, value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
+	outb(CONFIG_RESET_ENABLE, wdt_base + CONFIG_REG);
 
-	value = CONFIG_RESET_ENABLE;
-	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
-				   EfiPciIoWidthUint8,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   wdt_base + CONFIG_REG, 1, &value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
-
-	value = LOCK_WDT_ENABLE | LOCK_WDT_LOCK;
-	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
-				   EfiPciIoWidthUint8,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   wdt_base + LOCK_REG, 1, &value);
+	outb(LOCK_WDT_ENABLE | LOCK_WDT_LOCK, wdt_base + LOCK_REG);
 
 	return status;
 }
