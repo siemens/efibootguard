@@ -122,13 +122,13 @@ static const iTCO_info iTCO_chipset_info[] = {
 	{
 	    .name = L"Wildcat Point_LP",
 	    .pci_id = 0x9cc3,
-	    .itco_version = ITCO_V3,
+	    .itco_version = ITCO_V2,
 	},
     [ITCO_INTEL_ICH9] =
 	{
 	    .name = L"ICH9", /* QEmu machine q35 */
 	    .pci_id = 0x2918,
-	    .itco_version = ITCO_V3,
+	    .itco_version = ITCO_V2,
 	},
     [ITCO_INTEL_LPC_NM10] =
 	{
