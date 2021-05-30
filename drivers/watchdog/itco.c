@@ -16,6 +16,7 @@
 #include <efi.h>
 #include <efilib.h>
 #include <pci/header.h>
+#include <sys/io.h>
 
 #define TCO_RLD_REG		0x00
 #define TCO1_CNT_NO_REBOOT	(1 << 0)
@@ -184,28 +185,13 @@ static UINT32 get_tco_base(EFI_PCI_IO *pci_io, const iTCO_info *itco)
 	return (pm_base & regs->pm_base_addr_mask) + 0x60;
 }
 
-static EFI_STATUS update_no_reboot_flag_cnt(EFI_PCI_IO *pci_io,
-					    UINT32 tco_base)
+static void update_no_reboot_flag_cnt(UINT32 tco_base)
 {
-	EFI_STATUS status;
 	UINT32 value;
 
-	status = uefi_call_wrapper(pci_io->Io.Read, 6, pci_io,
-				   EfiPciIoWidthUint16,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   tco_base + TCO1_CNT_REG, 1, &value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
+	value = inw(tco_base + TCO1_CNT_REG);
 	value &= ~TCO1_CNT_NO_REBOOT;
-	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
-				   EfiPciIoWidthUint16,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   tco_base + TCO1_CNT_REG, 1, &value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
-	return status;
+	outw(value, tco_base + TCO1_CNT_REG);
 }
 
 static EFI_STATUS update_no_reboot_flag_mem(EFI_PCI_IO *pci_io,
@@ -284,7 +270,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	UINT8 itco_chip;
 	const iTCO_info *itco;
 	UINT32 tco_base, value;
-	EFI_STATUS status;
+	EFI_STATUS status = 0;
 
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL ||
 	    !itco_supported(pci_device_id, &itco_chip)) {
@@ -301,37 +287,18 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	}
 
 	/* Set timer value */
-	status = uefi_call_wrapper(pci_io->Io.Read, 6, pci_io,
-				   EfiPciIoWidthUint16,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   tco_base + TCO_TMR_REG, 1, &value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
+	value = inw(tco_base + TCO_TMR_REG);
 	value &= 0xfc00;
 	value |= get_timeout_value(itco->itco_version, timeout) & 0x3ff;
-	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
-				   EfiPciIoWidthUint16,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   tco_base + TCO_TMR_REG, 1, &value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
+	outw(value, tco_base + TCO_TMR_REG);
 
 	/* Force reloading of timer value */
-	value = 1;
-	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
-				   EfiPciIoWidthUint16,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   tco_base + TCO_RLD_REG, 1, &value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
+	outw(1, tco_base + TCO_RLD_REG);
 
 	/* Clear NO_REBOOT flag */
 	switch (itco->itco_version) {
 	case ITCO_V6:
-		status = update_no_reboot_flag_cnt(pci_io, tco_base);
+		update_no_reboot_flag_cnt(tco_base);
 		break;
 	case ITCO_V5:
 		status = update_no_reboot_flag_apl(pci_io, itco);
@@ -346,18 +313,9 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	}
 
 	/* Clear HLT flag to start timer */
-	status = uefi_call_wrapper(pci_io->Io.Read, 6, pci_io,
-				   EfiPciIoWidthUint16,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   tco_base + TCO1_CNT_REG, 1, &value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
+	value = inw(tco_base + TCO1_CNT_REG);
 	value &= ~TCO_TMR_HLT_MASK;
-	status = uefi_call_wrapper(pci_io->Io.Write, 6, pci_io,
-				   EfiPciIoWidthUint16,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   tco_base + TCO1_CNT_REG, 1, &value);
+	outw(value, tco_base + TCO1_CNT_REG);
 
 	return status;
 }
