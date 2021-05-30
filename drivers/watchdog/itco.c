@@ -17,6 +17,7 @@
 #include <efilib.h>
 #include <pci/header.h>
 #include <sys/io.h>
+#include <mmio.h>
 
 #define SMI_EN_REG		0x30
 #define TCO_EN			(1 << 13)
@@ -233,7 +234,7 @@ static EFI_STATUS update_no_reboot_flag_mem(EFI_PCI_IO *pci_io,
 	pmc_base &= regs->pmc_base_addr_mask;
 
 	pmc_reg = pmc_base + regs->pmc_reg;
-	*(volatile UINT32 *)pmc_reg &= ~regs->pmc_no_reboot_mask;
+	writel(readl(pmc_reg) & ~regs->pmc_no_reboot_mask, pmc_reg);
 
 	return status;
 }
@@ -252,21 +253,17 @@ static void update_no_reboot_flag_apl(const iTCO_info *itco)
 	const iTCO_regs* regs = &iTCO_version_regs[itco->itco_version];
 
 	/* Unhide the P2SB device if it's hidden. */
-	BOOLEAN p2sb_hidden =
-	    *(volatile UINT16 *)apl_mmcfg_address(0, 13, 0, 0) == 0xffff;
+	BOOLEAN p2sb_hidden = readw(apl_mmcfg_address(0, 13, 0, 0)) == 0xffff;
 	if (p2sb_hidden) {
-		*(volatile UINT8 *)apl_mmcfg_address(0, 13, 0, 0xE1) = 0;
+		writeb(0, apl_mmcfg_address(0, 13, 0, 0xE1));
 	}
 
 	/* Get PMC_BASE from PMC Controller Register. */
-	volatile UINT8 *reg =
-	    (volatile UINT8 *)apl_mmcfg_address(0, 13, 1, (UINTN)regs->pmc_reg);
-	UINT8 value = *reg;
-	value &= ~regs->pmc_no_reboot_mask;
-	*reg = value;
+	UINTN reg = apl_mmcfg_address(0, 13, 1, (UINTN)regs->pmc_reg);
+	writeb(readb(reg) & ~regs->pmc_no_reboot_mask, reg);
 
 	if (p2sb_hidden) {
-		*(volatile UINT8 *)apl_mmcfg_address(0, 13, 0, 0xE1) = 1;
+		writeb(1, apl_mmcfg_address(0, 13, 0, 0xE1));
 	}
 }
 
