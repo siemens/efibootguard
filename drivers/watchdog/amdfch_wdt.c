@@ -15,6 +15,8 @@
 #include <efi.h>
 #include <efilib.h>
 #include <pci/header.h>
+#include <sys/io.h>
+#include <mmio.h>
 
 /* #define AMDFCH_WDT_DEBUG */
 
@@ -67,77 +69,7 @@ static struct
 	EFI_PCI_IO *pci_io;
 } watchdog;
 
-static EFI_STATUS writel(UINT32 val, UINT32 addr)
-{
-	DebugPrint(L"\n- writel(0x%X, 0x%X) ", val, addr);
-	EFI_STATUS status;
-
-	status = uefi_call_wrapper(watchdog.pci_io->Mem.Write, 6, watchdog.pci_io,
-				   EfiPciIoWidthUint32,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   addr, 1, &val);
-
-	if (EFI_ERROR(status)) {
-		Print(L"Error while writel(0x%X, 0x%X): %r", val, addr, status);
-	}
-
-	return status;
-}
-
-static UINT32 readl(UINT32 addr)
-{
-	DebugPrint(L"\n- readl(0x%X) ", addr);
-	UINT32 val = 0;
-	EFI_STATUS status;
-
-	status = uefi_call_wrapper(watchdog.pci_io->Mem.Read, 6, watchdog.pci_io,
-				   EfiPciIoWidthUint32,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   addr, 1, &val);
-
-	if (EFI_ERROR(status)) {
-		Print(L"Error while readl(0x%X): %r", addr, status);
-	}
-
-	DebugPrint(L"= 0x%X ", val);
-	return val;
-}
-
-static EFI_STATUS outb(UINT8 val, UINT16 reg)
-{
-	DebugPrint(L"\n- outb(0x%X, 0x%X) ", val, reg);
-	EFI_STATUS status;
-
-	status = uefi_call_wrapper(watchdog.pci_io->Io.Write, 6, watchdog.pci_io,
-				   EfiPciIoWidthUint8,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   reg, 1, &val);
-	if (EFI_ERROR(status)) {
-		Print(L"Error while outb(0x%X, 0x%X): %r", val, reg, status);
-	}
-
-	return status;
-}
-
-static UINT8 inb(UINT16 reg)
-{
-	DebugPrint(L"\n- inb(0x%X) ", reg);
-	EFI_STATUS status;
-	UINT8 val = 0;
-
-	status = uefi_call_wrapper(watchdog.pci_io->Io.Read, 6, watchdog.pci_io,
-				   EfiPciIoWidthUint8,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   reg, 1, &val);
-	if (EFI_ERROR(status)) {
-		Print(L"Error while inb(0x%X): %r", reg, status);
-	}
-
-	DebugPrint(L"= 0x%X ", val);
-	return val;
-}
-
-static EFI_STATUS amdfch_wdt_enable(VOID)
+static void amdfch_wdt_enable(VOID)
 {
 	DebugPrint(L"\n-- amdfch_wdt_enable() ");
 	UINT8 val;
@@ -145,10 +77,10 @@ static EFI_STATUS amdfch_wdt_enable(VOID)
 	outb(AMD_PM_WATCHDOG_EN_REG, AMD_IO_PM_INDEX_REG);
 	val = inb(AMD_IO_PM_DATA_REG);
 	val |= AMD_PM_WATCHDOG_TIMER_EN;
-	return outb(val, AMD_IO_PM_DATA_REG);
+	outb(val, AMD_IO_PM_DATA_REG);
 }
 
-static EFI_STATUS amdfch_wdt_set_resolution(UINT8 freq)
+static void amdfch_wdt_set_resolution(UINT8 freq)
 {
 	DebugPrint(L"\n-- amdfch_wdt_set_resolution(%d) ", freq);
 	UINT8 val;
@@ -159,20 +91,20 @@ static EFI_STATUS amdfch_wdt_set_resolution(UINT8 freq)
 	val &= ~AMD_PM_WATCHDOG_CONFIG_MASK;
 	/* Set the new frequency value */
 	val |= freq;
-	return outb(val, AMD_IO_PM_DATA_REG);
+	outb(val, AMD_IO_PM_DATA_REG);
 }
 
-static EFI_STATUS amdfch_wdt_set_timeout_action_reboot(VOID)
+static void amdfch_wdt_set_timeout_action_reboot(VOID)
 {
 	DebugPrint(L"\n-- amdfch_wdt_set_timeout_action_reboot() ");
 	UINT32 val;
 	/* Set the watchdog timeout action to reboot */
 	val = readl(AMDFCH_WDT_CONTROL(watchdog.base));
 	val &= ~AMDFCH_WDT_ACTION_RESET_BIT;
-	return writel(val, AMDFCH_WDT_CONTROL(watchdog.base));
+	writel(val, AMDFCH_WDT_CONTROL(watchdog.base));
 }
 
-static EFI_STATUS amdfch_wdt_set_time(UINT32 t)
+static void amdfch_wdt_set_time(UINT32 t)
 {
 	DebugPrint(L"\n-- amdfch_wdt_set_time(%d) ", t);
 	if (t < AMDFCH_WDT_MIN_TIMEOUT)
@@ -181,27 +113,27 @@ static EFI_STATUS amdfch_wdt_set_time(UINT32 t)
 		t = AMDFCH_WDT_MAX_TIMEOUT;
 
 	/* Write new timeout value to watchdog COUNT register */
-	return writel(t, AMDFCH_WDT_COUNT(watchdog.base));
+	writel(t, AMDFCH_WDT_COUNT(watchdog.base));
 }
 
-static EFI_STATUS amdfch_wdt_start(VOID)
+static void amdfch_wdt_start(VOID)
 {
 	DebugPrint(L"\n-- amdfch_wdt_start() ");
 	UINT32 val;
 	/* Start the watchdog timer */
 	val = readl(AMDFCH_WDT_CONTROL(watchdog.base));
 	val |= AMDFCH_WDT_START_STOP_BIT;
-	return writel(val, AMDFCH_WDT_CONTROL(watchdog.base));
+	writel(val, AMDFCH_WDT_CONTROL(watchdog.base));
 }
 
-static EFI_STATUS amdfch_wdt_ping(VOID)
+static void amdfch_wdt_ping(VOID)
 {
 	DebugPrint(L"\n-- amdfch_wdt_ping() ");
 	UINT32 val;
 	/* Trigger/Ping watchdog timer */
 	val = readl(AMDFCH_WDT_CONTROL(watchdog.base));
 	val |= AMDFCH_WDT_TRIGGER_BIT;
-	return writel(val, AMDFCH_WDT_CONTROL(watchdog.base));
+	writel(val, AMDFCH_WDT_CONTROL(watchdog.base));
 }
 
 static EFI_STATUS __attribute__((constructor))
@@ -238,41 +170,17 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 
 	DebugPrint(L"\nwatchdog.base = 0x%X\n", watchdog.base);
 
-	status = amdfch_wdt_enable();
-	if (EFI_ERROR(status)) {
-		Print(L"Error: amdfch_wdt_enable() failed.");
-		return status;
-	}
+	amdfch_wdt_enable();
 
-	status = amdfch_wdt_set_resolution(AMD_PM_WATCHDOG_1SEC_RES);
-	if (EFI_ERROR(status)) {
-		Print(L"Error: amdfch_wdt_set_resolution(%d) failed.", AMD_PM_WATCHDOG_1SEC_RES);
-		return status;
-	}
+	amdfch_wdt_set_resolution(AMD_PM_WATCHDOG_1SEC_RES);
 
-	status = amdfch_wdt_set_timeout_action_reboot();
-	if (EFI_ERROR(status)) {
-		Print(L"Error: amdfch_wdt_set_timeout_action_reboot() failed.");
-		return status;
-	}
+	amdfch_wdt_set_timeout_action_reboot();
 
-	status = amdfch_wdt_set_time(timeout);
-	if (EFI_ERROR(status)) {
-		Print(L"Error: amdfch_wdt_set_time(%d) failed.", timeout);
-		return status;
-	}
+	amdfch_wdt_set_time(timeout);
 
-	status = amdfch_wdt_start();
-	if (EFI_ERROR(status)) {
-		Print(L"Error: amdfch_wdt_start() failed.");
-		return status;
-	}
+	amdfch_wdt_start();
 
-	status = amdfch_wdt_ping();
-	if (EFI_ERROR(status)) {
-		Print(L"Error: amdfch_wdt_ping() failed.");
-		return status;
-	}
+	amdfch_wdt_ping();
 
-	return status;
+	return EFI_SUCCESS;
 }
