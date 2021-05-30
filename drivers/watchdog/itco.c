@@ -46,6 +46,7 @@ enum iTCO_versions {
 
 typedef struct {
 	UINT32 tco_base;
+	UINT32 pm_base_reg;
 	UINT32 pm_base_addr_mask;
 	UINT32 pmc_base_reg;
 	UINT32 pmc_reg;
@@ -70,6 +71,7 @@ static const iTCO_regs iTCO_version_regs[] = {
 	    .pmc_reg = 0x3410,			/* GCS_REG */
 	    .pmc_no_reboot_mask = (1 << 5),	/* GCS_NO_REBOOT */
 	    .pmc_base_addr_mask = 0xffffc000,	/* RCBABASE_ADDRMASK */
+	    .pm_base_reg = 0x40,
 	    .pm_base_addr_mask = 0x0000ff80,
 	},
     [ITCO_V3] =
@@ -78,6 +80,7 @@ static const iTCO_regs iTCO_version_regs[] = {
 	    .pmc_reg = 0x08,
 	    .pmc_no_reboot_mask = (1 << 4),
 	    .pmc_base_addr_mask = 0xfffffe00,
+	    .pm_base_reg = 0x40,
 	    .pm_base_addr_mask = 0x0000ff80,
 	},
     [ITCO_V4] =
@@ -162,27 +165,42 @@ static BOOLEAN itco_supported(UINT16 pci_device_id, UINT8 *index)
 	return FALSE;
 }
 
-static UINTN get_timeout_value(UINT32 iTCO_version, UINTN seconds){
+static UINTN get_timeout_value(UINT32 iTCO_version, UINTN seconds)
+{
 	return iTCO_version == ITCO_V3 ? seconds : ((seconds * 10 ) / 6);
 }
 
-static UINT32 get_tco_base(EFI_PCI_IO *pci_io, const iTCO_info *itco)
+static UINT32 get_pm_base(EFI_PCI_IO *pci_io, const iTCO_info *itco)
 {
 	const iTCO_regs* regs = &iTCO_version_regs[itco->itco_version];
-	UINT32 pm_base;
 	EFI_STATUS status;
+	UINT32 pm_base;
 
-	if (regs->tco_base) {
-		return regs->tco_base;
+	if (!regs->pm_base_reg) {
+		return 0;
 	}
 
 	status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
-				   EfiPciIoWidthUint32, 0x40, 1, &pm_base);
+				   EfiPciIoWidthUint32,
+				   regs->pm_base_reg, 1, &pm_base);
 	if (EFI_ERROR(status)) {
 		Print(L"Error reading PM_BASE: %r\n", status);
 		return 0;
 	}
-	return (pm_base & regs->pm_base_addr_mask) + 0x60;
+	return pm_base & regs->pm_base_addr_mask;
+}
+
+static UINT32 get_tco_base(UINT32 pm_base, const iTCO_info *itco)
+{
+	const iTCO_regs* regs = &iTCO_version_regs[itco->itco_version];
+
+	if (regs->tco_base) {
+		return regs->tco_base;
+	} else if (pm_base) {
+		return pm_base + 0x60;
+	} else {
+		return 0;
+	}
 }
 
 static void update_no_reboot_flag_cnt(UINT32 tco_base)
@@ -252,9 +270,9 @@ static EFI_STATUS __attribute__((constructor))
 init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
      UINTN timeout)
 {
+	UINT32 pm_base, tco_base, value;
 	UINT8 itco_chip;
 	const iTCO_info *itco;
-	UINT32 tco_base, value;
 	EFI_STATUS status;
 
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL ||
@@ -265,8 +283,9 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 
 	Print(L"Detected Intel TCO %s watchdog\n", itco->name);
 
-	/* Get TCOBASE */
-	tco_base = get_tco_base(pci_io, itco);
+	pm_base = get_pm_base(pci_io, itco);
+
+	tco_base = get_tco_base(pm_base, itco);
 	if (!tco_base) {
 		return EFI_UNSUPPORTED;
 	}
