@@ -1,7 +1,7 @@
 /*
- * EFI Boot Guard, iTCO support (Version 3 and later)
+ * EFI Boot Guard, iTCO support (Version 2 and later)
  *
- * Copyright (c) Siemens AG, 2019
+ * Copyright (c) Siemens AG, 2019-2021
  *
  * Authors:
  *  Jan Kiszka <jan.kiszka@siemens.com>
@@ -55,11 +55,10 @@ typedef struct {
 typedef struct {
 	CHAR16 name[16];
 	UINT32 pci_id;
-	iTCO_regs* regs;
 	UINT32 itco_version;
 } iTCO_info;
 
-static iTCO_regs iTCO_version_regs[] = {
+static const iTCO_regs iTCO_version_regs[] = {
     [ITCO_V1] =
 	{
 	    /* Not implemented yet */
@@ -103,56 +102,48 @@ static iTCO_info iTCO_chipset_info[] = {
 	{
 	    .name = L"Apollo Lake SoC",
 	    .pci_id = 0x5ae8,
-	    .regs = &iTCO_version_regs[ITCO_V5],
 	    .itco_version = ITCO_V5,
 	},
     [ITCO_INTEL_BAYTRAIL] =
 	{
 	    .name = L"Bay Trail SoC",
 	    .pci_id = 0x0f1c,
-	    .regs = &iTCO_version_regs[ITCO_V3],
 	    .itco_version = ITCO_V3,
 	},
     [ITCO_INTEL_WPT_LP] =
 	{
 	    .name = L"Wildcat Point_LP",
 	    .pci_id = 0x9cc3,
-	    .regs = &iTCO_version_regs[ITCO_V3],
 	    .itco_version = ITCO_V3,
 	},
     [ITCO_INTEL_ICH9] =
 	{
 	    .name = L"ICH9", /* QEmu machine q35 */
 	    .pci_id = 0x2918,
-	    .regs = &iTCO_version_regs[ITCO_V3],
 	    .itco_version = ITCO_V3,
 	},
     [ITCO_INTEL_LPC_NM10] =
 	{
 	    .name = L"NM10",
 	    .pci_id = 0x27bc,
-	    .regs = &iTCO_version_regs[ITCO_V2],
 	    .itco_version = ITCO_V2,
 	},
     [ITCO_INTEL_LPC_LP] =
 	{
 	    .name = L"Lynx Point",
 	    .pci_id = 0x8c4e,
-	    .regs = &iTCO_version_regs[ITCO_V2],
 	    .itco_version = ITCO_V2,
 	},
     [ITCO_INTEL_WBG] =
 	{
 	    .name = L"Wellsburg",
 	    .pci_id = 0x8d44,
-	    .regs = &iTCO_version_regs[ITCO_V2],
 	    .itco_version = ITCO_V2,
 	},
     [ITCO_INTEL_EHL] =
 	{
 	    .name = L"Elkhart Lake",
 	    .pci_id = 0x4b23,
-	    .regs = &iTCO_version_regs[ITCO_V6],
 	    .itco_version = ITCO_V6,
 	},
 };
@@ -176,11 +167,12 @@ static UINTN get_timeout_value(UINT32 iTCO_version, UINTN seconds){
 
 static UINT32 get_tco_base(EFI_PCI_IO *pci_io, iTCO_info *itco)
 {
+	const iTCO_regs* regs = &iTCO_version_regs[itco->itco_version];
 	UINT32 pm_base;
 	EFI_STATUS status;
 
-	if (itco->regs->tco_base) {
-		return itco->regs->tco_base;
+	if (regs->tco_base) {
+		return regs->tco_base;
 	}
 
 	status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
@@ -189,7 +181,7 @@ static UINT32 get_tco_base(EFI_PCI_IO *pci_io, iTCO_info *itco)
 		Print(L"Error reading PM_BASE: %r\n", status);
 		return 0;
 	}
-	return (pm_base & itco->regs->pm_base_addr_mask) + 0x60;
+	return (pm_base & regs->pm_base_addr_mask) + 0x60;
 }
 
 static EFI_STATUS update_no_reboot_flag_cnt(EFI_PCI_IO *pci_io,
@@ -219,29 +211,30 @@ static EFI_STATUS update_no_reboot_flag_cnt(EFI_PCI_IO *pci_io,
 static EFI_STATUS update_no_reboot_flag_mem(EFI_PCI_IO *pci_io,
 					    iTCO_info *itco)
 {
+	const iTCO_regs* regs = &iTCO_version_regs[itco->itco_version];
 	EFI_STATUS status;
 	UINT32 pmc_base, value;
 
 	status =
 	    uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io, EfiPciIoWidthUint32,
-			      itco->regs->pmc_base_reg, 1, &pmc_base);
+			      regs->pmc_base_reg, 1, &pmc_base);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
-	pmc_base &= itco->regs->pmc_base_addr_mask;
+	pmc_base &= regs->pmc_base_addr_mask;
 
 	status = uefi_call_wrapper(pci_io->Mem.Read, 6, pci_io,
 				   EfiPciIoWidthUint32,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   pmc_base + itco->regs->pmc_reg, 1, &value);
+				   pmc_base + regs->pmc_reg, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
-	value &= ~itco->regs->pmc_no_reboot_mask;
+	value &= ~regs->pmc_no_reboot_mask;
 	status = uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
 				   EfiPciIoWidthUint32,
 				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   pmc_base + itco->regs->pmc_reg, 1, &value);
+				   pmc_base + regs->pmc_reg, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
@@ -261,6 +254,8 @@ static EFI_STATUS update_no_reboot_flag_apl(__attribute__((unused))
 					    EFI_PCI_IO *pci_io,
 					    iTCO_info *itco)
 {
+	const iTCO_regs* regs = &iTCO_version_regs[itco->itco_version];
+
 	/* Unhide the P2SB device if it's hidden. */
 	BOOLEAN p2sb_hidden =
 	    *(volatile UINT16 *)apl_mmcfg_address(0, 13, 0, 0) == 0xffff;
@@ -270,9 +265,9 @@ static EFI_STATUS update_no_reboot_flag_apl(__attribute__((unused))
 
 	/* Get PMC_BASE from PMC Controller Register. */
 	volatile UINT8 *reg =
-	    (volatile UINT8 *)apl_mmcfg_address(0, 13, 1, (UINTN)itco->regs->pmc_reg);
+	    (volatile UINT8 *)apl_mmcfg_address(0, 13, 1, (UINTN)regs->pmc_reg);
 	UINT8 value = *reg;
-	value &= ~itco->regs->pmc_no_reboot_mask;
+	value &= ~regs->pmc_no_reboot_mask;
 	*reg = value;
 
 	if (p2sb_hidden) {
