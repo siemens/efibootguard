@@ -97,7 +97,7 @@ static const iTCO_regs iTCO_version_regs[] = {
 	},
 };
 
-static iTCO_info iTCO_chipset_info[] = {
+static const iTCO_info iTCO_chipset_info[] = {
     [ITCO_INTEL_APL] =
 	{
 	    .name = L"Apollo Lake SoC",
@@ -165,7 +165,7 @@ static UINTN get_timeout_value(UINT32 iTCO_version, UINTN seconds){
 	return iTCO_version == ITCO_V3 ? seconds : ((seconds * 10 ) / 6);
 }
 
-static UINT32 get_tco_base(EFI_PCI_IO *pci_io, iTCO_info *itco)
+static UINT32 get_tco_base(EFI_PCI_IO *pci_io, const iTCO_info *itco)
 {
 	const iTCO_regs* regs = &iTCO_version_regs[itco->itco_version];
 	UINT32 pm_base;
@@ -209,7 +209,7 @@ static EFI_STATUS update_no_reboot_flag_cnt(EFI_PCI_IO *pci_io,
 }
 
 static EFI_STATUS update_no_reboot_flag_mem(EFI_PCI_IO *pci_io,
-					    iTCO_info *itco)
+					    const iTCO_info *itco)
 {
 	const iTCO_regs* regs = &iTCO_version_regs[itco->itco_version];
 	EFI_STATUS status;
@@ -252,7 +252,7 @@ static UINTN apl_mmcfg_address(UINTN bus, UINTN device, UINTN function,
 
 static EFI_STATUS update_no_reboot_flag_apl(__attribute__((unused))
 					    EFI_PCI_IO *pci_io,
-					    iTCO_info *itco)
+					    const iTCO_info *itco)
 {
 	const iTCO_regs* regs = &iTCO_version_regs[itco->itco_version];
 
@@ -282,7 +282,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
      UINTN timeout)
 {
 	UINT8 itco_chip;
-	iTCO_info *itco;
+	const iTCO_info *itco;
 	UINT32 tco_base, value;
 	EFI_STATUS status;
 
