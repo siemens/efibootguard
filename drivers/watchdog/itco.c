@@ -18,6 +18,10 @@
 #include <pci/header.h>
 #include <sys/io.h>
 
+#define SMI_EN_REG		0x30
+#define TCO_EN			(1 << 13)
+#define GBL_SMI_EN		(1 << 0)
+
 #define TCO_RLD_REG		0x00
 #define TCO1_CNT_NO_REBOOT	(1 << 0)
 #define TCO1_CNT_REG		0x08
@@ -284,6 +288,15 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	Print(L"Detected Intel TCO %s watchdog\n", itco->name);
 
 	pm_base = get_pm_base(pci_io, itco);
+	if (pm_base) {
+		/*
+		 * If SMIs are not triggered, the reboot will only happen on
+		 * the second timeout.
+		 */
+		value = inl(pm_base + SMI_EN_REG);
+		if ((value & (TCO_EN | GBL_SMI_EN)) != (TCO_EN | GBL_SMI_EN))
+			timeout /= 2;
+	}
 
 	tco_base = get_tco_base(pm_base, itco);
 	if (!tco_base) {
