@@ -199,7 +199,8 @@ static EFI_STATUS update_no_reboot_flag_mem(EFI_PCI_IO *pci_io,
 {
 	const iTCO_regs* regs = &iTCO_version_regs[itco->itco_version];
 	EFI_STATUS status;
-	UINT32 pmc_base, value;
+	UINT32 pmc_base;
+	UINTN pmc_reg;
 
 	status =
 	    uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io, EfiPciIoWidthUint32,
@@ -209,21 +210,9 @@ static EFI_STATUS update_no_reboot_flag_mem(EFI_PCI_IO *pci_io,
 	}
 	pmc_base &= regs->pmc_base_addr_mask;
 
-	status = uefi_call_wrapper(pci_io->Mem.Read, 6, pci_io,
-				   EfiPciIoWidthUint32,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   pmc_base + regs->pmc_reg, 1, &value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
-	value &= ~regs->pmc_no_reboot_mask;
-	status = uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
-				   EfiPciIoWidthUint32,
-				   EFI_PCI_IO_PASS_THROUGH_BAR,
-				   pmc_base + regs->pmc_reg, 1, &value);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
+	pmc_reg = pmc_base + regs->pmc_reg;
+	*(volatile UINT32 *)pmc_reg &= ~regs->pmc_no_reboot_mask;
+
 	return status;
 }
 
