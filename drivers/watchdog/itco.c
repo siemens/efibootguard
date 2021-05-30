@@ -225,9 +225,7 @@ static UINTN apl_mmcfg_address(UINTN bus, UINTN device, UINTN function,
 		(function << 12) + offset;
 }
 
-static EFI_STATUS update_no_reboot_flag_apl(__attribute__((unused))
-					    EFI_PCI_IO *pci_io,
-					    const iTCO_info *itco)
+static void update_no_reboot_flag_apl(const iTCO_info *itco)
 {
 	const iTCO_regs* regs = &iTCO_version_regs[itco->itco_version];
 
@@ -248,8 +246,6 @@ static EFI_STATUS update_no_reboot_flag_apl(__attribute__((unused))
 	if (p2sb_hidden) {
 		*(volatile UINT8 *)apl_mmcfg_address(0, 13, 0, 0xE1) = 1;
 	}
-
-	return EFI_SUCCESS;
 }
 
 static EFI_STATUS __attribute__((constructor))
@@ -259,7 +255,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	UINT8 itco_chip;
 	const iTCO_info *itco;
 	UINT32 tco_base, value;
-	EFI_STATUS status = 0;
+	EFI_STATUS status;
 
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL ||
 	    !itco_supported(pci_device_id, &itco_chip)) {
@@ -290,15 +286,17 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 		update_no_reboot_flag_cnt(tco_base);
 		break;
 	case ITCO_V5:
-		status = update_no_reboot_flag_apl(pci_io, itco);
+		update_no_reboot_flag_apl(itco);
 		break;
 	case ITCO_V3:
 	case ITCO_V2:
 		status = update_no_reboot_flag_mem(pci_io, itco);
+		if (EFI_ERROR(status)) {
+			return status;
+		}
 		break;
-	}
-	if (EFI_ERROR(status)) {
-		return status;
+	default:
+		return EFI_UNSUPPORTED;
 	}
 
 	/* Clear HLT flag to start timer */
@@ -306,5 +304,5 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	value &= ~TCO_TMR_HLT_MASK;
 	outw(value, tco_base + TCO1_CNT_REG);
 
-	return status;
+	return EFI_SUCCESS;
 }
