@@ -122,9 +122,11 @@ install-exec-hook:
 #
 efi_loadername = efibootguard$(MACHINE_TYPE_NAME).efi
 
+# NOTE: wdat.c is placed first so it is tried before any other drivers
 # NOTE: ipc4x7e_wdt.c must be *before* itco.c
 efi_sources = \
 	drivers/watchdog/init_array_start.S \
+	drivers/watchdog/wdat.c \
 	drivers/watchdog/amdfch_wdt.c \
 	drivers/watchdog/i6300esb.c \
 	drivers/watchdog/atom-quark.c \
