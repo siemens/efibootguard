@@ -13,16 +13,15 @@
 #
 
 env:
-  matrix:
+  jobs:
     - TARGET=native
     - TARGET=i586
     - TARGET=cppcheck
 language: c
+dist: xenial
 
 compiler:
   - gcc
-
-sudo: required
 
 before_install:
   - sudo apt-get update
