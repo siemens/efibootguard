@@ -245,7 +245,7 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 				src = NULL;
 				break;
 			}
-			if (StrnCmp(src, &payloadpath[2], prefixlen) == 0) {
+			if (src && (StrnCmp(src, &payloadpath[2], prefixlen) == 0)) {
 				devpath = volumes[v].devpath;
 				break;
 			}
