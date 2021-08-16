@@ -25,12 +25,13 @@ Continuous integration:
 
 ## Watchdog support ##
 
-The following watchdog drivers are implemented:
-* Intel Quark
-* Intel TCO
-* Intel i6300esb
+The following watchdog drivers are implemented (and are probed in this order):
+* WDAT (ACPI) watchdog
 * AMD FCH
+* Intel i6300esb
+* Intel Quark
 * Siemens SIMATIC IPC4x7E
+* Intel TCO
 
 Note that if no working watchdog is found, the boot process deliberately fails.
 That said, setting a watchdog timeout of `0` allows to boot nonetheless without
