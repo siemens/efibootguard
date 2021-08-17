@@ -94,6 +94,7 @@ CHAR16 *get_volume_custom_label(EFI_FILE_HANDLE fh)
 	}
 	status = uefi_call_wrapper(tmp->Read, 3, tmp, &buffsize, buffer);
 	if (status != EFI_SUCCESS) {
+		(VOID)uefi_call_wrapper(fh->Close, 1, tmp);
 		FreePool(buffer);
 		return NULL;
 	}
