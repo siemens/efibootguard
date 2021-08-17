@@ -89,10 +89,12 @@ CHAR16 *get_volume_custom_label(EFI_FILE_HANDLE fh)
 	    fh->Open, 5, fh, &tmp, L"EFILABEL", EFI_FILE_MODE_READ,
 	    EFI_FILE_ARCHIVE | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM);
 	if (status != EFI_SUCCESS) {
+		FreePool(buffer);
 		return NULL;
 	}
 	status = uefi_call_wrapper(tmp->Read, 3, tmp, &buffsize, buffer);
 	if (status != EFI_SUCCESS) {
+		FreePool(buffer);
 		return NULL;
 	}
 	buffer[buffsize/sizeof(CHAR16)] = L'\0';
