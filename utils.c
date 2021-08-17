@@ -95,7 +95,7 @@ CHAR16 *get_volume_custom_label(EFI_FILE_HANDLE fh)
 	if (status != EFI_SUCCESS) {
 		return NULL;
 	}
-	buffer[buffsize] = L'\0';
+	buffer[buffsize/sizeof(CHAR16)] = L'\0';
 	(VOID)uefi_call_wrapper(fh->Close, 1, tmp);
 	return buffer;
 }
