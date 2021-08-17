@@ -196,6 +196,7 @@ EFI_STATUS close_volumes(VOLUME_DESC *volumes, UINTN count)
 		if (!volumes[i].root) {
 			ERROR(L"Invalid handle for volume %d.\n", i);
 			result = EFI_INVALID_PARAMETER;
+			continue;
 		}
 		status = uefi_call_wrapper(volumes[i].root->Close, 1,
 					   volumes[i].root);
