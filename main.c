@@ -160,6 +160,11 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 			   EFI_OUT_OF_RESOURCES);
 	}
 
+	status = close_volumes(volumes, volume_count);
+	if (EFI_ERROR(status)) {
+		WARNING(L"Cannot close volumes.\n", status);
+	}
+
 	if (bg_loader_params.timeout == 0) {
 		WARNING(L"Watchdog is disabled.\n");
 	} else {
