@@ -151,7 +151,7 @@ parse_rsdp(EFI_ACPI_ROOT_SDP_HEADER *rsdp, ACPI_TABLE_WDAT **wdat_table_ptr) {
 		return EFI_NOT_FOUND;
 	}
 
-	xsdt = (EFI_ACPI_SDT_HEADER *)(rsdp->xsdt_address);
+	xsdt = (EFI_ACPI_SDT_HEADER *)(UINTN)(rsdp->xsdt_address);
 	if (strncmpa(ACPI_SIG_XSDT, (CHAR8 *)(VOID *)(xsdt->signature), 4)) {
 		return EFI_INCOMPATIBLE_VERSION;
 	}
