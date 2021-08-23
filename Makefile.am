@@ -18,8 +18,6 @@
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
 
-OBJCOPY ?= objcopy
-
 efibootguarddir = $(libdir)/efibootguard
 
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir) -include config.h

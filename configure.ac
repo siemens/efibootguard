@@ -35,6 +35,8 @@ AC_CANONICAL_HOST
 AC_SYS_LARGEFILE
 
 AC_PROG_CC
+AC_CHECK_TOOL(LD, ld)
+AC_CHECK_TOOL(OBJCOPY, objcopy)
 
 dnl Dont try to use things like -std=c99 for efi compilation
 GNUEFI_CC=$CC
