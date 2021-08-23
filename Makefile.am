@@ -122,16 +122,23 @@ install-exec-hook:
 #
 efi_loadername = efibootguard$(MACHINE_TYPE_NAME).efi
 
+if ARCH_AARCH64
+efi_sources_watchdogs =
+else
 # NOTE: wdat.c is placed first so it is tried before any other drivers
 # NOTE: ipc4x7e_wdt.c must be *before* itco.c
-efi_sources = \
-	drivers/watchdog/init_array_start.S \
+efi_sources_watchdogs = \
 	drivers/watchdog/wdat.c \
 	drivers/watchdog/amdfch_wdt.c \
 	drivers/watchdog/i6300esb.c \
 	drivers/watchdog/atom-quark.c \
 	drivers/watchdog/ipc4x7e_wdt.c \
-	drivers/watchdog/itco.c \
+	drivers/watchdog/itco.c
+endif
+
+efi_sources = \
+	drivers/watchdog/init_array_start.S \
+	$(efi_sources_watchdogs) \
 	drivers/watchdog/init_array_end.S \
 	env/syspart.c \
 	env/fatvars.c \
@@ -159,12 +166,12 @@ efi_cflags = \
 	-fno-strict-aliasing \
 	-fno-stack-protector \
 	-Wsign-compare \
-	-mno-sse \
-	-mno-mmx \
 	$(CFLAGS)
 
 if ARCH_X86_64
 efi_cflags += \
+	-mno-sse \
+	-mno-mmx \
 	-DEFI_FUNCTION_WRAPPER \
 	-mno-red-zone
 endif
@@ -180,6 +187,15 @@ efi_ldflags = \
 	--fatal-warnings \
 	-L $(GNUEFI_LIB_DIR) \
 	$(GNUEFI_LIB_DIR)/crt0-efi-$(ARCH).o
+
+if ARCH_AARCH64
+# aarch64's objcopy doesn't understand --target efi-[app|bsdrv|rtdrv],
+# hence set subsystem 0xa (EFI application) and binary format.
+objcopy_format = -O binary
+efi_ldflags += --defsym=EFI_SUBSYSTEM=0xa
+else
+objcopy_format = --target=efi-app-$(ARCH)
+endif
 
 efi_objects_pre1 = $(efi_sources:.c=.o)
 efi_objects_pre2 = $(efi_objects_pre1:.S=.o)
@@ -217,7 +233,7 @@ $(efi_solib): $(efi_objects)
 $(efi_loadername): $(efi_solib)
 	$(AM_V_GEN) $(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic \
 	  -j .dynsym -j .rel -j .rela -j .reloc -j .init_array \
-	  --target=efi-app-$(ARCH) $< $@
+	  -j .rela.got -j .rela.data $(objcopy_format) $< $@
 
 $(top_builddir)/tools/bg_setenv-bg_setenv.o: $(GEN_VERSION_H)
 

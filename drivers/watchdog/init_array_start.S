@@ -13,7 +13,11 @@
  */
 
 .section .init_array
+/* Dummy value to avoid zero-size .init_array section linker error on
+ * architectures having no watchdog drivers */
+.word 0x5343
 /* align to 4K so that signing tools will not stumble over this section */
-.align 0x1000
+/* Note: Explicitly use .b(yte-)align as .align takes power of 2 on ARM */
+.balign 0x1000
 .global init_array_start
 init_array_start:
