@@ -18,9 +18,7 @@ For sending patches, please refer to the mailing list and `CONTRIBUTING.md` in
 the source tree.
 
 Continuous integration:
-* [Travis CI](https://travis-ci.com/siemens/efibootguard):
-  * Master branch: ![](https://img.shields.io/travis/siemens/efibootguard/master.svg)
-  * Next branch: ![](https://img.shields.io/travis/siemens/efibootguard/next.svg)
+* Based on [https://github.com/siemens/efibootguard/actions](GitHub Actions)
 * Coverity: ![](https://img.shields.io/coverity/scan/13885.svg)
 
 ## Watchdog support ##

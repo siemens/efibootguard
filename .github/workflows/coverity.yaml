@@ -1,0 +1,64 @@
+#
+# EFI Boot Guard
+#
+# Copyright (c) Siemens AG, 2021
+#
+# Authors:
+#  Claudius Heine <ch@denx.de>
+#  Jan Kiszka <jan.kiszka@siemens.com>
+#
+# This work is licensed under the terms of the GNU GPL, version 2.  See
+# the COPYING file in the top-level directory.
+#
+# SPDX-License-Identifier:      GPL-2.0
+#
+
+name: Coverity Scan
+
+on:
+  push:
+    branches:
+      - coverity_scan
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install amd64 dependencies
+        run: |
+          sudo apt-get install --no-install-recommends \
+              gcc-multilib gnu-efi libz-dev libpci-dev check
+      - name: Install Coverity
+        run: |
+          wget https://scan.coverity.com/download/cxx/linux64 \
+              --post-data "token=$COVERITY_TOKEN&project=siemens%2Fefibootguard" \
+              -O coverity_tool.tar.gz
+          tar -xf coverity_tool.tar.gz
+
+      - name: Prepare build
+        run: |
+          autoreconf -fi
+          mkdir -p build
+
+      - name: Build for Coverity
+        run: |
+          cd build
+          ../configure
+          ../cov-analysis-linux64-*/bin/cov-build --dir cov-int make -j $(nproc)
+
+      - name: Submit Coverity results
+        run: |
+          cd build
+          tar caf ebg-scan.tar.bz2 cov-int
+          curl --form token=$COVERITY_TOKEN \
+            --form email=$COVERITY_EMAIL \
+            --form file=@ebg-scan.tar.bz2 \
+            --form version="${{ github.sha }}" \
+            --form description="EFI Boot Guard Coverity Scan" \
+            https://scan.coverity.com/builds?project=siemens%2Fefibootguard
+    env:
+      COVERITY_TOKEN: ${{ secrets.COVERITY_TOKEN }}
+      COVERITY_EMAIL: ${{ secrets.COVERITY_EMAIL }}
