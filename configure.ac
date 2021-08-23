@@ -177,6 +177,7 @@ if test "x$PKG_CONFIG" = "xno"; then
 fi
 PKG_PROG_PKG_CONFIG()
 PKG_CHECK_MODULES(LIBCHECK, check)
+PKG_CHECK_MODULES(LIBPCI, libpci)
 # ------------------------------------------------------------------------------
 AC_CONFIG_FILES([
 	Makefile
