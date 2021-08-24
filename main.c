@@ -27,72 +27,75 @@ extern const unsigned long init_array_start[];
 extern const unsigned long init_array_end[];
 extern CHAR16 *boot_medium_path;
 
-static EFI_STATUS probe_watchdog(EFI_LOADED_IMAGE *loaded_image,
-				 EFI_PCI_IO *pci_io, UINT16 pci_vendor_id,
-				 UINT16 pci_device_id, UINTN timeout)
+#define PCI_GET_VENDOR_ID(id) id
+#define PCI_GET_PRODUCT_ID(id) id >> 16
+
+static EFI_STATUS probe_watchdogs(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 {
-	const unsigned long *entry;
+	if (init_array_end - init_array_start == 0) {
+		WARNING(L"No watchdog drivers registered.\n");
+		return EFI_NOT_FOUND;
+	}
 
-	for (entry = init_array_start; entry < init_array_end; entry++) {
-		EFI_STATUS (*probe)(EFI_PCI_IO *, UINT16, UINT16, UINTN);
-
-		probe = loaded_image->ImageBase + *entry;
-		if (probe(pci_io, pci_vendor_id, pci_device_id, timeout) ==
-		    EFI_SUCCESS) {
-			return EFI_SUCCESS;
+	UINTN handle_count = 0;
+	EFI_HANDLE *handle_buffer = NULL;
+	EFI_STATUS status = uefi_call_wrapper(BS->LocateHandleBuffer, 5,
+					      ByProtocol, &PciIoProtocol, NULL,
+					      &handle_count, &handle_buffer);
+	if (EFI_ERROR(status) || (handle_count == 0)) {
+		WARNING(L"No PCI I/O Protocol handles found.\n");
+		if (handle_buffer) {
+			FreePool(handle_buffer);
 		}
+		return EFI_UNSUPPORTED;
 	}
 
-	return EFI_UNSUPPORTED;
-}
-
-static EFI_STATUS scan_devices(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
-{
-	EFI_HANDLE devices[1000];
-	UINTN count, size = sizeof(devices);
-	EFI_PCI_IO *pci_io;
-	EFI_STATUS status;
+	EFI_PCI_IO_PROTOCOL *pci_io;
 	UINT32 value;
-
-	status = uefi_call_wrapper(BS->LocateHandle, 5, ByProtocol,
-				   &PciIoProtocol, NULL, &size, devices);
-	if (EFI_ERROR(status)) {
-		return status;
-	}
-
-	count = size / sizeof(EFI_HANDLE);
-	if (count == 0) {
-		return probe_watchdog(loaded_image, NULL, 0, 0, timeout);
-	}
-
-	do {
-		EFI_HANDLE device = devices[count - 1];
-
-		count--;
-
-		status = uefi_call_wrapper(BS->OpenProtocol, 6, device,
-					   &PciIoProtocol, (VOID **)&pci_io,
-					   this_image, NULL,
-					   EFI_OPEN_PROTOCOL_GET_PROTOCOL);
+	for (UINTN index = 0; index < handle_count; index++) {
+		status = uefi_call_wrapper(BS->OpenProtocol, 6,
+		    handle_buffer[index], &PciIoProtocol,
+		    (VOID **)&pci_io, this_image, NULL,
+		    EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
 		if (EFI_ERROR(status)) {
-			error_exit(L"Cannot open PciIoProtocol while probing watchdogs",
-				   status);
+			ERROR(L"Cannot not open PciIoProtocol: %r\n", status);
+			FreePool(handle_buffer);
+			return status;
 		}
 
 		status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
 					   EfiPciIoWidthUint32, PCI_VENDOR_ID,
 					   1, &value);
 		if (EFI_ERROR(status)) {
-			error_exit(L"Cannot read from PCI device while probing watchdogs",
-				   status);
+			WARNING(
+			    L"Cannot not read from PCI device, skipping: %r\n",
+			    status);
+			(VOID) uefi_call_wrapper(
+			    BS->CloseProtocol, 4, handle_buffer[index],
+			    &PciIoProtocol, this_image, NULL);
+			continue;
 		}
 
-		status = probe_watchdog(loaded_image, pci_io, (UINT16)value,
-					value >> 16, timeout);
+		EFI_STATUS (*probe)(EFI_PCI_IO *, UINT16, UINT16, UINTN);
+		for (const unsigned long *entry = init_array_start;
+		     entry < init_array_end; entry++) {
+			probe = loaded_image->ImageBase + *entry;
+			if ((status = probe(pci_io, PCI_GET_VENDOR_ID(value),
+					    PCI_GET_PRODUCT_ID(value),
+					    timeout)) == EFI_SUCCESS) {
+				break;
+			}
+		}
 
-		uefi_call_wrapper(BS->CloseProtocol, 4, device, &PciIoProtocol,
-				  this_image, NULL);
-	} while (status != EFI_SUCCESS && count > 0);
+		(VOID) uefi_call_wrapper(BS->CloseProtocol, 4,
+					 handle_buffer[index], &PciIoProtocol,
+					 this_image, NULL);
+
+		if (status == EFI_SUCCESS) {
+			break;
+		}
+	}
+	FreePool(handle_buffer);
 
 	return status;
 }
@@ -168,7 +171,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	if (bg_loader_params.timeout == 0) {
 		WARNING(L"Watchdog is disabled.\n");
 	} else {
-		status = scan_devices(loaded_image, bg_loader_params.timeout);
+		status = probe_watchdogs(loaded_image, bg_loader_params.timeout);
 		if (EFI_ERROR(status)) {
 			error_exit(L"Cannot probe watchdog", status);
 		}
