@@ -91,6 +91,14 @@ pkginclude_HEADERS = \
 	include/ebgenv.h
 
 #
+# Shared libraries
+#
+LIBEBGENV_SO_VERSION = $(shell $(EGREP) -o '[0-9]+\.[0-9]+' $(top_srcdir)/VERSION)
+lib_LTLIBRARIES = libebgenv.la
+libebgenv_la_SOURCES = $(libebgenv_a_SOURCES)
+libebgenv_la_LDFLAGS = -release $(LIBEBGENV_SO_VERSION).0
+
+#
 # bg_setenv binary
 #
 bin_PROGRAMS = bg_setenv
@@ -111,6 +119,7 @@ bg_setenv_DEPENDENCIES = \
 install-exec-hook:
 	$(LN_S) -f bg_setenv$(EXEEXT) \
 		$(DESTDIR)$(bindir)/bg_printenv$(EXEEXT)
+	$(RM) $(DESTDIR)$(libdir)/$(lib_LTLIBRARIES)
 
 #
 # EFI compilation

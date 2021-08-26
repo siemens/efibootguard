@@ -28,6 +28,8 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_PREFIX_DEFAULT([/usr])
 
+LT_INIT
+
 AM_INIT_AUTOMAKE([foreign 1.11 -Wall -Wno-portability silent-rules tar-pax no-dist-gzip dist-xz subdir-objects])
 AM_SILENT_RULES([yes])
 
@@ -47,8 +49,8 @@ AM_PROG_CC_C_O
 AC_PROG_GCC_TRADITIONAL
 
 AC_PROG_MKDIR_P
-AC_PROG_RANLIB
 AC_PROG_LN_S
+AC_PROG_EGREP
 
 AC_ARG_WITH([gnuefi-sys-dir],
 	    AS_HELP_STRING([--with-gnuefi-sys-dir=DIRECTORY],

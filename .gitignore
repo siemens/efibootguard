@@ -23,6 +23,7 @@
 *.so
 *.so.*
 *.dylib
+*.lai
 
 # EFI
 *.efi
@@ -70,6 +71,7 @@ Makefile.in
 /config.status
 /config.sub
 /configure
+/configure~
 /configure.scan
 /depcomp
 /install-sh
@@ -78,4 +80,7 @@ Makefile.in
 /Makefile
 /tools/tests/Makefile
 .deps/
+m4/libtool.m4
+m4/lt*
 version.h
+libtool
