@@ -25,6 +25,7 @@ static char doc[] =
 	"bg_setenv/bg_printenv - Environment tool for the EFI Boot Guard";
 
 static struct argp_option options_setenv[] = {
+	{"preserve", 'P', 0, 0, "Preserve existing entries"},
 	{"kernel", 'k', "KERNEL", 0, "Set kernel to load"},
 	{"args", 'a', "KERNEL_ARGS", 0, "Set kernel arguments"},
 	{"part", 'p', "ENV_PART", 0,
@@ -172,6 +173,9 @@ static bool part_specified = false;
 static bool verbosity = false;
 
 static char *envfilepath = NULL;
+
+/* whether to keep existing entries in BGENV before applying the new settings */
+static bool preserve_env = false;
 
 static char *ustatemap[] = {"OK", "INSTALLED", "TESTING", "FAILED", "UNKNOWN"};
 
@@ -410,6 +414,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		/* Set user-defined variable(s) */
 		e = set_uservars(arg);
 		break;
+	case 'P':
+		preserve_env = true;
+		break;
 	case 'V':
 		fprintf(stdout, "EFI Boot Guard %s\n", EFIBOOTGUARD_VERSION);
 		exit(0);
@@ -607,6 +614,10 @@ static int dumpenv_to_file(char *envfilepath) {
 	memset(&env, 0, sizeof(BGENV));
 	memset(&data, 0, sizeof(BG_ENVDATA));
 	env.data = &data;
+
+	if (preserve_env && !get_env(envfilepath, &data)) {
+		return 1;
+	}
 
 	update_environment(&env);
 	if (verbosity) {
