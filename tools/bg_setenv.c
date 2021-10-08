@@ -225,16 +225,18 @@ static error_t set_uservars(char *arg)
 static int parse_int(char *arg)
 {
 	char *tmp;
-	int i;
+	long i;
 
 	errno = 0;
 	i = strtol(arg, &tmp, 10);
-	if ((errno == ERANGE && (i == LONG_MAX || i == LONG_MIN)) ||
-	    (errno != 0 && i == 0) || (tmp == arg)) {
+	if (errno == ERANGE ||             /* out of range */
+	    (errno != 0 && i == 0) ||      /* no conversion was performed */
+	    tmp == arg || *tmp != '\0' ||  /* invalid input */
+	    i < INT_MIN || i > INT_MAX) {  /* not a valid int */
 		errno = EINVAL;
 		return -1;
 	}
-	return i;
+	return (int) i;
 }
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
