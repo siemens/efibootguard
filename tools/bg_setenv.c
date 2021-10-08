@@ -629,13 +629,14 @@ static int dumpenv_to_file(char *envfilepath) {
 			fprintf(stderr,
 				"Error writing to output file: %s\n",
 				strerror(errno));
-			result = errno;
+			result = 1;
+		} else {
+			fprintf(stdout, "Output written to %s.\n", envfilepath);
 		}
 		if (fclose(of)) {
 			fprintf(stderr, "Error closing output file.\n");
-			result = errno;
+			result = 1;
 		};
-		fprintf(stdout, "Output written to %s.\n", envfilepath);
 	} else {
 		fprintf(stderr, "Error opening output file %s (%s).\n",
 			envfilepath, strerror(errno));
