@@ -275,14 +275,14 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 			fprintf(stderr, "Invalid number specified for -p.\n");
 			return 1;
 		}
-		if (i == 0 || i == 1) {
+		if (i >= 0 && i < ENV_NUM_CONFIG_PARTS) {
 			fprintf(stdout, "Updating config partition #%d\n", i);
 			arguments->which_part = i;
 			part_specified = true;
 		} else {
 			fprintf(stderr,
 				"Selected partition out of range. Valid range: "
-				"0..1.\n");
+				"0..%d.\n", ENV_NUM_CONFIG_PARTS - 1);
 			return 1;
 		}
 		break;
