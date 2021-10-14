@@ -554,15 +554,14 @@ static void dump_envs(void)
 			fprintf(stdout, " Config Partition #%d ", i);
 		}
 		BGENV *env = bgenv_open_by_index(i);
-		if (env) {
-			if (verbosity) {
-				dump_env(env->data);
-			}
-		} else {
+		if (!env) {
 			fprintf(stderr, "Error, could not read environment "
 					"for index %d\n",
 				i);
 			return;
+		}
+		if (verbosity) {
+			dump_env(env->data);
 		}
 		bgenv_close(env);
 	}
