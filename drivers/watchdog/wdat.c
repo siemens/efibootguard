@@ -29,6 +29,7 @@
 #define EFI_ACPI_ROOT_SDP_REVISION 0x02
 
 #define ACPI_SIG_RSDP (CHAR8 *)"RSD PTR "
+#define ACPI_SIG_RSDT (CHAR8 *)"RSDT"
 #define ACPI_SIG_XSDT (CHAR8 *)"XSDT"
 #define ACPI_SIG_WDAT (CHAR8 *)"WDAT"
 
@@ -140,18 +141,34 @@ typedef struct {
  */
 
 static EFI_STATUS
-parse_rsdp(EFI_ACPI_ROOT_SDP_HEADER *rsdp, ACPI_TABLE_WDAT **wdat_table_ptr) {
-	EFI_ACPI_SDT_HEADER *xsdt;
+parse_rsdt(EFI_ACPI_SDT_HEADER *rsdt, ACPI_TABLE_WDAT **wdat_table_ptr)
+{
+	UINT32 *entry_ptr;
+	UINT32 n, count;
+
+	if (strncmpa(ACPI_SIG_RSDT, (CHAR8 *)(VOID *)(rsdt->signature), 4)) {
+		return EFI_INCOMPATIBLE_VERSION;
+	}
+
+	entry_ptr = (UINT32 *)(rsdt + 1);
+	count = (rsdt->length - sizeof (EFI_ACPI_SDT_HEADER)) / sizeof(UINT32);
+	for (n = 0; n < count; n++, entry_ptr++) {
+		EFI_ACPI_SDT_HEADER *entry =
+			(EFI_ACPI_SDT_HEADER *)((UINTN)(*entry_ptr));
+		if (!strncmpa(ACPI_SIG_WDAT, entry->signature, 4)) {
+			*wdat_table_ptr = (ACPI_TABLE_WDAT *)entry;
+			return EFI_SUCCESS;
+		}
+	}
+	return EFI_NOT_FOUND;
+}
+
+static EFI_STATUS
+parse_xsdt(EFI_ACPI_SDT_HEADER *xsdt, ACPI_TABLE_WDAT **wdat_table_ptr)
+{
 	UINT64 *entry_ptr;
 	UINT64 n, count;
 
-	*wdat_table_ptr = NULL;
-
-	if (rsdp->revision < EFI_ACPI_ROOT_SDP_REVISION) {
-		return EFI_NOT_FOUND;
-	}
-
-	xsdt = (EFI_ACPI_SDT_HEADER *)(UINTN)(rsdp->xsdt_address);
 	if (strncmpa(ACPI_SIG_XSDT, (CHAR8 *)(VOID *)(xsdt->signature), 4)) {
 		return EFI_INCOMPATIBLE_VERSION;
 	}
@@ -170,7 +187,30 @@ parse_rsdp(EFI_ACPI_ROOT_SDP_HEADER *rsdp, ACPI_TABLE_WDAT **wdat_table_ptr) {
 }
 
 static EFI_STATUS
-locate_and_parse_rsdp(ACPI_TABLE_WDAT **wdat_table_ptr) {
+parse_rsdp(EFI_ACPI_ROOT_SDP_HEADER *rsdp, ACPI_TABLE_WDAT **wdat_table_ptr)
+{
+	EFI_ACPI_SDT_HEADER *sdt;
+
+	*wdat_table_ptr = NULL;
+
+	if (rsdp->revision > EFI_ACPI_ROOT_SDP_REVISION) {
+		ERROR(L"SDP revision not supported (%d)\n", rsdp->revision);
+		return EFI_INCOMPATIBLE_VERSION;
+	}
+
+	if (rsdp->revision == EFI_ACPI_ROOT_SDP_REVISION) {
+		sdt = (EFI_ACPI_SDT_HEADER *)(UINTN)(rsdp->xsdt_address);
+		return parse_xsdt(sdt, wdat_table_ptr);
+	}
+	else {
+		sdt = (EFI_ACPI_SDT_HEADER *)(UINTN)(rsdp->rsdt_address);
+		return parse_rsdt(sdt, wdat_table_ptr);
+	}
+}
+
+static EFI_STATUS
+locate_and_parse_rsdp(ACPI_TABLE_WDAT **wdat_table_ptr)
+{
 	EFI_CONFIGURATION_TABLE *ect = ST->ConfigurationTable;
 	EFI_ACPI_ROOT_SDP_HEADER *rsdp;
 	EFI_GUID acpi_table_guid = ACPI_TABLE_GUID;
