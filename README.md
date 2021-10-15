@@ -18,8 +18,8 @@ For sending patches, please refer to the mailing list and `CONTRIBUTING.md` in
 the source tree.
 
 Continuous integration:
-* Based on [https://github.com/siemens/efibootguard/actions](GitHub Actions)
-* Coverity: ![](https://img.shields.io/coverity/scan/13885.svg)
+* GitHub Actions: [![CI](https://github.com/siemens/efibootguard/actions/workflows/main.yaml/badge.svg?branch=master)](https://github.com/siemens/efibootguard/actions/workflows/main.yaml)
+* Coverity: ![[coverity]](https://img.shields.io/coverity/scan/13885.svg)
 
 ## Watchdog support ##
 
