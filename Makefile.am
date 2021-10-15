@@ -117,7 +117,7 @@ bg_setenv_DEPENDENCIES = \
 	libebgenv.a
 
 install-exec-hook:
-	$(LN_S) -f bg_setenv$(EXEEXT) \
+	$(AM_V_at)$(LN_S) -f bg_setenv$(EXEEXT) \
 		$(DESTDIR)$(bindir)/bg_printenv$(EXEEXT)
 	$(RM) $(DESTDIR)$(libdir)/$(lib_LTLIBRARIES)
 
@@ -248,7 +248,7 @@ $(top_builddir)/tools/bg_setenv-bg_setenv.o: $(GEN_VERSION_H)
 bg_printenvdir = $(top_srcdir)
 
 bg_printenv: $(bg_setenv)
-	$(LN_S) -f bg_setenv bg_printenv
+	$(AM_V_at)$(LN_S) -f bg_setenv bg_printenv
 
 all-local: bg_printenv
 
