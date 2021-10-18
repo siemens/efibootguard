@@ -8,7 +8,9 @@
 pacman -S gnu-efi-libs pciutils check
 ```
 
-### Debian 8 ###
+### Debian ###
+
+Debian 8 or newer:
 
 ```
 apt-get install gnu-efi libpci-dev check
@@ -45,3 +47,7 @@ make
 ```
 
 where `<sys-root-dir>` points to the wanted sysroot for cross-compilation.
+
+## Testing ##
+
+`make check` will run all unit tests.
