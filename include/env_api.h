@@ -74,8 +74,8 @@ typedef struct gc_item {
 
 extern void bgenv_be_verbose(bool v);
 
-extern char *str16to8(char *buffer, wchar_t *src);
-extern wchar_t *str8to16(wchar_t *buffer, char *src);
+extern char *str16to8(char *buffer, const wchar_t *src);
+extern wchar_t *str8to16(wchar_t *buffer, const char *src);
 
 extern bool bgenv_init(void);
 extern void bgenv_finalize(void);
