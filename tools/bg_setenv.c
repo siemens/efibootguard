@@ -549,10 +549,8 @@ static void update_environment(BGENV *env)
 static void dump_envs(void)
 {
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
-		if (verbosity) {
-			fprintf(stdout, "\n----------------------------\n");
-			fprintf(stdout, " Config Partition #%d ", i);
-		}
+		fprintf(stdout, "\n----------------------------\n");
+		fprintf(stdout, " Config Partition #%d ", i);
 		BGENV *env = bgenv_open_by_index(i);
 		if (!env) {
 			fprintf(stderr, "Error, could not read environment "
@@ -560,9 +558,7 @@ static void dump_envs(void)
 				i);
 			return;
 		}
-		if (verbosity) {
-			dump_env(env->data);
-		}
+		dump_env(env->data);
 		bgenv_close(env);
 	}
 }
@@ -667,7 +663,6 @@ int main(int argc, char **argv)
 
 	} else {
 		argp = &argp_printenv;
-		verbosity = true;
 	}
 
 	struct arguments arguments;
@@ -703,11 +698,14 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	dump_envs();
-
 	if (!write_mode) {
+		dump_envs();
 		bgenv_finalize();
 		return 0;
+	}
+
+	if (verbosity) {
+		dump_envs();
 	}
 
 	BGENV *env_new = NULL;
