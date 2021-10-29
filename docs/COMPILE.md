@@ -50,4 +50,7 @@ where `<sys-root-dir>` points to the wanted sysroot for cross-compilation.
 
 ## Testing ##
 
-`make check` will run all unit tests.
+* `make check` will run all unit tests.
+* `bats tests` will run all integration tests (you need
+  [bats-core](https://github.com/bats-core/bats-core) for that; packaged as
+  `bash-bats` for Arch Linux and `bats` for Debian).

@@ -40,7 +40,7 @@ jobs:
         if: ${{ matrix.target == 'amd64' || matrix.target == 'cppcheck' }}
         run: |
           sudo apt-get install --no-install-recommends \
-              gcc-multilib gnu-efi libz-dev libpci-dev check
+              gcc-multilib gnu-efi libz-dev libpci-dev check bats
       - name: Install i386 dependencies
         if: ${{ matrix.target == 'i386' }}
         run: |
@@ -86,9 +86,12 @@ jobs:
       - name: Build amd64
         if: ${{ matrix.target == 'amd64' }}
         run: |
-          cd build
+          pushd build >/dev/null
           ../configure
           make check -j $(nproc)
+          sudo make install
+          popd >/dev/null
+          time bats --tap tests
       - name: Build i386
         if: ${{ matrix.target == 'i386' }}
         run: |
