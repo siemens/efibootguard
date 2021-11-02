@@ -119,11 +119,8 @@ bg_setenv_CFLAGS = \
 	$(AM_CFLAGS) -static
 
 bg_setenv_LDADD = \
-	-lebgenv \
+	$(top_builddir)/libebgenv.a \
 	-lz
-
-bg_setenv_DEPENDENCIES = \
-	libebgenv.a
 
 install-exec-hook:
 	$(AM_V_at)$(LN_S) -f bg_setenv$(EXEEXT) \
