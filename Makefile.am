@@ -107,7 +107,7 @@ bg_setenv_SOURCES = \
 	tools/bg_setenv.c
 
 bg_setenv_CFLAGS = \
-	$(AM_CFLAGS)
+	$(AM_CFLAGS) -static
 
 bg_setenv_LDADD = \
 	-lebgenv \
