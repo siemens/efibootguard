@@ -5,6 +5,7 @@
  *
  * Authors:
  *  Andreas Reichel <andreas.reichel.ext@siemens.com>
+ *  Michael Adler <michael.adler@siemens.com>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -33,6 +34,11 @@ static char doc[] =
 	OPT("filepath", 'f', "ENVFILE", 0,                                     \
 	    "Environment to use. Expects a file name, "                        \
 	    "usually called BGENV.DAT.")                                       \
+	, OPT("part", 'p', "ENV_PART", 0,                                      \
+	      "Set environment partition to update. If no partition is "       \
+	      "specified, "                                                    \
+	      "the one with the smallest revision value above zero is "        \
+	      "updated.")                                                      \
 	, OPT("verbose", 'v', 0, 0, "Be verbose")                              \
 	, OPT("version", 'V', 0, 0, "Print version")
 
@@ -41,10 +47,6 @@ static struct argp_option options_setenv[] = {
 	OPT("preserve", 'P', 0, 0, "Preserve existing entries"),
 	OPT("kernel", 'k', "KERNEL", 0, "Set kernel to load"),
 	OPT("args", 'a', "KERNEL_ARGS", 0, "Set kernel arguments"),
-	OPT("part", 'p', "ENV_PART", 0,
-	    "Set environment partition to update. If no partition is "
-	    "specified, "
-	    "the one with the smallest revision value above zero is updated."),
 	OPT("revision", 'r', "REVISION", 0, "Set revision value"),
 	OPT("ustate", 's', "USTATE", 0, "Set update status for environment"),
 	OPT("watchdog", 'w', "WATCHDOG_TIMEOUT", 0,
@@ -61,6 +63,8 @@ static struct argp_option options_setenv[] = {
 
 static struct argp_option options_printenv[] = {
 	BG_CLI_OPTIONS_COMMON,
+	OPT("current", 'c', 0, 0,
+	    "Only print values from the current environment"),
 	{},
 };
 
@@ -68,16 +72,18 @@ static struct argp_option options_printenv[] = {
 struct arguments_common {
 	char *envfilepath;
 	bool verbosity;
+	/* which partition to operate on; a negative value means no partition
+	 * was specified. */
+	int which_part;
+	bool part_specified;
 };
 
 /* Arguments used by bg_setenv. */
 struct arguments_setenv {
 	struct arguments_common common;
-	int which_part;
 	/* auto update feature automatically updates partition with
 	 * oldest environment revision (lowest value) */
 	bool auto_update;
-	bool part_specified;
 	/* whether to keep existing entries in BGENV before applying new
 	 * settings */
 	bool preserve_env;
@@ -86,6 +92,7 @@ struct arguments_setenv {
 /* Arguments used by bg_printenv. */
 struct arguments_printenv {
 	struct arguments_common common;
+	bool current;
 };
 
 typedef enum { ENV_TASK_SET, ENV_TASK_DEL } BGENV_TASK;
@@ -254,6 +261,7 @@ static error_t parse_common_opt(int key, char *arg, bool compat_mode,
 				struct arguments_common *arguments)
 {
 	bool found = false;
+	int i;
 	switch (key) {
 	case 'f':
 		found = true;
@@ -282,6 +290,24 @@ static error_t parse_common_opt(int key, char *arg, bool compat_mode,
 			if (!arguments->envfilepath) {
 				return ENOMEM;
 			}
+		}
+		break;
+	case 'p':
+		found = true;
+		i = parse_int(arg);
+		if (errno) {
+			fprintf(stderr, "Invalid number specified for -p.\n");
+			return 1;
+		}
+		if (i >= 0 && i < ENV_NUM_CONFIG_PARTS) {
+			arguments->which_part = i;
+			arguments->part_specified = true;
+		} else {
+			fprintf(stderr,
+				"Selected partition out of range. Valid range: "
+				"0..%d.\n",
+				ENV_NUM_CONFIG_PARTS - 1);
+			return 1;
 		}
 		break;
 	case 'v':
@@ -331,23 +357,6 @@ static error_t parse_setenv_opt(int key, char *arg, struct argp_state *state)
 		}
 		e = journal_add_action(ENV_TASK_SET, "kernelparams", 0,
 				       (uint8_t *)arg, strlen(arg) + 1);
-		break;
-	case 'p':
-		i = parse_int(arg);
-		if (errno) {
-			fprintf(stderr, "Invalid number specified for -p.\n");
-			return 1;
-		}
-		if (i >= 0 && i < ENV_NUM_CONFIG_PARTS) {
-			fprintf(stdout, "Updating config partition #%d\n", i);
-			arguments->which_part = i;
-			arguments->part_specified = true;
-		} else {
-			fprintf(stderr,
-				"Selected partition out of range. Valid range: "
-				"0..%d.\n", ENV_NUM_CONFIG_PARTS - 1);
-			return 1;
-		}
 		break;
 	case 's':
 		i = parse_int(arg);
@@ -461,6 +470,9 @@ static error_t parse_printenv_opt(int key, char *arg, struct argp_state *state)
 	struct arguments_printenv *arguments = state->input;
 
 	switch (key) {
+	case 'c':
+		arguments->current = true;
+		break;
 	case ARGP_KEY_ARG:
 		/* too many arguments - program terminates with call to
 		 * argp_usage with non-zero return code */
@@ -599,6 +611,28 @@ static void dump_envs(void)
 	}
 }
 
+static void dump_latest_env(void)
+{
+	BGENV *env = bgenv_open_latest();
+	if (!env) {
+		fprintf(stderr, "Failed to retrieve latest environment.\n");
+		return;
+	}
+	dump_env(env->data);
+	bgenv_close(env);
+}
+
+static void dump_env_by_index(uint32_t index)
+{
+	BGENV *env = bgenv_open_by_index(index);
+	if (!env) {
+		fprintf(stderr, "Failed to retrieve latest environment.\n");
+		return;
+	}
+	dump_env(env->data);
+	bgenv_close(env);
+}
+
 static bool get_env(char *configfilepath, BG_ENVDATA *data)
 {
 	FILE *config;
@@ -696,10 +730,25 @@ static error_t bg_printenv(int argc, char **argv)
 	if (e) {
 		return e;
 	}
-	if (arguments.common.envfilepath) {
-		int result = printenv_from_file(arguments.common.envfilepath);
-		free(arguments.common.envfilepath);
-		return result;
+
+	const struct arguments_common *common = &arguments.common;
+
+	/* count the number of arguments which result in bg_printenv
+	 * operating on a single partition; to avoid ambiguity, we only
+	 * allow one such argument. */
+	int counter = 0;
+	if (common->envfilepath) ++counter;
+	if (common->part_specified) ++counter;
+	if (arguments.current) ++counter;
+	if (counter > 1) {
+		fprintf(stderr, "Error, only one of -c/-f/-p can be set.\n");
+		return 1;
+	}
+
+	if (common->envfilepath) {
+		e = printenv_from_file(common->envfilepath);
+		free(common->envfilepath);
+		return e;
 	}
 
 	/* not in file mode */
@@ -708,7 +757,17 @@ static error_t bg_printenv(int argc, char **argv)
 		return 1;
 	}
 
-	dump_envs();
+	if (arguments.current) {
+		fprintf(stdout, "Using latest config partition\n");
+		dump_latest_env();
+	} else if (common->part_specified) {
+		fprintf(stdout, "Using config partition #%d\n",
+			arguments.common.which_part);
+		dump_env_by_index(common->which_part);
+	} else {
+		dump_envs();
+	}
+
 	bgenv_finalize();
 	return 0;
 }
@@ -740,7 +799,7 @@ static error_t bg_setenv(int argc, char **argv)
 		return e;
 	}
 
-	if (arguments.auto_update && arguments.part_specified) {
+	if (arguments.auto_update && arguments.common.part_specified) {
 		fprintf(stderr, "Error, both automatic and manual partition "
 				"selection. Cannot use -p and -u "
 				"simultaneously.\n");
@@ -810,8 +869,9 @@ static error_t bg_setenv(int argc, char **argv)
 
 		bgenv_close(env_current);
 	} else {
-		if (arguments.part_specified) {
-			env_new = bgenv_open_by_index(arguments.which_part);
+		if (arguments.common.part_specified) {
+			env_new = bgenv_open_by_index(
+				arguments.common.which_part);
 		} else {
 			env_new = bgenv_open_latest();
 		}
