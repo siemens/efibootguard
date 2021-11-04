@@ -85,3 +85,10 @@ m4/lt*
 version.h
 libtool
 .libs
+
+# Test binaries
+test_bgenv_init_retval
+test_ebgenv_api
+test_ebgenv_api_internal
+test_probe_config_file
+test_probe_config_partitions
