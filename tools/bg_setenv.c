@@ -392,13 +392,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				       (uint8_t *)"0", 2);
 		break;
 	case 'u':
-		if (arguments->part_specified) {
-			fprintf(stderr,
-				"Error, both automatic and manual partition "
-				"selection. Cannot use -p and -u "
-				"simultaneously.\n");
-			return 1;
-		}
 		arguments->auto_update = true;
 		break;
 	case 'v':
@@ -689,6 +682,13 @@ int main(int argc, char **argv)
 	}
 
 	int result = 0;
+
+	if (arguments.auto_update && arguments.part_specified) {
+		fprintf(stderr, "Error, both automatic and manual partition "
+				"selection. Cannot use -p and -u "
+				"simultaneously.\n");
+		return 1;
+	}
 
 	/* arguments are parsed, journal is filled */
 
