@@ -65,6 +65,11 @@ static struct argp_option options_printenv[] = {
 	BG_CLI_OPTIONS_COMMON,
 	OPT("current", 'c', 0, 0,
 	    "Only print values from the current environment"),
+	OPT("output", 'o', "LIST", 0,
+	    "Comma-separated list of fields which are printed. "
+	    "Available fields: in_progress, revision, kernel, kernelargs, "
+	    "watchdog_timeout, ustate, user. "
+	    "If omitted, all available fields are printed."),
 	{},
 };
 
@@ -89,10 +94,24 @@ struct arguments_setenv {
 	bool preserve_env;
 };
 
+struct fields {
+	unsigned int in_progress : 1;
+	unsigned int revision : 1;
+	unsigned int kernel : 1;
+	unsigned int kernelargs : 1;
+	unsigned int wdog_timeout : 1;
+	unsigned int ustate : 1;
+	unsigned int user : 1;
+};
+
+static const struct fields ALL_FIELDS = {1, 1, 1, 1, 1, 1, 1};
+
 /* Arguments used by bg_printenv. */
 struct arguments_printenv {
 	struct arguments_common common;
 	bool current;
+	/* a bitset to decide which fields are printed */
+	struct fields output_fields;
 };
 
 typedef enum { ENV_TASK_SET, ENV_TASK_DEL } BGENV_TASK;
@@ -465,13 +484,45 @@ static error_t parse_setenv_opt(int key, char *arg, struct argp_state *state)
 	return e;
 }
 
+static error_t parse_output_fields(char *fields, struct fields *output_fields)
+{
+	char *token;
+	memset(output_fields, 0, sizeof(struct fields));
+	while ((token = strsep(&fields, ","))) {
+		if (*token == '\0') continue;
+		if (strcmp(token, "in_progress") == 0) {
+			output_fields->in_progress = true;
+		} else if (strcmp(token, "revision") == 0) {
+			output_fields->revision = true;
+		} else if (strcmp(token, "kernel") == 0) {
+			output_fields->kernel = true;
+		} else if (strcmp(token, "kernelargs") == 0) {
+			output_fields->kernelargs = true;
+		} else if (strcmp(token, "watchdog_timeout") == 0) {
+			output_fields->wdog_timeout = true;
+		} else if (strcmp(token, "ustate") == 0) {
+			output_fields->ustate = true;
+		} else if (strcmp(token, "user") == 0) {
+			output_fields->user = true;
+		} else {
+			fprintf(stderr, "Unknown output field: %s\n", token);
+			return 1;
+		}
+	}
+	return 0;
+}
+
 static error_t parse_printenv_opt(int key, char *arg, struct argp_state *state)
 {
 	struct arguments_printenv *arguments = state->input;
+	error_t e = 0;
 
 	switch (key) {
 	case 'c':
 		arguments->current = true;
+		break;
+	case 'o':
+		e = parse_output_fields(arg, &arguments->output_fields);
 		break;
 	case ARGP_KEY_ARG:
 		/* too many arguments - program terminates with call to
@@ -482,7 +533,7 @@ static error_t parse_printenv_opt(int key, char *arg, struct argp_state *state)
 		return parse_common_opt(key, arg, false, &arguments->common);
 	}
 
-	return 0;
+	return e;
 }
 
 static void dump_uservars(uint8_t *udata)
@@ -554,24 +605,38 @@ static void dump_uservars(uint8_t *udata)
 	}
 }
 
-static void dump_env(BG_ENVDATA *env)
+static void dump_env(BG_ENVDATA *env, struct fields output_fields)
 {
 	char buffer[ENV_STRING_LENGTH];
 	fprintf(stdout, "Values:\n");
-	fprintf(stdout,
-		"in_progress:      %s\n",env->in_progress ? "yes" : "no");
-	fprintf(stdout, "revision:         %u\n", env->revision);
-	fprintf(stdout,
-		"kernel:           %s\n", str16to8(buffer, env->kernelfile));
-	fprintf(stdout,
-		"kernelargs:       %s\n", str16to8(buffer, env->kernelparams));
-	fprintf(stdout,
-		"watchdog timeout: %u seconds\n", env->watchdog_timeout_sec);
-	fprintf(stdout, "ustate:           %u (%s)\n", (uint8_t)env->ustate,
-	       ustate2str(env->ustate));
-	fprintf(stdout, "\n");
-	fprintf(stdout, "user variables:\n");
-	dump_uservars(env->userdata);
+	if (output_fields.in_progress) {
+		fprintf(stdout, "in_progress:      %s\n",
+			env->in_progress ? "yes" : "no");
+	}
+	if (output_fields.revision) {
+		fprintf(stdout, "revision:         %u\n", env->revision);
+	}
+	if (output_fields.kernel) {
+		fprintf(stdout, "kernel:           %s\n",
+			str16to8(buffer, env->kernelfile));
+	}
+	if (output_fields.kernelargs) {
+		fprintf(stdout, "kernelargs:       %s\n",
+			str16to8(buffer, env->kernelparams));
+	}
+	if (output_fields.wdog_timeout) {
+		fprintf(stdout, "watchdog timeout: %u seconds\n",
+			env->watchdog_timeout_sec);
+	}
+	if (output_fields.ustate) {
+		fprintf(stdout, "ustate:           %u (%s)\n",
+			(uint8_t)env->ustate, ustate2str(env->ustate));
+	}
+	if (output_fields.user) {
+		fprintf(stdout, "\n");
+		fprintf(stdout, "user variables:\n");
+		dump_uservars(env->userdata);
+	}
 	fprintf(stdout, "\n\n");
 }
 
@@ -594,7 +659,7 @@ static void update_environment(BGENV *env, bool verbosity)
 
 }
 
-static void dump_envs(void)
+static void dump_envs(struct fields output_fields)
 {
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 		fprintf(stdout, "\n----------------------------\n");
@@ -606,30 +671,30 @@ static void dump_envs(void)
 				i);
 			return;
 		}
-		dump_env(env->data);
+		dump_env(env->data, output_fields);
 		bgenv_close(env);
 	}
 }
 
-static void dump_latest_env(void)
+static void dump_latest_env(struct fields output_fields)
 {
 	BGENV *env = bgenv_open_latest();
 	if (!env) {
 		fprintf(stderr, "Failed to retrieve latest environment.\n");
 		return;
 	}
-	dump_env(env->data);
+	dump_env(env->data, output_fields);
 	bgenv_close(env);
 }
 
-static void dump_env_by_index(uint32_t index)
+static void dump_env_by_index(uint32_t index, struct fields output_fields)
 {
 	BGENV *env = bgenv_open_by_index(index);
 	if (!env) {
 		fprintf(stderr, "Failed to retrieve latest environment.\n");
 		return;
 	}
-	dump_env(env->data);
+	dump_env(env->data, output_fields);
 	bgenv_close(env);
 }
 
@@ -658,13 +723,14 @@ static bool get_env(char *configfilepath, BG_ENVDATA *data)
 	return result;
 }
 
-static int printenv_from_file(char *envfilepath) {
+static int printenv_from_file(char *envfilepath, struct fields output_fields)
+{
 	int success = 0;
 	BG_ENVDATA data;
 
 	success = get_env(envfilepath, &data);
 	if (success) {
-		dump_env(&data);
+		dump_env(&data, output_fields);
 		return 0;
 	} else {
 		fprintf(stderr, "Error reading environment file.\n");
@@ -689,7 +755,7 @@ static int dumpenv_to_file(char *envfilepath, bool verbosity, bool preserve_env)
 
 	update_environment(&env, verbosity);
 	if (verbosity) {
-		dump_env(env.data);
+		dump_env(env.data, ALL_FIELDS);
 	}
 	FILE *of = fopen(envfilepath, "wb");
 	if (of) {
@@ -723,8 +789,9 @@ static error_t bg_printenv(int argc, char **argv)
 		.doc = doc,
 	};
 
-	struct arguments_printenv arguments;
-	memset(&arguments, 0, sizeof(struct arguments_printenv));
+	struct arguments_printenv arguments = {
+		.output_fields = ALL_FIELDS,
+	};
 
 	error_t e = argp_parse(&argp_printenv, argc, argv, 0, 0, &arguments);
 	if (e) {
@@ -746,7 +813,8 @@ static error_t bg_printenv(int argc, char **argv)
 	}
 
 	if (common->envfilepath) {
-		e = printenv_from_file(common->envfilepath);
+		e = printenv_from_file(common->envfilepath,
+				       arguments.output_fields);
 		free(common->envfilepath);
 		return e;
 	}
@@ -759,13 +827,13 @@ static error_t bg_printenv(int argc, char **argv)
 
 	if (arguments.current) {
 		fprintf(stdout, "Using latest config partition\n");
-		dump_latest_env();
+		dump_latest_env(arguments.output_fields);
 	} else if (common->part_specified) {
 		fprintf(stdout, "Using config partition #%d\n",
 			arguments.common.which_part);
-		dump_env_by_index(common->which_part);
+		dump_env_by_index(common->which_part, arguments.output_fields);
 	} else {
-		dump_envs();
+		dump_envs(arguments.output_fields);
 	}
 
 	bgenv_finalize();
@@ -826,7 +894,7 @@ static error_t bg_setenv(int argc, char **argv)
 	}
 
 	if (arguments.common.verbosity) {
-		dump_envs();
+		dump_envs(ALL_FIELDS);
 	}
 
 	BGENV *env_new = NULL;
@@ -888,7 +956,7 @@ static error_t bg_setenv(int argc, char **argv)
 	if (arguments.common.verbosity) {
 		fprintf(stdout, "New environment data:\n");
 		fprintf(stdout, "---------------------\n");
-		dump_env(env_new->data);
+		dump_env(env_new->data, ALL_FIELDS);
 	}
 	if (!bgenv_write(env_new)) {
 		fprintf(stderr, "Error storing environment.\n");

@@ -114,3 +114,23 @@ foo = bar" ]]
     run md5sum "$envfile"
     [[ "$output" =~ ^a24b154a48e1f33b79b87e0fa5eff8a1\s*.* ]]
 }
+
+@test "bg_printenv ustate" {
+    local envfile
+    envfile="$(mktemp -d)/BGENV.DAT"
+
+    create_sample_bgenv "$envfile"
+    run bg_printenv "--filepath=$envfile" --output ustate
+    [[ "$output" = "Values:
+ustate:           0 (OK)" ]]
+}
+
+@test "bg_printenv with all fields is the same as omitting fields" {
+    local envfile
+    envfile="$(mktemp -d)/BGENV.DAT"
+
+    create_sample_bgenv "$envfile"
+    expected_output=$(bg_printenv "--filepath=$envfile")
+    run bg_printenv "--filepath=$envfile" --output in_progress,revision,kernel,kernelargs,watchdog_timeout,ustate,user
+    [[ "$output" = "$expected_output" ]]
+}
