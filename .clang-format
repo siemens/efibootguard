@@ -14,3 +14,5 @@ PointerAlignment: Right
 ReflowComments: true
 SortIncludes: false
 UseTab: Always
+ContinuationIndentWidth: 8
+AlignConsecutiveMacros: true
