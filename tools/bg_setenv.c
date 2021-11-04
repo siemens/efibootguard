@@ -639,6 +639,19 @@ static int dumpenv_to_file(char *envfilepath, bool verbosity, bool preserve_env)
 	return result;
 }
 
+/* This is the entrypoint for the command bg_printenv. */
+static int bg_printenv(const struct arguments *arguments)
+{
+	if (arguments->envfilepath) {
+		int result = printenv_from_file(arguments->envfilepath);
+		free(arguments->envfilepath);
+		return result;
+	}
+	dump_envs();
+	bgenv_finalize();
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	static struct argp argp_setenv = {options_setenv, parse_opt, NULL, doc};
@@ -671,19 +684,19 @@ int main(int argc, char **argv)
 		return e;
 	}
 
+	if (!write_mode) {
+		return bg_printenv(&arguments);
+	}
+
 	int result = 0;
 
 	/* arguments are parsed, journal is filled */
 
 	/* is output to file or input from file ? */
 	if (arguments.envfilepath) {
-		if (write_mode) {
-			result = dumpenv_to_file(arguments.envfilepath,
-						 arguments.verbosity,
-						 arguments.preserve_env);
-		} else {
-			result = printenv_from_file(arguments.envfilepath);
-		}
+		result = dumpenv_to_file(arguments.envfilepath,
+					 arguments.verbosity,
+					 arguments.preserve_env);
 		free(arguments.envfilepath);
 		return result;
 	}
@@ -692,12 +705,6 @@ int main(int argc, char **argv)
 	if (!bgenv_init()) {
 		fprintf(stderr, "Error initializing FAT environment.\n");
 		return 1;
-	}
-
-	if (!write_mode) {
-		dump_envs();
-		bgenv_finalize();
-		return 0;
 	}
 
 	if (arguments.verbosity) {
