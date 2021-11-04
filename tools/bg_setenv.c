@@ -61,6 +61,15 @@ static struct argp_option options_printenv[] = {
 struct arguments {
 	bool printenv;
 	int which_part;
+	/* auto update feature automatically updates partition with
+	 * oldest environment revision (lowest value) */
+	bool auto_update;
+	bool part_specified;
+	bool verbosity;
+	char *envfilepath;
+	/* whether to keep existing entries in BGENV before applying the new
+	 * settings */
+	bool preserve_env;
 };
 
 typedef enum { ENV_TASK_SET, ENV_TASK_DEL } BGENV_TASK;
@@ -163,20 +172,6 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 	}
 }
 
-/* auto update feature automatically updates partition with
- * oldest environment revision (lowest value)
- */
-static bool auto_update = false;
-
-static bool part_specified = false;
-
-static bool verbosity = false;
-
-static char *envfilepath = NULL;
-
-/* whether to keep existing entries in BGENV before applying the new settings */
-static bool preserve_env = false;
-
 static char *ustatemap[] = {"OK", "INSTALLED", "TESTING", "FAILED", "UNKNOWN"};
 
 static uint8_t str2ustate(char *str)
@@ -278,7 +273,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		if (i >= 0 && i < ENV_NUM_CONFIG_PARTS) {
 			fprintf(stdout, "Updating config partition #%d\n", i);
 			arguments->which_part = i;
-			part_specified = true;
+			arguments->part_specified = true;
 		} else {
 			fprintf(stderr,
 				"Selected partition out of range. Valid range: "
@@ -362,8 +357,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'f':
-		free(envfilepath);
-		envfilepath = NULL;
+		free(arguments->envfilepath);
+		arguments->envfilepath = NULL;
 
 		/* compat mode, permitting "bg_setenv -f <dir>" */
 		if (!arguments->printenv) {
@@ -374,17 +369,17 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				fprintf(stderr,
 					"WARNING: Using -f to specify only the "
 					"ouptut directory is deprecated.\n");
-				res = asprintf(&envfilepath, "%s/%s", arg,
-					       FAT_ENV_FILENAME);
+				res = asprintf(&arguments->envfilepath, "%s/%s",
+					       arg, FAT_ENV_FILENAME);
 				if (res == -1) {
 					return ENOMEM;
 				}
 			}
 		}
 
-		if (!envfilepath) {
-			envfilepath = strdup(arg);
-			if (!envfilepath) {
+		if (!arguments->envfilepath) {
+			arguments->envfilepath = strdup(arg);
+			if (!arguments->envfilepath) {
 				return ENOMEM;
 			}
 		}
@@ -397,18 +392,18 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				       (uint8_t *)"0", 2);
 		break;
 	case 'u':
-		if (part_specified) {
+		if (arguments->part_specified) {
 			fprintf(stderr,
 				"Error, both automatic and manual partition "
 				"selection. Cannot use -p and -u "
 				"simultaneously.\n");
 			return 1;
 		}
-		auto_update = true;
+		arguments->auto_update = true;
 		break;
 	case 'v':
 		/* Set verbosity in this program */
-		verbosity = true;
+		arguments->verbosity = true;
 		/* Set verbosity in the library */
 		bgenv_be_verbose(true);
 		break;
@@ -417,7 +412,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		e = set_uservars(arg);
 		break;
 	case 'P':
-		preserve_env = true;
+		arguments->preserve_env = true;
 		break;
 	case 'V':
 		fprintf(stdout, "EFI Boot Guard %s\n", EFIBOOTGUARD_VERSION);
@@ -527,7 +522,7 @@ static void dump_env(BG_ENVDATA *env)
 	fprintf(stdout, "\n\n");
 }
 
-static void update_environment(BGENV *env)
+static void update_environment(BGENV *env, bool verbosity)
 {
 	if (verbosity) {
 		fprintf(stdout, "Processing journal...\n");
@@ -602,7 +597,8 @@ static int printenv_from_file(char *envfilepath) {
 	}
 }
 
-static int dumpenv_to_file(char *envfilepath) {
+static int dumpenv_to_file(char *envfilepath, bool verbosity, bool preserve_env)
+{
 	/* execute journal and write to file */
 	int result = 0;
 	BGENV env;
@@ -616,7 +612,7 @@ static int dumpenv_to_file(char *envfilepath) {
 		return 1;
 	}
 
-	update_environment(&env);
+	update_environment(&env, verbosity);
 	if (verbosity) {
 		dump_env(env.data);
 	}
@@ -665,9 +661,7 @@ int main(int argc, char **argv)
 		argp = &argp_printenv;
 	}
 
-	struct arguments arguments;
-	arguments.printenv = !write_mode;
-	arguments.which_part = 0;
+	struct arguments arguments = {.printenv = !write_mode, .which_part = 0};
 
 	STAILQ_INIT(&head);
 
@@ -682,13 +676,15 @@ int main(int argc, char **argv)
 	/* arguments are parsed, journal is filled */
 
 	/* is output to file or input from file ? */
-	if (envfilepath) {
+	if (arguments.envfilepath) {
 		if (write_mode) {
-			result = dumpenv_to_file(envfilepath);
+			result = dumpenv_to_file(arguments.envfilepath,
+						 arguments.verbosity,
+						 arguments.preserve_env);
 		} else {
-			result = printenv_from_file(envfilepath);
+			result = printenv_from_file(arguments.envfilepath);
 		}
-		free(envfilepath);
+		free(arguments.envfilepath);
 		return result;
 	}
 
@@ -704,14 +700,14 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if (verbosity) {
+	if (arguments.verbosity) {
 		dump_envs();
 	}
 
 	BGENV *env_new = NULL;
 	BGENV *env_current;
 
-	if (auto_update) {
+	if (arguments.auto_update) {
 		/* clone latest environment */
 
 		env_current = bgenv_open_latest();
@@ -729,7 +725,7 @@ int main(int argc, char **argv)
 			result = 1;
 			goto cleanup;
 		}
-		if (verbosity) {
+		if (arguments.verbosity) {
 			fprintf(stdout,
 				"Updating environment with revision %u\n",
 				env_new->data->revision);
@@ -748,7 +744,7 @@ int main(int argc, char **argv)
 
 		bgenv_close(env_current);
 	} else {
-		if (part_specified) {
+		if (arguments.part_specified) {
 			env_new = bgenv_open_by_index(arguments.which_part);
 		} else {
 			env_new = bgenv_open_latest();
@@ -761,9 +757,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	update_environment(env_new);
+	update_environment(env_new, arguments.verbosity);
 
-	if (verbosity) {
+	if (arguments.verbosity) {
 		fprintf(stdout, "New environment data:\n");
 		fprintf(stdout, "---------------------\n");
 		dump_env(env_new->data);
