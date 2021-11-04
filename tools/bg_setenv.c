@@ -24,52 +24,68 @@
 static char doc[] =
 	"bg_setenv/bg_printenv - Environment tool for the EFI Boot Guard";
 
+#define OPT(name, key, arg, flags, doc)                                        \
+	{                                                                      \
+		name, key, arg, flags, doc                                     \
+	}
+
+#define BG_CLI_OPTIONS_COMMON                                                  \
+	OPT("filepath", 'f', "ENVFILE", 0,                                     \
+	    "Environment to use. Expects a file name, "                        \
+	    "usually called BGENV.DAT.")                                       \
+	, OPT("verbose", 'v', 0, 0, "Be verbose")                              \
+	, OPT("version", 'V', 0, 0, "Print version")
+
 static struct argp_option options_setenv[] = {
-	{"preserve", 'P', 0, 0, "Preserve existing entries"},
-	{"kernel", 'k', "KERNEL", 0, "Set kernel to load"},
-	{"args", 'a', "KERNEL_ARGS", 0, "Set kernel arguments"},
-	{"part", 'p', "ENV_PART", 0,
-	 "Set environment partition to update. If no partition is specified, "
-	 "the one with the smallest revision value above zero is updated."},
-	{"revision", 'r', "REVISION", 0, "Set revision value"},
-	{"ustate", 's', "USTATE", 0, "Set update status for environment"},
-	{"filepath", 'f', "ENVFILE", 0,
-	 "Output environment to file. Expects an output file name, "
-	 "usually called BGENV.DAT."},
-	{"watchdog", 'w', "WATCHDOG_TIMEOUT", 0, "Watchdog timeout in seconds"},
-	{"confirm", 'c', 0, 0, "Confirm working environment"},
-	{"update", 'u', 0, 0, "Automatically update oldest revision"},
-	{"verbose", 'v', 0, 0, "Be verbose"},
-	{"uservar", 'x', "KEY=VAL", 0,
-	 "Set user-defined string variable. For setting multiple variables, "
-	 "use this option multiple times."},
-	{"in_progress", 'i', "IN_PROGRESS", 0,
-	 "Set in_progress variable to simulate a running update process."},
-	{"version", 'V', 0, 0, "Print version"},
-	{}
+	BG_CLI_OPTIONS_COMMON,
+	OPT("preserve", 'P', 0, 0, "Preserve existing entries"),
+	OPT("kernel", 'k', "KERNEL", 0, "Set kernel to load"),
+	OPT("args", 'a', "KERNEL_ARGS", 0, "Set kernel arguments"),
+	OPT("part", 'p', "ENV_PART", 0,
+	    "Set environment partition to update. If no partition is "
+	    "specified, "
+	    "the one with the smallest revision value above zero is updated."),
+	OPT("revision", 'r', "REVISION", 0, "Set revision value"),
+	OPT("ustate", 's', "USTATE", 0, "Set update status for environment"),
+	OPT("watchdog", 'w', "WATCHDOG_TIMEOUT", 0,
+	    "Watchdog timeout in seconds"),
+	OPT("confirm", 'c', 0, 0, "Confirm working environment"),
+	OPT("update", 'u', 0, 0, "Automatically update oldest revision"),
+	OPT("uservar", 'x', "KEY=VAL", 0,
+	    "Set user-defined string variable. For setting multiple variables, "
+	    "use this option multiple times."),
+	OPT("in_progress", 'i', "IN_PROGRESS", 0,
+	    "Set in_progress variable to simulate a running update process."),
+	{},
 };
 
 static struct argp_option options_printenv[] = {
-	{"filepath", 'f', "ENVFILE", 0,
-	 "Read environment from file. Expects a valid EFI Boot Guard "
-	 "environment file."},
-	{"verbose", 'v', 0, 0, "Be verbose"},
-	{"version", 'V', 0, 0, "Print version"},
-	{}
+	BG_CLI_OPTIONS_COMMON,
+	{},
 };
 
-struct arguments {
-	bool printenv;
+/* Common arguments used by both bg_setenv and bg_printenv. */
+struct arguments_common {
+	char *envfilepath;
+	bool verbosity;
+};
+
+/* Arguments used by bg_setenv. */
+struct arguments_setenv {
+	struct arguments_common common;
 	int which_part;
 	/* auto update feature automatically updates partition with
 	 * oldest environment revision (lowest value) */
 	bool auto_update;
 	bool part_specified;
-	bool verbosity;
-	char *envfilepath;
-	/* whether to keep existing entries in BGENV before applying the new
+	/* whether to keep existing entries in BGENV before applying new
 	 * settings */
 	bool preserve_env;
+};
+
+/* Arguments used by bg_printenv. */
+struct arguments_printenv {
+	struct arguments_common common;
 };
 
 typedef enum { ENV_TASK_SET, ENV_TASK_DEL } BGENV_TASK;
@@ -234,9 +250,61 @@ static int parse_int(char *arg)
 	return (int) i;
 }
 
-static error_t parse_opt(int key, char *arg, struct argp_state *state)
+static error_t parse_common_opt(int key, char *arg, bool compat_mode,
+				struct arguments_common *arguments)
 {
-	struct arguments *arguments = state->input;
+	bool found = false;
+	switch (key) {
+	case 'f':
+		found = true;
+		free(arguments->envfilepath);
+		arguments->envfilepath = NULL;
+
+		if (compat_mode) {
+			/* compat mode, permitting "bg_setenv -f <dir>" */
+			struct stat sb;
+
+			int res = stat(arg, &sb);
+			if (res == 0 && S_ISDIR(sb.st_mode)) {
+				fprintf(stderr,
+					"WARNING: Using -f to specify only the "
+					"ouptut directory is deprecated.\n");
+				res = asprintf(&arguments->envfilepath, "%s/%s",
+					       arg, FAT_ENV_FILENAME);
+				if (res == -1) {
+					return ENOMEM;
+				}
+			}
+		}
+
+		if (!arguments->envfilepath) {
+			arguments->envfilepath = strdup(arg);
+			if (!arguments->envfilepath) {
+				return ENOMEM;
+			}
+		}
+		break;
+	case 'v':
+		found = true;
+		/* Set verbosity in this program */
+		arguments->verbosity = true;
+		/* Set verbosity in the library */
+		bgenv_be_verbose(true);
+		break;
+	case 'V':
+		found = true;
+		fprintf(stdout, "EFI Boot Guard %s\n", EFIBOOTGUARD_VERSION);
+		exit(0);
+	}
+	if (!found) {
+		return ARGP_ERR_UNKNOWN;
+	}
+	return 0;
+}
+
+static error_t parse_setenv_opt(int key, char *arg, struct argp_state *state)
+{
+	struct arguments_setenv *arguments = state->input;
 	int i, res;
 	char *tmp;
 	error_t e = 0;
@@ -356,34 +424,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 				       "watchdog_timeout_sec", 0,
 				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
-	case 'f':
-		free(arguments->envfilepath);
-		arguments->envfilepath = NULL;
-
-		/* compat mode, permitting "bg_setenv -f <dir>" */
-		if (!arguments->printenv) {
-			struct stat sb;
-
-			res = stat(arg, &sb);
-			if (res == 0 && S_ISDIR(sb.st_mode)) {
-				fprintf(stderr,
-					"WARNING: Using -f to specify only the "
-					"ouptut directory is deprecated.\n");
-				res = asprintf(&arguments->envfilepath, "%s/%s",
-					       arg, FAT_ENV_FILENAME);
-				if (res == -1) {
-					return ENOMEM;
-				}
-			}
-		}
-
-		if (!arguments->envfilepath) {
-			arguments->envfilepath = strdup(arg);
-			if (!arguments->envfilepath) {
-				return ENOMEM;
-			}
-		}
-		break;
 	case 'c':
 		VERBOSE(stdout,
 			"Confirming environment to work. Removing boot-once "
@@ -394,12 +434,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 	case 'u':
 		arguments->auto_update = true;
 		break;
-	case 'v':
-		/* Set verbosity in this program */
-		arguments->verbosity = true;
-		/* Set verbosity in the library */
-		bgenv_be_verbose(true);
-		break;
 	case 'x':
 		/* Set user-defined variable(s) */
 		e = set_uservars(arg);
@@ -407,22 +441,36 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 	case 'P':
 		arguments->preserve_env = true;
 		break;
-	case 'V':
-		fprintf(stdout, "EFI Boot Guard %s\n", EFIBOOTGUARD_VERSION);
-		exit(0);
 	case ARGP_KEY_ARG:
 		/* too many arguments - program terminates with call to
 		 * argp_usage with non-zero return code */
 		argp_usage(state);
 		break;
 	default:
-		return ARGP_ERR_UNKNOWN;
+		return parse_common_opt(key, arg, true, &arguments->common);
 	}
 
 	if (e) {
 		fprintf(stderr, "Error creating journal: %s\n", strerror(e));
 	}
 	return e;
+}
+
+static error_t parse_printenv_opt(int key, char *arg, struct argp_state *state)
+{
+	struct arguments_printenv *arguments = state->input;
+
+	switch (key) {
+	case ARGP_KEY_ARG:
+		/* too many arguments - program terminates with call to
+		 * argp_usage with non-zero return code */
+		argp_usage(state);
+		break;
+	default:
+		return parse_common_opt(key, arg, false, &arguments->common);
+	}
+
+	return 0;
 }
 
 static void dump_uservars(uint8_t *udata)
@@ -633,71 +681,24 @@ static int dumpenv_to_file(char *envfilepath, bool verbosity, bool preserve_env)
 }
 
 /* This is the entrypoint for the command bg_printenv. */
-static int bg_printenv(const struct arguments *arguments)
+static error_t bg_printenv(int argc, char **argv)
 {
-	if (arguments->envfilepath) {
-		int result = printenv_from_file(arguments->envfilepath);
-		free(arguments->envfilepath);
-		return result;
-	}
-	dump_envs();
-	bgenv_finalize();
-	return 0;
-}
+	struct argp argp_printenv = {
+		.options = options_printenv,
+		.parser = parse_printenv_opt,
+		.doc = doc,
+	};
 
-int main(int argc, char **argv)
-{
-	static struct argp argp_setenv = {options_setenv, parse_opt, NULL, doc};
-	static struct argp argp_printenv = {options_printenv, parse_opt, NULL,
-					    doc};
-	static struct argp *argp;
+	struct arguments_printenv arguments;
+	memset(&arguments, 0, sizeof(struct arguments_printenv));
 
-	bool write_mode = (bool)strstr(argv[0], "bg_setenv");
-	if (write_mode) {
-		argp = &argp_setenv;
-
-		if (argc < 2) {
-			printf("No task to perform. Please specify at least one"
-			       " optional argument. See --help for further"
-			       " information.\n");
-			return 1;
-		}
-
-	} else {
-		argp = &argp_printenv;
-	}
-
-	struct arguments arguments = {.printenv = !write_mode, .which_part = 0};
-
-	STAILQ_INIT(&head);
-
-	error_t e;
-	e = argp_parse(argp, argc, argv, 0, 0, &arguments);
+	error_t e = argp_parse(&argp_printenv, argc, argv, 0, 0, &arguments);
 	if (e) {
 		return e;
 	}
-
-	if (!write_mode) {
-		return bg_printenv(&arguments);
-	}
-
-	int result = 0;
-
-	if (arguments.auto_update && arguments.part_specified) {
-		fprintf(stderr, "Error, both automatic and manual partition "
-				"selection. Cannot use -p and -u "
-				"simultaneously.\n");
-		return 1;
-	}
-
-	/* arguments are parsed, journal is filled */
-
-	/* is output to file or input from file ? */
-	if (arguments.envfilepath) {
-		result = dumpenv_to_file(arguments.envfilepath,
-					 arguments.verbosity,
-					 arguments.preserve_env);
-		free(arguments.envfilepath);
+	if (arguments.common.envfilepath) {
+		int result = printenv_from_file(arguments.common.envfilepath);
+		free(arguments.common.envfilepath);
 		return result;
 	}
 
@@ -707,7 +708,65 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	if (arguments.verbosity) {
+	dump_envs();
+	bgenv_finalize();
+	return 0;
+}
+
+/* This is the entrypoint for the command bg_setenv. */
+static error_t bg_setenv(int argc, char **argv)
+{
+	if (argc < 2) {
+		printf("No task to perform. Please specify at least one"
+		       " optional argument. See --help for further"
+		       " information.\n");
+		return 1;
+	}
+
+	struct argp argp_setenv = {
+		.options = options_setenv,
+		.parser = parse_setenv_opt,
+		.doc = doc,
+	};
+
+	struct arguments_setenv arguments;
+	memset(&arguments, 0, sizeof(struct arguments_setenv));
+
+	STAILQ_INIT(&head);
+
+	error_t e;
+	e = argp_parse(&argp_setenv, argc, argv, 0, 0, &arguments);
+	if (e) {
+		return e;
+	}
+
+	if (arguments.auto_update && arguments.part_specified) {
+		fprintf(stderr, "Error, both automatic and manual partition "
+				"selection. Cannot use -p and -u "
+				"simultaneously.\n");
+		return 1;
+	}
+
+	int result = 0;
+
+	/* arguments are parsed, journal is filled */
+
+	/* is output to file or input from file ? */
+	if (arguments.common.envfilepath) {
+		result = dumpenv_to_file(arguments.common.envfilepath,
+					 arguments.common.verbosity,
+					 arguments.preserve_env);
+		free(arguments.common.envfilepath);
+		return result;
+	}
+
+	/* not in file mode */
+	if (!bgenv_init()) {
+		fprintf(stderr, "Error initializing FAT environment.\n");
+		return 1;
+	}
+
+	if (arguments.common.verbosity) {
 		dump_envs();
 	}
 
@@ -732,7 +791,7 @@ int main(int argc, char **argv)
 			result = 1;
 			goto cleanup;
 		}
-		if (arguments.verbosity) {
+		if (arguments.common.verbosity) {
 			fprintf(stdout,
 				"Updating environment with revision %u\n",
 				env_new->data->revision);
@@ -764,9 +823,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	update_environment(env_new, arguments.verbosity);
+	update_environment(env_new, arguments.common.verbosity);
 
-	if (arguments.verbosity) {
+	if (arguments.common.verbosity) {
 		fprintf(stdout, "New environment data:\n");
 		fprintf(stdout, "---------------------\n");
 		dump_env(env_new->data);
@@ -782,4 +841,13 @@ cleanup:
 	bgenv_close(env_new);
 	bgenv_finalize();
 	return result;
+}
+
+int main(int argc, char **argv)
+{
+	if (strstr(argv[0], "bg_setenv")) {
+		return bg_setenv(argc, argv);
+	} else {
+		return bg_printenv(argc, argv);
+	}
 }
