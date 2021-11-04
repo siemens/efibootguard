@@ -134,3 +134,23 @@ ustate:           0 (OK)" ]]
     run bg_printenv "--filepath=$envfile" --output in_progress,revision,kernel,kernelargs,watchdog_timeout,ustate,user
     [[ "$output" = "$expected_output" ]]
 }
+
+@test "bg_printenv ustate raw" {
+    local envfile
+    envfile="$(mktemp -d)/BGENV.DAT"
+
+    create_sample_bgenv "$envfile"
+    run bg_printenv "--filepath=$envfile" --output ustate --raw
+    [[ "$output" = "USTATE=0" ]]
+}
+
+@test "bg_printenv multiple fields raw" {
+    local envfile
+    envfile="$(mktemp -d)/BGENV.DAT"
+
+    create_sample_bgenv "$envfile"
+    run bg_printenv "--filepath=$envfile" --output ustate,kernel,kernelargs --raw
+    [[ "$output" = "KERNEL=C:BOOT:kernel.efi
+KERNELARGS=root=/dev/sda
+USTATE=0" ]]
+}
