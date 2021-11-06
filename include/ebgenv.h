@@ -17,6 +17,8 @@
 #pragma once
 
 #include <errno.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 #define USERVAR_TYPE_CHAR		1
 #define USERVAR_TYPE_UINT8		2
