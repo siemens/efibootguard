@@ -104,7 +104,10 @@ libebgenv_la_LDFLAGS = -release $(LIBEBGENV_SO_VERSION).0
 bin_PROGRAMS = bg_setenv
 
 bg_setenv_SOURCES = \
-	tools/bg_setenv.c
+	tools/bg_setenv.c \
+	tools/bg_printenv.c \
+	tools/bg_envtools.c \
+	tools/main.c
 
 bg_setenv_CFLAGS = \
 	$(AM_CFLAGS) -static
