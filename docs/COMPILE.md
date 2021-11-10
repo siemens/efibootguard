@@ -5,7 +5,14 @@
 ### Arch Linux ###
 
 ```
-pacman -S gnu-efi-libs pciutils check
+# libs
+pacman -S gnu-efi-libs pciutils
+
+# build tools
+pacman -S gcc make automake autoconf libtool pkg-config
+
+# test dependencies
+pacman -S check bash-bats
 ```
 
 ### Debian ###
@@ -13,7 +20,14 @@ pacman -S gnu-efi-libs pciutils check
 Debian 8 or newer:
 
 ```
-apt-get install gnu-efi libpci-dev check
+# libs
+apt-get install gnu-efi libpci-dev
+
+# build tools
+apt-get install make automake autoconf libtool pkg-config
+
+# test dependencies
+apt-get install check bats
 ```
 
 ## Compilation ##
@@ -51,6 +65,4 @@ where `<sys-root-dir>` points to the wanted sysroot for cross-compilation.
 ## Testing ##
 
 * `make check` will run all unit tests.
-* `bats tests` will run all integration tests (you need
-  [bats-core](https://github.com/bats-core/bats-core) for that; packaged as
-  `bash-bats` for Arch Linux and `bats` for Debian).
+* `bats tests` will run all integration tests.
