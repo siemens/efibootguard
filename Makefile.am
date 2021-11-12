@@ -224,21 +224,22 @@ efibootguard_DATA = $(efi_loadername)
 CLEANFILES += $(efi_objects) $(efi_solib) $(efi_loadername)
 EXTRA_DIST += $(efi_sources)
 
+define gnuefi_compile
+	$(AM_V_CC) $(MKDIR_P) $(shell dirname $@)/; \
+	$(GNUEFI_CC) $(efi_cppflags) $(efi_cflags) -c $< -o $@
+endef
+
 $(top_builddir)/%.o: $(top_srcdir)/%.c
-	@$(MKDIR_P) $(shell dirname $@)/
-	$(AM_V_CC)$(GNUEFI_CC) $(efi_cppflags) $(efi_cflags) -c $< -o $@
+	$(call gnuefi_compile)
 
 $(top_builddir)/env/%.o: $(top_srcdir)/env/%.c
-	@$(MKDIR_P) $(shell dirname $@)/
-	$(AM_V_CC)$(GNUEFI_CC) $(efi_cppflags) $(efi_cflags) -c $< -o $@
+	$(call gnuefi_compile)
 
 $(top_builddir)/drivers/watchdog/%.o: $(top_srcdir)/drivers/watchdog/%.c
-	@$(MKDIR_P) $(shell dirname $@)/
-	$(AM_V_CC)$(GNUEFI_CC) $(efi_cppflags) $(efi_cflags) -c $< -o $@
+	$(call gnuefi_compile)
 
 $(top_builddir)/drivers/watchdog/%.o: $(top_srcdir)/drivers/watchdog/%.S
-	@$(MKDIR_P) $(shell dirname $@)/
-	$(AM_V_CC)$(GNUEFI_CC) $(efi_cppflags) $(efi_cflags) -c $< -o $@
+	$(call gnuefi_compile)
 
 $(top_builddir)/main.o: $(GEN_VERSION_H)
 
