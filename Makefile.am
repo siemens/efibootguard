@@ -38,11 +38,11 @@ ARFLAGS = cr
 EXTRA_DIST = autogen.sh README LICENSE
 CLEANFILES =
 
-SHTAB := env \
+define shtab
+	$(AM_V_GEN) $(MKDIR_P) $(@D); \
 	PYTHONPATH=${top_srcdir}/completion/shtab:${top_srcdir}/completion \
-	@PYTHON@ -m shtab
-SHTAB_BASH := $(SHTAB) --shell=bash -u
-SHTAB_ZSH := $(SHTAB) --shell=zsh -u
+	@PYTHON@ -m shtab -u --shell=$1 $2 >$@
+endef
 
 define filechk
 	$(AM_V_at)set -e;			\
@@ -275,20 +275,16 @@ bash-completion: $(BASH_COMPLETION_FILES)
 zsh-completion: $(ZSH_COMPLETION_FILES)
 
 $(top_builddir)/completion/bash/bg_setenv.bash: ${top_srcdir}/completion/bg_setenv/cli.py
-	@$(MKDIR_P) $(@D)
-	$(AM_V_GEN)$(SHTAB_BASH) bg_setenv.cli.bg_setenv >$@
+	$(call shtab,bash,bg_setenv.cli.bg_setenv)
 
 $(top_builddir)/completion/zsh/_bg_setenv: ${top_srcdir}/completion/bg_setenv/cli.py
-	@$(MKDIR_P) $(@D)
-	$(AM_V_GEN)$(SHTAB_ZSH) bg_setenv.cli.bg_setenv >$@
+	$(call shtab,zsh,bg_setenv.cli.bg_setenv)
 
 $(top_builddir)/completion/bash/bg_printenv.bash: ${top_srcdir}/completion/bg_printenv/cli.py
-	@$(MKDIR_P) $(@D)
-	$(AM_V_GEN)$(SHTAB_BASH) bg_printenv.cli.bg_printenv >$@
+	$(call shtab,bash,bg_printenv.cli.bg_printenv)
 
 $(top_builddir)/completion/zsh/_bg_printenv: ${top_srcdir}/completion/bg_printenv/cli.py
-	@$(MKDIR_P) $(@D)
-	$(AM_V_GEN)$(SHTAB_ZSH) bg_printenv.cli.bg_printenv >$@
+	$(call shtab,zsh,bg_printenv.cli.bg_printenv)
 
 all-local: bg_printenv bash-completion zsh-completion
 
