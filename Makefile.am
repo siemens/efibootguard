@@ -38,6 +38,12 @@ ARFLAGS = cr
 EXTRA_DIST = autogen.sh README LICENSE
 CLEANFILES =
 
+SHTAB := env \
+	PYTHONPATH=${top_srcdir}/completion/shtab:${top_srcdir}/completion \
+	@PYTHON@ -m shtab
+SHTAB_BASH := $(SHTAB) --shell=bash -u
+SHTAB_ZSH := $(SHTAB) --shell=zsh -u
+
 define filechk
 	$(AM_V_at)set -e;			\
 	echo '  CHK      $@';			\
@@ -253,9 +259,40 @@ bg_printenvdir = $(top_srcdir)
 bg_printenv: $(bg_setenv)
 	$(AM_V_at)$(LN_S) -f bg_setenv bg_printenv
 
-all-local: bg_printenv
+BASH_COMPLETION_FILES := $(top_builddir)/completion/bash/bg_setenv.bash $(top_builddir)/completion/bash/bg_printenv.bash
+ZSH_COMPLETION_FILES := $(top_builddir)/completion/zsh/_bg_setenv $(top_builddir)/completion/zsh/_bg_printenv
 
-CLEANFILES += bg_printenv
+bashcompletiondir = ${datarootdir}/efibootguard/completion/bash
+bashcompletion_DATA = $(BASH_COMPLETION_FILES)
+
+zshcompletiondir = ${datarootdir}/efibootguard/completion/zsh
+zshcompletion_DATA = $(ZSH_COMPLETION_FILES)
+
+.PHONY: bash-completion
+bash-completion: $(BASH_COMPLETION_FILES)
+
+.PHONY: zsh-completion
+zsh-completion: $(ZSH_COMPLETION_FILES)
+
+$(top_builddir)/completion/bash/bg_setenv.bash: ${top_srcdir}/completion/bg_setenv/cli.py
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN)$(SHTAB_BASH) bg_setenv.cli.bg_setenv >$@
+
+$(top_builddir)/completion/zsh/_bg_setenv: ${top_srcdir}/completion/bg_setenv/cli.py
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN)$(SHTAB_ZSH) bg_setenv.cli.bg_setenv >$@
+
+$(top_builddir)/completion/bash/bg_printenv.bash: ${top_srcdir}/completion/bg_printenv/cli.py
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN)$(SHTAB_BASH) bg_printenv.cli.bg_printenv >$@
+
+$(top_builddir)/completion/zsh/_bg_printenv: ${top_srcdir}/completion/bg_printenv/cli.py
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN)$(SHTAB_ZSH) bg_printenv.cli.bg_printenv >$@
+
+all-local: bg_printenv bash-completion zsh-completion
+
+CLEANFILES += bg_printenv $(BASH_COMPLETION_FILES) $(ZSH_COMPLETION_FILES)
 
 # Tests depend on libraries being built - start with "."
 SUBDIRS = . tools/tests

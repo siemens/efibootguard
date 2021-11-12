@@ -1,3 +1,6 @@
 [submodule "tests/fff"]
 	path = tests/fff
 	url = https://github.com/meekrosoft/fff
+[submodule "completion/shtab"]
+	path = completion/shtab
+	url = https://github.com/iterative/shtab.git

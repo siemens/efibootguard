@@ -21,6 +21,7 @@
 static char tool_doc[] =
 	"bg_printenv - Environment tool for the EFI Boot Guard";
 
+/* if you change these, do not forget to update completion/bg_printenv/cli.py */
 static struct argp_option options_printenv[] = {
 	BG_CLI_OPTIONS_COMMON,
 	OPT("current", 'c', 0, 0,

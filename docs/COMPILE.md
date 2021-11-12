@@ -9,7 +9,7 @@
 pacman -S gnu-efi-libs pciutils
 
 # build tools
-pacman -S gcc make automake autoconf libtool pkg-config
+pacman -S gcc make automake autoconf libtool pkg-config python
 
 # test dependencies
 pacman -S check bash-bats
@@ -24,7 +24,7 @@ Debian 8 or newer:
 apt-get install gnu-efi libpci-dev
 
 # build tools
-apt-get install make automake autoconf libtool pkg-config
+apt-get install make automake autoconf libtool pkg-config python3
 
 # test dependencies
 apt-get install check bats

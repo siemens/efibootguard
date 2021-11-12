@@ -25,6 +25,7 @@
 static char tool_doc[] =
 	"bg_setenv - Environment tool for the EFI Boot Guard";
 
+ /* if you change these, do not forget to update completion/bg_setenv/cli.py */
 static struct argp_option options_setenv[] = {
 	BG_CLI_OPTIONS_COMMON,
 	OPT("preserve", 'P', 0, 0, "Preserve existing entries"),

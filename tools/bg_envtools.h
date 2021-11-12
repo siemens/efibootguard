@@ -23,6 +23,7 @@
 		name, key, arg, flags, doc                                     \
 	}
 
+/* if you change these, do not forget to update completion/common.py */
 #define BG_CLI_OPTIONS_COMMON                                                  \
 	OPT("filepath", 'f', "ENVFILE", 0,                                     \
 	    "Environment to use. Expects a file name, "                        \

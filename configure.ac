@@ -181,6 +181,13 @@ fi
 PKG_PROG_PKG_CONFIG()
 PKG_CHECK_MODULES(LIBCHECK, check)
 PKG_CHECK_MODULES(LIBPCI, libpci)
+
+dnl Python
+AC_PATH_PROGS(PYTHON, [python3 python3.9 python3.8 python3.7 python3.6 python2.7 python2], no)
+if test "x$PYTHON" = "xno"; then
+	AC_MSG_ERROR([You need to install python])
+fi
+
 # ------------------------------------------------------------------------------
 AC_CONFIG_FILES([
 	Makefile
