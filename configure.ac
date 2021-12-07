@@ -174,11 +174,10 @@ AC_ARG_WITH([mem-uservars],
 AC_DEFINE_UNQUOTED([ENV_MEM_USERVARS], [${ENV_MEM_USERVARS}], [Reserved memory for user variables])
 
 dnl pkg-config
-AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+PKG_PROG_PKG_CONFIG()
 if test "x$PKG_CONFIG" = "xno"; then
 	AC_MSG_ERROR([You need to install pkg-config])
 fi
-PKG_PROG_PKG_CONFIG()
 PKG_CHECK_MODULES(LIBCHECK, check)
 PKG_CHECK_MODULES(LIBPCI, libpci)
 
