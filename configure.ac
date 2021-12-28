@@ -179,7 +179,13 @@ if test "x$PKG_CONFIG" = "xno"; then
 	AC_MSG_ERROR([You need to install pkg-config])
 fi
 PKG_CHECK_MODULES(LIBCHECK, check)
-PKG_CHECK_MODULES(LIBPCI, libpci)
+
+AC_ARG_ENABLE([libpci],
+    AS_HELP_STRING([--disable-libpci], [Disable libpci detection if only tools need to be built]))
+
+AS_IF([test "x$enable_libpci" != "xno"], [
+    PKG_CHECK_MODULES(LIBPCI, libpci)
+])
 
 dnl Python
 AC_PATH_PROGS(PYTHON, [python3 python3.9 python3.8 python3.7 python3.6 python2.7 python2], no)
