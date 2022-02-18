@@ -179,7 +179,16 @@ if test "x$PKG_CONFIG" = "xno"; then
 	AC_MSG_ERROR([You need to install pkg-config])
 fi
 PKG_CHECK_MODULES(LIBCHECK, check)
-PKG_CHECK_MODULES(LIBPCI, libpci)
+
+AC_ARG_ENABLE([bootloader],
+    AS_HELP_STRING([--disable-bootloader], [Compile the bootloader disabled, only make the tools]),
+	[enable_bootloader="no"],
+	[enable_bootloader="yes"])
+
+AS_IF([test "x$enable_bootloader" != "xno"], [
+    PKG_CHECK_MODULES(LIBPCI, libpci)
+])
+AM_CONDITIONAL([BOOTLOADER], [test "x$enable_bootloader" != "xno"])
 
 dnl Python
 AC_PATH_PROGS(PYTHON, [python3 python3.9 python3.8 python3.7 python3.6 python2.7 python2], no)
@@ -199,6 +208,8 @@ AC_MSG_RESULT([
 
 	arch:                    $ARCH
 	machine type:            $MACHINE_TYPE_NAME
+
+	build efi bootloader:    ${enable_bootloader}
 
 	prefix:                  ${prefix}
 	exec_prefix:             ${exec_prefix}

@@ -135,6 +135,7 @@ install-exec-hook:
 #
 efi_loadername = efibootguard$(MACHINE_TYPE_NAME).efi
 
+if BOOTLOADER
 if ARCH_AARCH64
 efi_sources_watchdogs =
 else
@@ -249,6 +250,7 @@ $(efi_loadername): $(efi_solib)
 	$(AM_V_GEN) $(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic \
 	  -j .dynsym -j .rel -j .rela -j .reloc -j .init_array \
 	  -j .rela.got -j .rela.data $(objcopy_format) $< $@
+endif
 
 $(top_builddir)/tools/bg_setenv-bg_setenv.o: $(GEN_VERSION_H)
 
