@@ -653,25 +653,19 @@ Suite *ebg_test_suite(void)
 
 	s = suite_create("ebgenv_api");
 
-	TFun tfuncs[] = {
-		ebgenv_api_ebg_env_create_new,
-		ebgenv_api_ebg_env_open_current,
-		ebgenv_api_ebg_env_get,
-		ebgenv_api_ebg_env_set,
-		ebgenv_api_ebg_env_set_ex,
-		ebgenv_api_ebg_env_get_ex,
-		ebgenv_api_ebg_env_user_free,
-		ebgenv_api_ebg_env_getglobalstate,
-		ebgenv_api_ebg_env_setglobalstate,
-		ebgenv_api_ebg_env_close,
-		ebgenv_api_ebg_env_register_gc_var
-	};
-
 	tc_core = tcase_create("Core");
 
-	for (int i = 0; i < sizeof(tfuncs)/sizeof(void *); i++) {
-		tcase_add_test(tc_core, tfuncs[i]);
-	}
+	tcase_add_test(tc_core, ebgenv_api_ebg_env_create_new);
+	tcase_add_test(tc_core, ebgenv_api_ebg_env_open_current);
+	tcase_add_test(tc_core, ebgenv_api_ebg_env_get);
+	tcase_add_test(tc_core, ebgenv_api_ebg_env_set);
+	tcase_add_test(tc_core, ebgenv_api_ebg_env_set_ex);
+	tcase_add_test(tc_core, ebgenv_api_ebg_env_get_ex);
+	tcase_add_test(tc_core, ebgenv_api_ebg_env_user_free);
+	tcase_add_test(tc_core, ebgenv_api_ebg_env_getglobalstate);
+	tcase_add_test(tc_core, ebgenv_api_ebg_env_setglobalstate);
+	tcase_add_test(tc_core, ebgenv_api_ebg_env_close);
+	tcase_add_test(tc_core, ebgenv_api_ebg_env_register_gc_var);
 
 	suite_add_tcase(s, tc_core);
 

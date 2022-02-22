@@ -434,25 +434,19 @@ Suite *ebg_test_suite(void)
 
 	s = suite_create("ebgenv_api");
 
-	TFun tfuncs[] = {
-		ebgenv_api_internal_strXtoY,
-		ebgenv_api_internal_bgenv_str2enum,
-		ebgenv_api_internal_bgenv_open_by_index,
-		ebgenv_api_internal_bgenv_open_oldest,
-		ebgenv_api_internal_bgenv_open_latest,
-		ebgenv_api_internal_bgenv_write,
-		ebgenv_api_internal_bgenv_read,
-		ebgenv_api_internal_bgenv_create_new,
-		ebgenv_api_internal_bgenv_get,
-		ebgenv_api_internal_bgenv_set,
-		ebgenv_api_internal_uservars
-	};
-
 	tc_core = tcase_create("Core");
 
-	for (int i = 0; i < sizeof(tfuncs)/sizeof(void *); i++) {
-		tcase_add_test(tc_core, tfuncs[i]);
-	}
+	tcase_add_test(tc_core, ebgenv_api_internal_strXtoY);
+	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_str2enum);
+	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_open_by_index);
+	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_open_oldest);
+	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_open_latest);
+	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_write);
+	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_read);
+	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_create_new);
+	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_get);
+	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_set);
+	tcase_add_test(tc_core, ebgenv_api_internal_uservars);
 
 	suite_add_tcase(s, tc_core);
 
