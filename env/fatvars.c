@@ -135,7 +135,8 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 			continue;
 		}
 		UINTN readlen = sizeof(BG_ENVDATA);
-		if (EFI_ERROR(read_cfg_file(fh, &readlen, (VOID *)&env[i]))) {
+		if (EFI_ERROR(read_cfg_file(fh, &readlen, (VOID *)&env[i])) ||
+		    readlen < sizeof(BG_ENVDATA)) {
 			ERROR(L"Cannot read environment from config partition %d.\n", i);
 			env_invalid[i] = 1;
 			if (EFI_ERROR(close_cfg_file(v->root, fh))) {
