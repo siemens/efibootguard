@@ -173,20 +173,19 @@ AC_ARG_WITH([mem-uservars],
 
 AC_DEFINE_UNQUOTED([ENV_MEM_USERVARS], [${ENV_MEM_USERVARS}], [Reserved memory for user variables])
 
-dnl pkg-config
-PKG_PROG_PKG_CONFIG()
-if test "x$PKG_CONFIG" = "xno"; then
-	AC_MSG_ERROR([You need to install pkg-config])
-fi
-PKG_CHECK_MODULES(LIBCHECK, check)
-
 AC_ARG_ENABLE([bootloader],
     AS_HELP_STRING([--disable-bootloader], [Compile the bootloader disabled, only make the tools]),
 	[enable_bootloader="no"],
 	[enable_bootloader="yes"])
 
 AS_IF([test "x$enable_bootloader" != "xno"], [
-    PKG_CHECK_MODULES(LIBPCI, libpci)
+	PKG_CHECK_MODULES(LIBPCI, libpci)
+	dnl pkg-config
+	PKG_PROG_PKG_CONFIG()
+	if test "x$PKG_CONFIG" = "xno"; then
+		AC_MSG_ERROR([You need to install pkg-config])
+	fi
+	PKG_CHECK_MODULES(LIBCHECK, check)
 ])
 AM_CONDITIONAL([BOOTLOADER], [test "x$enable_bootloader" != "xno"])
 
