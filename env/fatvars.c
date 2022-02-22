@@ -168,6 +168,10 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 			 * config */
 			result = BG_CONFIG_PARTIALLY_CORRUPTED;
 		}
+
+		/* enforce NULL-termination of strings */
+		env[i].kernelfile[ENV_STRING_LENGTH - 1] = 0;
+		env[i].kernelparams[ENV_STRING_LENGTH - 1] = 0;
 	}
 
 	/* Find environment with latest revision and check if there is a test

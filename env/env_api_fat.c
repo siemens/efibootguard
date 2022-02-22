@@ -86,6 +86,9 @@ bool read_env(CONFIG_PART *part, BG_ENVDATA *env)
 	if (part->not_mounted) {
 		unmount_partition(part);
 	}
+	/* enforce NULL-termination of strings */
+	env->kernelfile[ENV_STRING_LENGTH - 1] = 0;
+	env->kernelparams[ENV_STRING_LENGTH - 1] = 0;
 	return result;
 }
 
