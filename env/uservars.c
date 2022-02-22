@@ -167,7 +167,7 @@ uint8_t *bgenv_find_uservar(uint8_t *udata, char *key)
 	while (*udata) {
 		bgenv_map_uservar(udata, &varkey, NULL, NULL, NULL, NULL);
 
-		if (strncmp(varkey, key, strlen(key) + 1) == 0) {
+		if (strcmp(varkey, key) == 0) {
 			return udata;
 		}
 		udata = bgenv_next_uservar(udata);

@@ -134,11 +134,9 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 	ck_assert_int_eq(((BGENV *)e.bgenv)->data->ustate, USTATE_OK);
 	ck_assert_int_eq(((BGENV *)e.bgenv)->data->watchdog_timeout_sec, 44);
 	(void)str16to8(buffer, ((BGENV *)e.bgenv)->data->kernelfile);
-	ck_assert_int_eq(
-		strncmp(buffer, kernelfile, strlen(kernelfile) + 1), 0);
+	ck_assert_int_eq(strcmp(buffer, kernelfile), 0);
 	(void)str16to8(buffer, ((BGENV *)e.bgenv)->data->kernelparams);
-	ck_assert_int_eq(
-		strncmp(buffer, kernelparams, strlen(kernelparams) + 1), 0);
+	ck_assert_int_eq(strcmp(buffer, kernelparams), 0);
 
 	(void)ebg_env_close(&e);
 

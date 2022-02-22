@@ -24,23 +24,22 @@ bool bgenv_verbosity = false;
 
 EBGENVKEY bgenv_str2enum(char *key)
 {
-	if (strncmp(key, "kernelfile", strlen("kernelfile") + 1) == 0) {
+	if (strcmp(key, "kernelfile") == 0) {
 		return EBGENV_KERNELFILE;
 	}
-	if (strncmp(key, "kernelparams", strlen("kernelparams") + 1) == 0) {
+	if (strcmp(key, "kernelparams") == 0) {
 		return EBGENV_KERNELPARAMS;
 	}
-	if (strncmp(key, "watchdog_timeout_sec",
-		    strlen("watchdog_timeout_sec") + 1) == 0) {
+	if (strcmp(key, "watchdog_timeout_sec") == 0) {
 		return EBGENV_WATCHDOG_TIMEOUT_SEC;
 	}
-	if (strncmp(key, "revision", strlen("revision") + 1) == 0) {
+	if (strcmp(key, "revision") == 0) {
 		return EBGENV_REVISION;
 	}
-	if (strncmp(key, "ustate", strlen("ustate") + 1) == 0) {
+	if (strcmp(key, "ustate") == 0) {
 		return EBGENV_USTATE;
 	}
-	if (strncmp(key, "in_progress", strlen("in_progress") + 1) == 0) {
+	if (strcmp(key, "in_progress") == 0) {
 		return EBGENV_IN_PROGRESS;
 	}
 	return EBGENV_UNKNOWN;

@@ -122,7 +122,7 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 		VERBOSE(stdout, "Task = SET, key = %s, type = %llu, val = %s\n",
 			action->key, (long long unsigned int)action->type,
 			(char *)action->data);
-		if (strncmp(action->key, "ustate", strlen("ustate")+1) == 0) {
+		if (strcmp(action->key, "ustate") == 0) {
 			uint16_t ustate;
 			unsigned long t;
 			char *arg;
