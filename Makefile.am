@@ -72,6 +72,11 @@ $(GEN_VERSION_H): $(top_srcdir)/Makefile.in FORCE
 CLEANFILES += $(GEN_VERSION_H)
 
 #
+# pkg-config
+#
+pkgconfig_DATA = libebgenv.pc
+
+#
 # Static libraries
 #
 lib_LIBRARIES = libebgenv.a

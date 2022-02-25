@@ -1,0 +1,23 @@
+# EFI Boot Guard
+# Copyright (c) Siemens AG, 2019-2022
+#
+# Authors:
+#  Christian Storm <christian.storm@siemens.com>
+#
+# This work is licensed under the terms of the GNU GPL, version 2.  See
+# the COPYING file in the top-level directory.
+#
+# SPDX-License-Identifier:	GPL-2.0
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libebgenv
+URL: https://github.com/siemens/efibootguard
+Description: Library to access the EFI Boot Guard environment
+Version: @LIBEBGENV_VERSION@
+Requires.private: zlib
+Libs: -L${libdir} -lebgenv
+Cflags: -I${includedir}

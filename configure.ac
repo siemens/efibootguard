@@ -178,18 +178,21 @@ AC_ARG_ENABLE([bootloader],
 	[enable_bootloader="no"],
 	[enable_bootloader="yes"])
 
+dnl pkg-config
+PKG_PROG_PKG_CONFIG()
+if test "x$PKG_CONFIG" = "xno"; then
+	AC_MSG_ERROR([You need to install pkg-config])
+fi
+
 AS_IF([test "x$enable_bootloader" != "xno"],
     [
 	PKG_CHECK_MODULES(LIBPCI, libpci)
-
-	dnl pkg-config
-	PKG_PROG_PKG_CONFIG()
-	if test "x$PKG_CONFIG" = "xno"; then
-		AC_MSG_ERROR([You need to install pkg-config])
-	fi
 	PKG_CHECK_MODULES(LIBCHECK, check)
     ])
 AM_CONDITIONAL([BOOTLOADER], [test "x$enable_bootloader" != "xno"])
+
+PKG_INSTALLDIR
+AC_SUBST(LIBEBGENV_VERSION, $(echo $VERSION | cut -dv -f2))
 
 dnl Python
 AC_PATH_PROGS(PYTHON, [python3 python3.9 python3.8 python3.7 python3.6 python2.7 python2], no)
@@ -201,6 +204,7 @@ fi
 AC_CONFIG_FILES([
 	Makefile
 	tools/tests/Makefile
+	libebgenv.pc
 ])
 
 AC_OUTPUT
