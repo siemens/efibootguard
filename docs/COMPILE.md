@@ -2,6 +2,13 @@
 
 ## Required libraries and headers for compilation ##
 
+If you are building from a git checkout, make sure that you have cloned
+the git submodules as well, e.g.
+
+```
+git submodule update --init
+```
+
 ### Arch Linux ###
 
 ```
