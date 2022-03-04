@@ -15,6 +15,7 @@
 #include <efi.h>
 #include <efilib.h>
 #include <pci/header.h>
+#include "utils.h"
 
 #define PCI_DEVICE_ID_INTEL_ESB_9	0x25ab
 
@@ -57,7 +58,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 		return EFI_UNSUPPORTED;
 	}
 
-	Print(L"Detected i6300ESB watchdog\n");
+	INFO(L"Detected i6300ESB watchdog\n");
 
 	status = unlock_timer_regs(pci_io);
 	if (EFI_ERROR(status)) {
