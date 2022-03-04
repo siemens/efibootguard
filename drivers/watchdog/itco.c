@@ -18,6 +18,7 @@
 #include <pci/header.h>
 #include <sys/io.h>
 #include <mmio.h>
+#include "utils.h"
 
 #define SMI_EN_REG		0x30
 #define TCO_EN			(1 << 13)
@@ -189,7 +190,7 @@ static UINT32 get_pm_base(EFI_PCI_IO *pci_io, const iTCO_info *itco)
 				   EfiPciIoWidthUint32,
 				   regs->pm_base_reg, 1, &pm_base);
 	if (EFI_ERROR(status)) {
-		Print(L"Error reading PM_BASE: %r\n", status);
+		ERROR(L"reading PM_BASE: %r\n", status);
 		return 0;
 	}
 	return pm_base & regs->pm_base_addr_mask;
@@ -282,7 +283,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	}
 	itco = &iTCO_chipset_info[itco_chip];
 
-	Print(L"Detected Intel TCO %s watchdog\n", itco->name);
+	INFO(L"Detected Intel TCO %s watchdog\n", itco->name);
 
 	pm_base = get_pm_base(pci_io, itco);
 	if (pm_base) {
