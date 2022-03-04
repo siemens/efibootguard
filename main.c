@@ -27,8 +27,8 @@ extern const unsigned long init_array_start[];
 extern const unsigned long init_array_end[];
 extern CHAR16 *boot_medium_path;
 
-#define PCI_GET_VENDOR_ID(id) id
-#define PCI_GET_PRODUCT_ID(id) id >> 16
+#define PCI_GET_VENDOR_ID(id)	(UINT16)(id)
+#define PCI_GET_PRODUCT_ID(id)	(UINT16)((id) >> 16)
 
 static EFI_STATUS probe_watchdogs(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 {
