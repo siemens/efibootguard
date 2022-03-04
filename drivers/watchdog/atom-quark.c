@@ -16,6 +16,7 @@
 #include <efilib.h>
 #include <pci/header.h>
 #include <sys/io.h>
+#include "utils.h"
 
 #define PCI_DEVICE_ID_INTEL_ITC		0x8186
 #define PCI_DEVICE_ID_INTEL_CENTERTON	0x0c60
@@ -79,7 +80,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 
 	wdt_base &= WDTBA_ADDRMASK;
 
-	Print(L"Detected Intel Atom/Quark watchdog\n");
+	INFO(L"Detected Intel Atom/Quark watchdog\n");
 
 	write_timer_regs(wdt_base, TIMER1_REG,
 			 ((timeout * 1000000000ULL) >> 15) / 30);
