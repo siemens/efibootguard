@@ -18,6 +18,7 @@
 #include <pci/header.h>
 #include <sys/io.h>
 #include <mmio.h>
+#include "utils.h"
 
 #define PCI_DEVICE_ID_INTEL_SUNRISEPOINT_H_LPC	0xa150
 
@@ -163,7 +164,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	switch (get_station_id(smbios_struct)) {
 	case SIMATIC_IPC427E:
 	case SIMATIC_IPC477E:
-		Print(L"Detected SIMATIC IPC4x7E watchdog\n");
+		INFO(L"Detected SIMATIC IPC4x7E watchdog\n");
 
 		/*
 		 * Drive SAFE_EN_N low to allow that watchdog can trigger a
@@ -192,7 +193,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 		}
 		val |= SIMATIC_WD_MACRO_MOD;
 		if (inb(SIMATIC_WD_ENABLE_REG) & SIMATIC_WD_TRIGGERED) {
-			Print(L"NOTE: Detected watchdog triggered reboot\n");
+			WARNING(L"Detected watchdog triggered reboot\n");
 			/* acknowledge, turning off the LED */
 			val |= SIMATIC_WD_TRIGGERED;
 		}
