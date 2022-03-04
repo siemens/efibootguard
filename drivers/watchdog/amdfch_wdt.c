@@ -17,6 +17,7 @@
 #include <pci/header.h>
 #include <sys/io.h>
 #include <mmio.h>
+#include "utils.h"
 
 /* #define AMDFCH_WDT_DEBUG */
 
@@ -158,10 +159,10 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	switch (pci_revision_id) {
 	case 0x59:
 	case 0x61:
-		Print(L"\nDetected AMD FCH Watchdog Timer (rev %X)\n", pci_revision_id);
+		INFO(L"Detected AMD FCH Watchdog Timer (rev %X)\n", pci_revision_id);
 		break;
 	default:
-		Print(L"\nError: Detected Unknown AMD FCH Watchdog Timer\n");
+		ERROR(L"Detected Unknown AMD FCH Watchdog Timer\n");
 		return EFI_UNSUPPORTED;
 	}
 
