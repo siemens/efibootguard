@@ -39,6 +39,7 @@ jobs:
       - name: Install amd64 dependencies
         if: ${{ matrix.target == 'amd64' || matrix.target == 'cppcheck' }}
         run: |
+          sudo apt-get update
           sudo apt-get install --no-install-recommends \
               gcc-multilib gnu-efi libz-dev libpci-dev check bats
       - name: Install i386 dependencies
