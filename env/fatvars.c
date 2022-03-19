@@ -64,12 +64,11 @@ static BG_STATUS save_current_config(VOID)
 	UINTN writelen = sizeof(BG_ENVDATA);
 
 	uint32_t crc32;
-	(VOID)uefi_call_wrapper(BS->CalculateCrc32, 3, &env[current_partition],
-				sizeof(BG_ENVDATA) - sizeof(env[current_partition].crc32),
-				&crc32);
+	(VOID) BS->CalculateCrc32(
+	    &env[current_partition],
+	    sizeof(BG_ENVDATA) - sizeof(env[current_partition].crc32), &crc32);
 	env[current_partition].crc32 = crc32;
-	efistatus = uefi_call_wrapper(fh->Write, 3, fh, &writelen,
-				      (VOID *)&env[current_partition]);
+	efistatus = fh->Write(fh, &writelen, (VOID *)&env[current_partition]);
 	if (EFI_ERROR(efistatus)) {
 		ERROR(L"Cannot write environment to file: %r\n", efistatus);
 		(VOID) close_cfg_file(v->root, fh);
@@ -147,9 +146,8 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 		}
 
 		uint32_t crc32;
-		(VOID)uefi_call_wrapper(BS->CalculateCrc32, 3, &env[i],
-					sizeof(BG_ENVDATA) - sizeof(env[i].crc32),
-					&crc32);
+		(VOID) BS->CalculateCrc32(
+		    &env[i], sizeof(BG_ENVDATA) - sizeof(env[i].crc32), &crc32);
 
 		if (crc32 != env[i].crc32) {
 			ERROR(L"CRC32 error in environment data on config partition %d.\n",

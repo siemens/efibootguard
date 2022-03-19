@@ -21,14 +21,14 @@
 VOID PrintC(const UINT8 color, const CHAR16 *fmt, ...)
 {
 	INT32 attr = ST->ConOut->Mode->Attribute;
-	(VOID)uefi_call_wrapper(ST->ConOut->SetAttribute, 2, ST->ConOut, color);
+	(VOID) ST->ConOut->SetAttribute(ST->ConOut, color);
 
 	va_list args;
 	va_start(args, fmt);
 	(VOID)VPrint(fmt, args);
 	va_end(args);
 
-	(VOID)uefi_call_wrapper(ST->ConOut->SetAttribute, 2, ST->ConOut, attr);
+	(VOID) ST->ConOut->SetAttribute(ST->ConOut, attr);
 }
 
 BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
@@ -52,8 +52,8 @@ BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 VOID __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status)
 {
 	ERROR(L"%s (%r).\n", message, status);
-	(VOID)uefi_call_wrapper(BS->Stall, 1, 3 * 1000 * 1000);
-	(VOID)uefi_call_wrapper(BS->Exit, 4, this_image, status, 0, NULL);
+	(VOID) BS->Stall(3 * 1000 * 1000);
+	(VOID) BS->Exit(this_image, status, 0, NULL);
 	__builtin_unreachable();
 }
 
@@ -69,8 +69,7 @@ CHAR16 *get_volume_label(EFI_FILE_HANDLE fh)
 		return NULL;
 	}
 	fsis = MAX_INFO_SIZE;
-	status =
-	    uefi_call_wrapper(fh->GetInfo, 4, fh, &fsiGuid, &fsis, (VOID *)fsi);
+	status = fh->GetInfo(fh, &fsiGuid, &fsis, (VOID *)fsi);
 	if (EFI_ERROR(status) || fsis == 0) {
 		FreePool(fsi);
 		return NULL;
@@ -85,21 +84,21 @@ CHAR16 *get_volume_custom_label(EFI_FILE_HANDLE fh)
 	CHAR16 *buffer = AllocatePool(64);
 	UINTN buffsize = 63;
 
-	status = uefi_call_wrapper(
-	    fh->Open, 5, fh, &tmp, L"EFILABEL", EFI_FILE_MODE_READ,
+	status = fh->Open(
+	    fh, &tmp, L"EFILABEL", EFI_FILE_MODE_READ,
 	    EFI_FILE_ARCHIVE | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM);
 	if (status != EFI_SUCCESS) {
 		FreePool(buffer);
 		return NULL;
 	}
-	status = uefi_call_wrapper(tmp->Read, 3, tmp, &buffsize, buffer);
+	status = tmp->Read(tmp, &buffsize, buffer);
 	if (status != EFI_SUCCESS) {
-		(VOID)uefi_call_wrapper(fh->Close, 1, tmp);
+		(VOID) fh->Close(tmp);
 		FreePool(buffer);
 		return NULL;
 	}
 	buffer[buffsize/sizeof(CHAR16)] = L'\0';
-	(VOID)uefi_call_wrapper(fh->Close, 1, tmp);
+	(VOID) fh->Close(tmp);
 	return buffer;
 }
 
@@ -118,8 +117,8 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 		return EFI_INVALID_PARAMETER;
 	}
 
-	status = uefi_call_wrapper(BS->LocateHandleBuffer, 5, ByProtocol,
-				   &sfspGuid, NULL, &handleCount, &handles);
+	status = BS->LocateHandleBuffer(
+	    ByProtocol, &sfspGuid, NULL, &handleCount, &handles);
 	if (EFI_ERROR(status)) {
 		ERROR(L"Could not locate handle buffer.\n");
 		return EFI_OUT_OF_RESOURCES;
@@ -136,16 +135,15 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 		EFI_FILE_IO_INTERFACE *fs = NULL;
 		CHAR16 *devpathstr;
 
-		status =
-		    uefi_call_wrapper(BS->HandleProtocol, 3, handles[index],
-				      &sfspGuid, (VOID **)&fs);
+		status = BS->HandleProtocol(
+		    handles[index], &sfspGuid, (VOID **)&fs);
 		if (EFI_ERROR(status)) {
 			/* skip failed handle and continue enumerating */
 			ERROR(L"File IO handle %d does not support SIMPLE_FILE_SYSTEM_PROTOCOL, skipping.\n",
 			      index);
 			continue;
 		}
-		status = uefi_call_wrapper(fs->OpenVolume, 2, fs, &tmp);
+		status = fs->OpenVolume(fs, &tmp);
 		if (EFI_ERROR(status)) {
 			/* skip failed handle and continue enumerating */
 			ERROR(L"Could not open file system for IO handle %d, skipping.\n",
@@ -198,8 +196,7 @@ EFI_STATUS close_volumes(VOLUME_DESC *volumes, UINTN count)
 			result = EFI_INVALID_PARAMETER;
 			continue;
 		}
-		status = uefi_call_wrapper(volumes[i].root->Close, 1,
-					   volumes[i].root);
+		status = volumes[i].root->Close(volumes[i].root);
 		if (EFI_ERROR(status)) {
 			ERROR(L"Could not close volume %d.\n", i);
 			result = EFI_DEVICE_ERROR;

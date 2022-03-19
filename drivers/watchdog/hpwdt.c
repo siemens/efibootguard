@@ -51,9 +51,9 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 		UINT16 vendor, product;
 		UINT32 value;
 
-		status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
-					   EfiPciIoWidthUint32,
-					   PCI_SUBSYSTEM_VENDOR_ID, 1, &value);
+		status = pci_io->Pci.Read(
+		    pci_io, EfiPciIoWidthUint32, PCI_SUBSYSTEM_VENDOR_ID, 1,
+		    &value);
 		if (EFI_ERROR(status)) {
 			return status;
 		}
@@ -71,17 +71,15 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	INFO(L"Detected HPE ProLiant watchdog\n");
 
 	reload = SECS_TO_TICKS(timeout);
-	status = uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
-				   EfiPciIoWidthUint16, 1, HPWDT_TIMER_REG,
-				   1, &reload);
+	status = pci_io->Mem.Write(
+	    pci_io, EfiPciIoWidthUint16, 1, HPWDT_TIMER_REG, 1, &reload);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
 
 	control = 0x81;
-	status = uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
-				   EfiPciIoWidthUint8, 1, HPWDT_TIMER_CON,
-				   1, &control);
+	status = pci_io->Mem.Write(
+	    pci_io, EfiPciIoWidthUint8, 1, HPWDT_TIMER_CON, 1, &control);
 	if (EFI_ERROR(status)) {
 		return status;
 	}

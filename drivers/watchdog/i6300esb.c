@@ -33,17 +33,15 @@ static EFI_STATUS unlock_timer_regs(EFI_PCI_IO *pci_io)
 	UINT32 value;
 
 	value = 0x80;
-	status = uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
-				   EfiPciIoWidthUint32, 0, ESB_RELOAD_REG,
-				   1, &value);
+	status = pci_io->Mem.Write(
+	    pci_io, EfiPciIoWidthUint32, 0, ESB_RELOAD_REG, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
 
 	value = 0x86;
-	return uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
-				   EfiPciIoWidthUint32, 0, ESB_RELOAD_REG,
-				   1, &value);
+	return pci_io->Mem.Write(
+	    pci_io, EfiPciIoWidthUint32, 0, ESB_RELOAD_REG, 1, &value);
 }
 
 static EFI_STATUS __attribute__((constructor))
@@ -66,9 +64,8 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	}
 
 	value = ((timeout * 1000000000ULL) >> 15) / 30;
-	status = uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
-				   EfiPciIoWidthUint32, 0, ESB_TIMER1_REG,
-				   1, &value);
+	status = pci_io->Mem.Write(
+	    pci_io, EfiPciIoWidthUint32, 0, ESB_TIMER1_REG, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
@@ -79,17 +76,15 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 	}
 
 	value = 0;
-	status = uefi_call_wrapper(pci_io->Mem.Write, 6, pci_io,
-				   EfiPciIoWidthUint32, 0, ESB_TIMER2_REG,
-				   1, &value);
+	status = pci_io->Mem.Write(
+	    pci_io, EfiPciIoWidthUint32, 0, ESB_TIMER2_REG, 1, &value);
 	if (EFI_ERROR(status)) {
 		return status;
 	}
 
 	value = ESB_LOCK_WDT_ENABLE | ESB_LOCK_WDT_LOCK;
-	status = uefi_call_wrapper(pci_io->Pci.Write, 5, pci_io,
-				   EfiPciIoWidthUint8, ESB_LOCK_REG,
-				   1, &value);
+	status = pci_io->Pci.Write(
+	    pci_io, EfiPciIoWidthUint8, ESB_LOCK_REG, 1, &value);
 
 	return status;
 }

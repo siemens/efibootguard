@@ -187,13 +187,13 @@ efi_cflags = \
 	-fno-strict-aliasing \
 	-fno-stack-protector \
 	-Wsign-compare \
+	-DGNU_EFI_USE_MS_ABI \
 	$(CFLAGS)
 
 if ARCH_X86_64
 efi_cflags += \
 	-mno-sse \
 	-mno-mmx \
-	-DEFI_FUNCTION_WRAPPER \
 	-mno-red-zone
 endif
 

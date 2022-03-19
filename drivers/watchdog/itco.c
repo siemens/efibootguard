@@ -186,9 +186,8 @@ static UINT32 get_pm_base(EFI_PCI_IO *pci_io, const iTCO_info *itco)
 		return 0;
 	}
 
-	status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
-				   EfiPciIoWidthUint32,
-				   regs->pm_base_reg, 1, &pm_base);
+	status = pci_io->Pci.Read(
+	    pci_io, EfiPciIoWidthUint32, regs->pm_base_reg, 1, &pm_base);
 	if (EFI_ERROR(status)) {
 		ERROR(L"reading PM_BASE: %r\n", status);
 		return 0;
@@ -226,9 +225,8 @@ static EFI_STATUS update_no_reboot_flag_mem(EFI_PCI_IO *pci_io,
 	UINT32 pmc_base;
 	UINTN pmc_reg;
 
-	status =
-	    uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io, EfiPciIoWidthUint32,
-			      regs->pmc_base_reg, 1, &pmc_base);
+	status = pci_io->Pci.Read(
+	    pci_io, EfiPciIoWidthUint32, regs->pmc_base_reg, 1, &pmc_base);
 	if (EFI_ERROR(status)) {
 		return status;
 	}

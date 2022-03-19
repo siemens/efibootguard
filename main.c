@@ -39,9 +39,9 @@ static EFI_STATUS probe_watchdogs(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 
 	UINTN handle_count = 0;
 	EFI_HANDLE *handle_buffer = NULL;
-	EFI_STATUS status = uefi_call_wrapper(BS->LocateHandleBuffer, 5,
-					      ByProtocol, &PciIoProtocol, NULL,
-					      &handle_count, &handle_buffer);
+	EFI_STATUS status = BS->LocateHandleBuffer(ByProtocol, &PciIoProtocol,
+						   NULL, &handle_count,
+						   &handle_buffer);
 	if (EFI_ERROR(status) || (handle_count == 0)) {
 		WARNING(L"No PCI I/O Protocol handles found.\n");
 		if (handle_buffer) {
@@ -53,26 +53,24 @@ static EFI_STATUS probe_watchdogs(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 	EFI_PCI_IO_PROTOCOL *pci_io;
 	UINT32 value;
 	for (UINTN index = 0; index < handle_count; index++) {
-		status = uefi_call_wrapper(BS->OpenProtocol, 6,
-		    handle_buffer[index], &PciIoProtocol,
-		    (VOID **)&pci_io, this_image, NULL,
-		    EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+		status = BS->OpenProtocol(handle_buffer[index], &PciIoProtocol,
+					  (VOID **)&pci_io, this_image, NULL,
+					  EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
 		if (EFI_ERROR(status)) {
 			ERROR(L"Cannot not open PciIoProtocol: %r\n", status);
 			FreePool(handle_buffer);
 			return status;
 		}
 
-		status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
-					   EfiPciIoWidthUint32, PCI_VENDOR_ID,
-					   1, &value);
+		status = pci_io->Pci.Read(pci_io, EfiPciIoWidthUint32,
+					  PCI_VENDOR_ID, 1, &value);
 		if (EFI_ERROR(status)) {
 			WARNING(
 			    L"Cannot not read from PCI device, skipping: %r\n",
 			    status);
-			(VOID) uefi_call_wrapper(
-			    BS->CloseProtocol, 4, handle_buffer[index],
-			    &PciIoProtocol, this_image, NULL);
+			(VOID) BS->CloseProtocol(handle_buffer[index],
+						 &PciIoProtocol, this_image,
+						 NULL);
 			continue;
 		}
 
@@ -87,8 +85,7 @@ static EFI_STATUS probe_watchdogs(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 			}
 		}
 
-		(VOID) uefi_call_wrapper(BS->CloseProtocol, 4,
-					 handle_buffer[index], &PciIoProtocol,
+		(VOID) BS->CloseProtocol(handle_buffer[index], &PciIoProtocol,
 					 this_image, NULL);
 
 		if (status == EFI_SUCCESS) {
@@ -115,13 +112,12 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	this_image = image_handle;
 	InitializeLib(this_image, system_table);
 
-	(VOID)uefi_call_wrapper(ST->ConOut->ClearScreen, 2, ST->ConOut);
+	(VOID) ST->ConOut->ClearScreen(ST->ConOut);
 	PrintC(EFI_CYAN, L"\nEFI Boot Guard %s\n", L"" EFIBOOTGUARD_VERSION);
 
-	status =
-	    uefi_call_wrapper(BS->OpenProtocol, 6, this_image,
-			      &LoadedImageProtocol, (VOID **)&loaded_image,
-			      this_image, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
+	status = BS->OpenProtocol(this_image, &LoadedImageProtocol,
+				  (VOID **)&loaded_image, this_image, NULL,
+				  EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 	if (EFI_ERROR(status)) {
 		error_exit(L"Cannot open LoadedImageProtocol to get image information",
 			   status);
@@ -178,8 +174,8 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	}
 
 	/* Load and start image */
-	status = uefi_call_wrapper(BS->LoadImage, 6, TRUE, this_image,
-				   payload_dev_path, NULL, 0, &payload_handle);
+	status = BS->LoadImage(TRUE, this_image, payload_dev_path, NULL, 0,
+			       &payload_handle);
 	if (EFI_ERROR(status)) {
 		error_exit(L"Cannot load specified kernel image", status);
 	}
@@ -187,10 +183,9 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	FreePool(payload_dev_path);
 	FreePool(boot_medium_path);
 
-	status =
-	    uefi_call_wrapper(BS->OpenProtocol, 6, payload_handle,
-			      &LoadedImageProtocol, (VOID **)&loaded_image,
-			      this_image, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
+	status = BS->OpenProtocol(payload_handle, &LoadedImageProtocol,
+				  (VOID **)&loaded_image, this_image,
+				  NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 	if (EFI_ERROR(status)) {
 		error_exit(L"Cannot open LoadedImageProtocol to set kernel load options",
 			   status);
@@ -203,5 +198,5 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	INFO(L"Starting %s with watchdog set to %d seconds ...\n",
 	     bg_loader_params.payload_path, bg_loader_params.timeout);
 
-	return uefi_call_wrapper(BS->StartImage, 3, payload_handle, NULL, NULL);
+	return BS->StartImage(payload_handle, NULL, NULL);
 }

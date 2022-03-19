@@ -149,9 +149,9 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 		return EFI_UNSUPPORTED;
 	}
 
-	status = uefi_call_wrapper(pci_io->Pci.Read, 5, pci_io,
-				   EfiPciIoWidthUint8, PCI_REVISION_ID_REG,
-				   1, &pci_revision_id);
+	status = pci_io->Pci.Read(
+	    pci_io, EfiPciIoWidthUint8, PCI_REVISION_ID_REG, 1,
+	    &pci_revision_id);
 	if (EFI_ERROR(status)) {
 		return EFI_UNSUPPORTED;
 	}

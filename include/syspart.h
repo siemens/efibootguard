@@ -20,16 +20,16 @@
 #include <efipciio.h>
 #include "bootguard.h"
 
-#define open_cfg_file(root, file, mode)					      \
-	uefi_call_wrapper((root)->Open, 5, (root), (file),		      \
-			  ENV_FILE_NAME, (mode),			      \
-			  EFI_FILE_ARCHIVE | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM)
+#define open_cfg_file(root, file, mode)					\
+	(root)->Open(							\
+	    (root), (file), ENV_FILE_NAME, (mode),			\
+	    EFI_FILE_ARCHIVE | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM)
 
-#define close_cfg_file(root, file)					      \
-	uefi_call_wrapper((root)->Close, 1, (file))
+#define close_cfg_file(root, file)					\
+	(root)->Close(file)
 
-#define read_cfg_file(file, len, buffer)				      \
-	uefi_call_wrapper((file)->Read, 3, (file), (len), (buffer))
+#define read_cfg_file(file, len, buffer)				\
+	(file)->Read((file), (len), (buffer))
 
 EFI_STATUS enumerate_cfg_parts(UINTN *config_volumes, UINTN *maxHandles);
 UINTN filter_cfg_parts(UINTN *config_volumes, UINTN maxHandles);
