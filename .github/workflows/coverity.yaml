@@ -31,6 +31,7 @@ jobs:
 
       - name: Install amd64 dependencies
         run: |
+          sudo apt-get update
           sudo apt-get install --no-install-recommends \
               gcc-multilib gnu-efi libz-dev libpci-dev check
       - name: Install Coverity
