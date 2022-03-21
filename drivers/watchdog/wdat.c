@@ -160,7 +160,7 @@ parse_rsdt(EFI_ACPI_SDT_HEADER *rsdt, ACPI_TABLE_WDAT **wdat_table_ptr)
 			return EFI_SUCCESS;
 		}
 	}
-	return EFI_NOT_FOUND;
+	return EFI_UNSUPPORTED;
 }
 
 static EFI_STATUS
@@ -183,7 +183,7 @@ parse_xsdt(EFI_ACPI_SDT_HEADER *xsdt, ACPI_TABLE_WDAT **wdat_table_ptr)
 			return EFI_SUCCESS;
 		}
 	}
-	return EFI_NOT_FOUND;
+	return EFI_UNSUPPORTED;
 }
 
 static EFI_STATUS
@@ -226,7 +226,7 @@ locate_and_parse_rsdp(ACPI_TABLE_WDAT **wdat_table_ptr)
 		}
 		ect++;
 	}
-	return EFI_NOT_FOUND;
+	return EFI_UNSUPPORTED;
 }
 
 static EFI_STATUS
