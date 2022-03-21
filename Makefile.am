@@ -172,7 +172,6 @@ efi_cppflags = \
 	-I$(GNUEFI_SYS_DIR)/usr/include \
 	-I$(GNUEFI_INC_DIR) \
 	-I$(GNUEFI_INC_DIR)/$(ARCH) \
-	-I$(GNUEFI_INC_DIR)/$(MACHINE_TYPE_NAME) \
 	$(LIBPCI_CFLAGS)
 
 efi_cflags = \
