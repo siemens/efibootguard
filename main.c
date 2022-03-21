@@ -33,8 +33,15 @@ extern CHAR16 *boot_medium_path;
 static EFI_STATUS probe_watchdogs(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 {
 	if (init_array_end - init_array_start == 0) {
-		WARNING(L"No watchdog drivers registered.\n");
-		return EFI_NOT_FOUND;
+		if (timeout > 0) {
+			ERROR(L"No watchdog drivers registered, but timeout is non-zero.\n");
+			return EFI_UNSUPPORTED;
+		}
+		return EFI_SUCCESS;
+	}
+	if (timeout == 0) {
+		WARNING(L"Watchdog is disabled.\n");
+		return EFI_SUCCESS;
 	}
 
 	UINTN handle_count = 0;
@@ -164,13 +171,9 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		WARNING(L"Cannot close volumes.\n", status);
 	}
 
-	if (bg_loader_params.timeout == 0) {
-		WARNING(L"Watchdog is disabled.\n");
-	} else {
-		status = probe_watchdogs(loaded_image, bg_loader_params.timeout);
-		if (EFI_ERROR(status)) {
-			error_exit(L"Cannot probe watchdog", status);
-		}
+	status = probe_watchdogs(loaded_image, bg_loader_params.timeout);
+	if (EFI_ERROR(status)) {
+		error_exit(L"Cannot probe watchdog", status);
 	}
 
 	/* Load and start image */
