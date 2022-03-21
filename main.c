@@ -50,7 +50,7 @@ static EFI_STATUS probe_watchdogs(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 						   NULL, &handle_count,
 						   &handle_buffer);
 	if (EFI_ERROR(status) || (handle_count == 0)) {
-		WARNING(L"No PCI I/O Protocol handles found.\n");
+		ERROR(L"No PCI I/O Protocol handles found.\n");
 		if (handle_buffer) {
 			FreePool(handle_buffer);
 		}
