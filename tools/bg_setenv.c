@@ -349,7 +349,7 @@ static int dumpenv_to_file(char *envfilepath, bool verbosity, bool preserve_env)
 
 	update_environment(&env, verbosity);
 	if (verbosity) {
-		dump_env(env.data, ALL_FIELDS, false);
+		dump_env(env.data, &ALL_FIELDS, false);
 	}
 	FILE *of = fopen(envfilepath, "wb");
 	if (of) {
@@ -428,7 +428,7 @@ error_t bg_setenv(int argc, char **argv)
 	}
 
 	if (arguments.common.verbosity) {
-		dump_envs(ALL_FIELDS, false);
+		dump_envs(&ALL_FIELDS, false);
 	}
 
 	BGENV *env_new = NULL;
@@ -492,7 +492,7 @@ error_t bg_setenv(int argc, char **argv)
 	if (arguments.common.verbosity) {
 		fprintf(stdout, "New environment data:\n");
 		fprintf(stdout, "---------------------\n");
-		dump_env(env_new->data, ALL_FIELDS, false);
+		dump_env(env_new->data, &ALL_FIELDS, false);
 	}
 	if (!bgenv_write(env_new)) {
 		fprintf(stderr, "Error storing environment.\n");

@@ -30,8 +30,8 @@ struct fields {
 
 extern const struct fields ALL_FIELDS;
 
-void dump_envs(struct fields output_fields, bool raw);
-void dump_env(BG_ENVDATA *env, struct fields output_fields, bool raw);
+void dump_envs(const struct fields *output_fields, bool raw);
+void dump_env(BG_ENVDATA *env, const struct fields *output_fields, bool raw);
 
 error_t bg_printenv(int argc, char **argv);
 

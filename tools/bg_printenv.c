@@ -144,13 +144,13 @@ static void dump_uservars(uint8_t *udata, bool raw)
 	}
 }
 
-void dump_env(BG_ENVDATA *env, struct fields output_fields, bool raw)
+void dump_env(BG_ENVDATA *env, const struct fields *output_fields, bool raw)
 {
 	char buffer[ENV_STRING_LENGTH];
 	if (!raw) {
 		fprintf(stdout, "Values:\n");
 	}
-	if (output_fields.in_progress) {
+	if (output_fields->in_progress) {
 		if (raw) {
 			fprintf(stdout, "IN_PROGRESS=%d\n", env->in_progress);
 		} else {
@@ -158,7 +158,7 @@ void dump_env(BG_ENVDATA *env, struct fields output_fields, bool raw)
 				env->in_progress ? "yes" : "no");
 		}
 	}
-	if (output_fields.revision) {
+	if (output_fields->revision) {
 		if (raw) {
 			fprintf(stdout, "REVISION=%u\n", env->revision);
 		} else {
@@ -166,7 +166,7 @@ void dump_env(BG_ENVDATA *env, struct fields output_fields, bool raw)
 				env->revision);
 		}
 	}
-	if (output_fields.kernel) {
+	if (output_fields->kernel) {
 		char *kernelfile = str16to8(buffer, env->kernelfile);
 		if (raw) {
 			fprintf(stdout, "KERNEL=%s\n", kernelfile);
@@ -174,7 +174,7 @@ void dump_env(BG_ENVDATA *env, struct fields output_fields, bool raw)
 			fprintf(stdout, "kernel:           %s\n", kernelfile);
 		}
 	}
-	if (output_fields.kernelargs) {
+	if (output_fields->kernelargs) {
 		char *kernelargs = str16to8(buffer, env->kernelparams);
 		if (raw) {
 			fprintf(stdout, "KERNELARGS=%s\n", kernelargs);
@@ -182,7 +182,7 @@ void dump_env(BG_ENVDATA *env, struct fields output_fields, bool raw)
 			fprintf(stdout, "kernelargs:       %s\n", kernelargs);
 		}
 	}
-	if (output_fields.wdog_timeout) {
+	if (output_fields->wdog_timeout) {
 		if (raw) {
 			fprintf(stdout, "WATCHDOG_TIMEOUT=%u\n",
 				env->watchdog_timeout_sec);
@@ -191,7 +191,7 @@ void dump_env(BG_ENVDATA *env, struct fields output_fields, bool raw)
 				env->watchdog_timeout_sec);
 		}
 	}
-	if (output_fields.ustate) {
+	if (output_fields->ustate) {
 		if (raw) {
 			fprintf(stdout, "USTATE=%u\n", env->ustate);
 		} else {
@@ -199,7 +199,7 @@ void dump_env(BG_ENVDATA *env, struct fields output_fields, bool raw)
 				(uint8_t)env->ustate, ustate2str(env->ustate));
 		}
 	}
-	if (output_fields.user) {
+	if (output_fields->user) {
 		if (!raw) {
 			fprintf(stdout, "\n");
 			fprintf(stdout, "user variables:\n");
@@ -211,7 +211,7 @@ void dump_env(BG_ENVDATA *env, struct fields output_fields, bool raw)
 	}
 }
 
-void dump_envs(struct fields output_fields, bool raw)
+void dump_envs(const struct fields *output_fields, bool raw)
 {
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 		if (!raw) {
@@ -230,7 +230,7 @@ void dump_envs(struct fields output_fields, bool raw)
 	}
 }
 
-static void dump_latest_env(struct fields output_fields, bool raw)
+static void dump_latest_env(const struct fields *output_fields, bool raw)
 {
 	BGENV *env = bgenv_open_latest();
 	if (!env) {
@@ -249,11 +249,11 @@ static void dump_env_by_index(uint32_t index, struct fields output_fields,
 		fprintf(stderr, "Failed to retrieve latest environment.\n");
 		return;
 	}
-	dump_env(env->data, output_fields, raw);
+	dump_env(env->data, &output_fields, raw);
 	bgenv_close(env);
 }
 
-static int printenv_from_file(char *envfilepath, struct fields output_fields,
+static int printenv_from_file(char *envfilepath, const struct fields *output_fields,
 			      bool raw)
 {
 	int success = 0;
@@ -338,7 +338,7 @@ error_t bg_printenv(int argc, char **argv)
 
 	if (common->envfilepath) {
 		e = printenv_from_file(common->envfilepath,
-				       arguments.output_fields, arguments.raw);
+				       &arguments.output_fields, arguments.raw);
 		free(common->envfilepath);
 		return e;
 	}
@@ -353,7 +353,7 @@ error_t bg_printenv(int argc, char **argv)
 		if (!arguments.raw) {
 			fprintf(stdout, "Using latest config partition\n");
 		}
-		dump_latest_env(arguments.output_fields, arguments.raw);
+		dump_latest_env(&arguments.output_fields, arguments.raw);
 	} else if (common->part_specified) {
 		if (!arguments.raw) {
 			fprintf(stdout, "Using config partition #%d\n",
@@ -362,7 +362,7 @@ error_t bg_printenv(int argc, char **argv)
 		dump_env_by_index(common->which_part, arguments.output_fields,
 				  arguments.raw);
 	} else {
-		dump_envs(arguments.output_fields, arguments.raw);
+		dump_envs(&arguments.output_fields, arguments.raw);
 	}
 
 	bgenv_finalize();
