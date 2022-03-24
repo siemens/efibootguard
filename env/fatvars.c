@@ -21,7 +21,7 @@
 #include <envdata.h>
 
 static int current_partition = 0;
-static BG_ENVDATA env[ENV_NUM_CONFIG_PARTS];
+static BG_ENVDATA *env;
 
 static BG_STATUS save_current_config(VOID)
 {
@@ -94,10 +94,17 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 	UINTN i;
 	int env_invalid[ENV_NUM_CONFIG_PARTS] = {0};
 
+	env = (BG_ENVDATA *)AllocatePool(sizeof(BG_ENVDATA) *
+					 ENV_NUM_CONFIG_PARTS);
+	if (!env) {
+		ERROR(L"Could not allocate memory for config data.\n");
+		return result;
+	}
+
 	config_volumes = (UINTN *)AllocatePool(sizeof(UINTN) * volume_count);
 	if (!config_volumes) {
 		ERROR(L"Could not allocate memory for config partition mapping.\n");
-		return result;
+		goto env_cleanup;
 	}
 
 	if (EFI_ERROR(enumerate_cfg_parts(config_volumes, &numHandles))) {
@@ -231,6 +238,8 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 
 lc_cleanup:
 	FreePool(config_volumes);
+env_cleanup:
+	FreePool(env);
 	return result;
 }
 
