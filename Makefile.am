@@ -76,6 +76,8 @@ CLEANFILES += $(GEN_VERSION_H)
 #
 pkgconfig_DATA = libebgenv.pc
 
+CLEANFILES += libebgenv.pc
+
 #
 # Static libraries
 #
