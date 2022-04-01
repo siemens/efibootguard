@@ -194,11 +194,19 @@ AM_CONDITIONAL([BOOTLOADER], [test "x$enable_bootloader" != "xno"])
 PKG_INSTALLDIR
 AC_SUBST(LIBEBGENV_VERSION, $(echo $VERSION | cut -dv -f2))
 
-dnl Python
-AC_PATH_PROGS(PYTHON, [python3 python3.9 python3.8 python3.7 python3.6 python2.7 python2], no)
-if test "x$PYTHON" = "xno"; then
-	AC_MSG_ERROR([You need to install python])
-fi
+dnl shell completion
+AC_ARG_ENABLE([completion],
+    AS_HELP_STRING([--disable-completion], [do not generate shell completion files]))
+
+AS_IF([test "x$enable_completion" != "xno"],
+      [
+      dnl Python
+      AC_PATH_PROGS(PYTHON, [python3 python3.9 python3.8 python3.7 python3.6 python2.7 python2], no)
+      if test "x$PYTHON" = "xno"; then
+          AC_MSG_ERROR([You need to install python])
+      fi
+      ])
+AM_CONDITIONAL([COMPLETION], [test "x$enable_completion" != "xno"])
 
 # ------------------------------------------------------------------------------
 AC_CONFIG_FILES([

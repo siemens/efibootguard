@@ -264,8 +264,13 @@ bg_printenvdir = $(top_srcdir)
 bg_printenv: $(bg_setenv)
 	$(AM_V_at)$(LN_S) -f bg_setenv bg_printenv
 
+if COMPLETION
 BASH_COMPLETION_FILES := $(top_builddir)/completion/bash/bg_setenv.bash $(top_builddir)/completion/bash/bg_printenv.bash
 ZSH_COMPLETION_FILES := $(top_builddir)/completion/zsh/_bg_setenv $(top_builddir)/completion/zsh/_bg_printenv
+else
+BASH_COMPLETION_FILES :=
+ZSH_COMPLETION_FILES :=
+endif
 
 bashcompletiondir = ${datarootdir}/efibootguard/completion/bash
 bashcompletion_DATA = $(BASH_COMPLETION_FILES)
