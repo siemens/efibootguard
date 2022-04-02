@@ -134,6 +134,11 @@ install-exec-hook:
 	$(RM) $(DESTDIR)$(libdir)/$(lib_LTLIBRARIES)
 
 #
+# Unified kernel image generator script
+#
+bin_SCRIPTS = tools/bg_gen_unified_kernel
+
+#
 # EFI compilation
 #
 # This part of the build system uses custom make rules and bypass regular
