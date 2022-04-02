@@ -125,6 +125,7 @@ jobs:
           suppress+=" --suppress=*:/usr/include/bits/*"
           # Function 'efi_main' is called by efi:
           suppress+=" --suppress=unusedFunction:main.c"
+          suppress+=" --suppress=unusedFunction:kernel-stub/main.c"
           # Some functions are defined for API only
           suppress+=" --suppress=unusedFunction:utils.c"
           suppress+=" --suppress=unusedFunction:env/env_api.c"
@@ -138,6 +139,10 @@ jobs:
           suppress+=" --suppress=comparePointers:main.c"
           # False positive on constructors, first hit
           suppress+=" --suppress=unusedFunction:drivers/watchdog/amdfch_wdt.c"
+          # False positive, noreturn is not recognized
+          suppress+=" --suppress=nullPointerRedundantCheck:kernel-stub/main.c"
+          # Avoid noise regarding Ignore* fields
+          suppress+=" --suppress=unusedStructMember:kernel-stub/main.c"
 
           enable="--enable=warning \
                   --enable=style \

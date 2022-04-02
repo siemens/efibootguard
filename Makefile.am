@@ -167,6 +167,13 @@ efi_sources = \
 	bootguard.c \
 	main.c
 
+kernel_stub_name = kernel-stub$(MACHINE_TYPE_NAME).efi
+
+kernel_stub_sources = \
+	kernel-stub/fdt.c \
+	kernel-stub/initrd.c \
+	kernel-stub/main.c
+
 efi_cppflags = \
 	-I$(top_builddir) -include config.h \
 	-I$(top_srcdir)/include \
@@ -223,10 +230,15 @@ efi_objects_pre2 = $(efi_objects_pre1:.S=.o)
 efi_objects = $(addprefix $(top_builddir)/,$(efi_objects_pre2))
 efi_solib = $(top_builddir)/efibootguard$(MACHINE_TYPE_NAME).so
 
+kernel_stub_objects_pre = $(kernel_stub_sources:.c=.o)
+kernel_stub_objects = $(addprefix $(top_builddir)/,$(kernel_stub_objects_pre))
+kernel_stub_solib = $(top_builddir)/kernel-stub/kernel-stub$(MACHINE_TYPE_NAME).so
+
 # automake stuff
-efibootguard_DATA = $(efi_loadername)
+efibootguard_DATA = $(efi_loadername) $(kernel_stub_name)
 CLEANFILES += $(efi_objects) $(efi_solib) $(efi_loadername)
-EXTRA_DIST += $(efi_sources)
+CLEANFILES += $(kernel_stub_objects) $(kernel_stub_solib) $(kernel_stub_name)
+EXTRA_DIST += $(efi_sources) $(kernel_stub_sources)
 
 define gnuefi_compile
 	$(AM_V_CC) $(MKDIR_P) $(shell dirname $@)/; \
@@ -245,7 +257,10 @@ $(top_builddir)/drivers/watchdog/%.o: $(top_srcdir)/drivers/watchdog/%.c
 $(top_builddir)/drivers/watchdog/%.o: $(top_srcdir)/drivers/watchdog/%.S
 	$(call gnuefi_compile)
 
-$(top_builddir)/main.o: $(GEN_VERSION_H)
+$(top_builddir)/kernel-stub/%.o: $(top_srcdir)/kernel-stub/%.c
+	$(call gnuefi_compile)
+
+$(top_builddir)/main.o $(top_builddir)/kernel-stub/main.o: $(GEN_VERSION_H)
 
 $(efi_solib): $(efi_objects)
 	$(AM_V_CCLD)$(LD) $(efi_ldflags) $(efi_objects) \
@@ -256,6 +271,16 @@ $(efi_loadername): $(efi_solib)
 	$(AM_V_GEN) $(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic \
 	  -j .dynsym -j .rel -j .rela -j .reloc -j .init_array \
 	  -j .rela.got -j .rela.data $(objcopy_format) $< $@
+
+$(kernel_stub_solib): $(kernel_stub_objects)
+	$(AM_V_CCLD)$(LD) $(efi_ldflags) $(kernel_stub_objects) \
+		-o $@ -lefi -lgnuefi $(shell $(CC) $(CFLAGS) -print-libgcc-file-name); \
+	nm -D -u $@ | grep ' U ' && exit 1 || :
+
+$(kernel_stub_name): $(kernel_stub_solib)
+	$(AM_V_GEN) $(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic \
+	  -j .dynsym -j .rel -j .rela -j .reloc -j .rela.got -j .rela.data \
+	  $(objcopy_format) $< $@
 endif
 
 $(top_builddir)/tools/bg_setenv-bg_envtools.o: $(GEN_VERSION_H)
