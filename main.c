@@ -30,6 +30,8 @@ extern CHAR16 *boot_medium_path;
 #define PCI_GET_VENDOR_ID(id)	(UINT16)(id)
 #define PCI_GET_PRODUCT_ID(id)	(UINT16)((id) >> 16)
 
+typedef EFI_STATUS (*WATCHDOG_PROBE)(EFI_PCI_IO *, UINT16, UINT16, UINTN);
+
 static EFI_STATUS probe_watchdogs(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 {
 	if (init_array_end - init_array_start == 0) {
@@ -81,10 +83,10 @@ static EFI_STATUS probe_watchdogs(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 			continue;
 		}
 
-		EFI_STATUS (*probe)(EFI_PCI_IO *, UINT16, UINT16, UINTN);
 		for (const unsigned long *entry = init_array_start;
 		     entry < init_array_end; entry++) {
-			probe = loaded_image->ImageBase + *entry;
+			WATCHDOG_PROBE probe = (WATCHDOG_PROBE)
+				(UINT8 * ) loaded_image->ImageBase + *entry;
 			if ((status = probe(pci_io, PCI_GET_VENDOR_ID(value),
 					    PCI_GET_PRODUCT_ID(value),
 					    timeout)) == EFI_SUCCESS) {
