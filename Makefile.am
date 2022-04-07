@@ -259,7 +259,7 @@ $(efi_loadername): $(efi_solib)
 	  -j .rela.got -j .rela.data $(objcopy_format) $< $@
 endif
 
-$(top_builddir)/tools/bg_setenv-bg_setenv.o: $(GEN_VERSION_H)
+$(top_builddir)/tools/bg_setenv-bg_envtools.o: $(GEN_VERSION_H)
 
 bg_printenvdir = $(top_srcdir)
 
