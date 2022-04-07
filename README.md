@@ -30,6 +30,7 @@ The following watchdog drivers are implemented (and are probed in this order):
 * Intel Quark
 * Siemens SIMATIC IPC4x7E
 * Intel TCO
+* HPE ProLiant
 
 Note that if no working watchdog is found, the boot process deliberately fails.
 That said, setting a watchdog timeout of `0` allows to boot nonetheless without
