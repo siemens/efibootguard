@@ -6,6 +6,10 @@ Provides the following functionality:
 * Arm a hardware watchdog prior to loading an OS
 * Provides a simple update mechanism with fail-safe algorithm
 
+In addition, this project provides a UEFI stub and generator tool to create
+unified kernel images consisting of kernel, command line and, optionally,
+initrd and device trees.
+
 ## Development ##
 
 Mailing list:
@@ -51,4 +55,5 @@ See `Installation And Usage` for further information.
 * [API Library](docs/API.md)
 * [Compilation Instructions](docs/COMPILE.md)
 * [Installation And Usage](docs/USAGE.md)
+* [Unified Kernel Images](docs/UNIFIED-KERNEL.md)
 * [System Recovery](docs/RECOVERY.md)
