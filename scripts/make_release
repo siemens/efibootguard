@@ -29,7 +29,7 @@ if [ ! -f VERSION ] || [ ! -d .git ]; then
 	exit 1
 fi
 
-if [ -n "`git status -s -uno`" ]; then
+if [ -n "$(git status -s -uno)" ]; then
 	echo "Working directory is dirty!"
 	exit 1
 fi
@@ -42,8 +42,8 @@ if [ "$answer" != "y" ]; then
 	exit 1
 fi
 
-echo -e "Tag commit\n\n    `git log -1 --oneline`"
-echo -e "\nof branch\n\n    `git branch | sed -n 's/^\* //p'`"
+echo -e "Tag commit\n\n    $(git log -1 --oneline)"
+echo -e "\nof branch\n\n    $(git branch | sed -n 's/^\* //p')"
 echo -ne "\nas $name? (y/N) "
 read answer
 if [ "$answer" != "y" ]; then
