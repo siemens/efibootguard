@@ -2,7 +2,7 @@
 #
 # EFI Boot Guard
 #
-# Copyright (c) Siemens AG, 2014-2017
+# Copyright (c) Siemens AG, 2014-2022
 #
 # Authors:
 #  Jan Kiszka <jan.kiszka@siemens.com>
@@ -31,6 +31,14 @@ fi
 
 if [ -n "`git status -s -uno`" ]; then
 	echo "Working directory is dirty!"
+	exit 1
+fi
+
+match=$(grep -e "-version-info" $(git rev-parse --show-toplevel)/Makefile.am)
+echo -e "Library version: ${match/*-version-info /}"
+echo -ne "Still accurate? (y/N) "
+read answer
+if [ "$answer" != "y" ]; then
 	exit 1
 fi
 
