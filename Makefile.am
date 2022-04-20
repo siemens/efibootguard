@@ -106,10 +106,9 @@ pkginclude_HEADERS = \
 #
 # Shared libraries
 #
-LIBEBGENV_SO_VERSION = $(shell $(EGREP) -o '[0-9]+\.[0-9]+' $(top_srcdir)/VERSION)
 lib_LTLIBRARIES = libebgenv.la
 libebgenv_la_SOURCES = $(libebgenv_a_SOURCES)
-libebgenv_la_LDFLAGS = -release $(LIBEBGENV_SO_VERSION).0
+libebgenv_la_LDFLAGS = -version-info 0:0:0
 
 #
 # bg_setenv binary
