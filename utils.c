@@ -211,7 +211,6 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 {
 	UINTN prefixlen = 0;
 	EFI_DEVICE_PATH *devpath = NULL;
-	CHAR16 *fullpath;
 
 	LABELMODE lm = NOLABEL;
 	/* Check if payload path contains a
@@ -258,24 +257,16 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 		return FileDevicePath(device, payloadpath);
 	}
 
-	CHAR16 *pathprefix = DevicePathToStr(devpath);
-	fullpath = AllocatePool(sizeof(CHAR16) *
-			   (StrLen(pathprefix) + StrLen(payloadpath) + 1));
-
-	StrCpy(fullpath, pathprefix);
-	StrCat(fullpath, payloadpath + prefixlen + 3);
-	INFO(L"Full path for kernel is: %s\n", fullpath);
-
-	FreePool(fullpath);
-	FreePool(pathprefix);
-
 	EFI_DEVICE_PATH *filedevpath;
 	EFI_DEVICE_PATH *appendeddevpath;
 
 	filedevpath = FileDevicePath(NULL, payloadpath + prefixlen + 3);
 	appendeddevpath = AppendDevicePath(devpath, filedevpath);
-
 	FreePool(filedevpath);
+
+	CHAR16 *pathstr = DevicePathToStr(appendeddevpath);
+	INFO(L"Full path for kernel is: %s\n", pathstr);
+	FreePool(pathstr);
 
 	return appendeddevpath;
 }
