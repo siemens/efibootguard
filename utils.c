@@ -165,9 +165,9 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 		    get_volume_custom_label((*volumes)[rootCount].root);
 		INFO(L"Volume %d: ", rootCount);
 		if (IsOnBootMedium(devpath)) {
-			PrintC(EFI_LIGHTGRAY, L"(On boot medium) ");
+			INFO(L"(On boot medium) ");
 		}
-		PrintC(EFI_LIGHTGRAY, L"%s, LABEL=%s, CLABEL=%s\n",
+		INFO(L"%s, LABEL=%s, CLABEL=%s\n",
 		      devpathstr, (*volumes)[rootCount].fslabel,
 		      (*volumes)[rootCount].fscustomlabel);
 
