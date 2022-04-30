@@ -82,17 +82,12 @@ AC_SUBST(GNUEFI_LIB_DIR)
 AC_DEFINE_UNQUOTED(GNUEFI_LIB_DIR, ["$GNUEFI_LIB_DIR"], [The lib directory for gnuefi])
 
 dnl Define ARCH_<NAME> conditionals
-SET_ARCH(I586, i586*)
-SET_ARCH(I686, i686*)
+SET_ARCH(I586, i586*|i686*)
 SET_ARCH(X86_64, x86_64*)
 SET_ARCH(IA64, ia64*)
 SET_ARCH(AARCH64, aarch64*)
 
 ARCH=$(echo $host | sed "s/\(-\).*$//")
-
-AM_COND_IF(ARCH_I686, [
-	   ARCH=ia32
-	   MACHINE_TYPE_NAME=ia32])
 
 AM_COND_IF(ARCH_I586, [
 	   ARCH=ia32
