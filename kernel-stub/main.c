@@ -111,6 +111,11 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		error_exit(L"Error getting LoadedImageProtocol", status);
 	}
 
+	/* consider zero-termination for string length */
+	if (stub_image->LoadOptionsSize > sizeof(CHAR16)) {
+		info(L"WARNING: Passed command line options ignored, only built-in used");
+	}
+
 	pe_header = get_pe_header(stub_image->ImageBase);
 	for (n = 0, section = get_sections(pe_header);
 	     n < pe_header->Coff.NumberOfSections;
