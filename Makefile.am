@@ -191,7 +191,6 @@ efi_cflags = \
 	-Wall \
 	-Wextra \
 	-std=gnu99 \
-	-nostdinc \
 	-ggdb -O0 \
 	-fpic \
 	-fshort-wchar \
