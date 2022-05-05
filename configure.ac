@@ -218,6 +218,7 @@ AC_MSG_RESULT([
 	machine type:            $MACHINE_TYPE_NAME
 
 	build efi bootloader:    ${enable_bootloader}
+	enable shell completion: ${enable_completion}
 
 	prefix:                  ${prefix}
 	exec_prefix:             ${exec_prefix}
