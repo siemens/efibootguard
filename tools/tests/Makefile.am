@@ -29,6 +29,10 @@ AM_CFLAGS = \
 	-D_GNU_SOURCE \
 	-g
 
+if ARCH_ARM
+AM_LDFLAGS = -Wl,--no-wchar-size-warning
+endif
+
 libtest_env_api_fat_a_SRC = \
 	../../env/env_api.c \
 	../../env/env_api_fat.c \

@@ -86,6 +86,7 @@ SET_ARCH(I586, i586*|i686*)
 SET_ARCH(X86_64, x86_64*)
 SET_ARCH(IA64, ia64*)
 SET_ARCH(AARCH64, aarch64*)
+SET_ARCH(ARM, arm*)
 
 ARCH=$(echo $host | sed "s/\(-\).*$//")
 
@@ -99,9 +100,17 @@ AM_COND_IF(ARCH_X86_64, [
 AM_COND_IF(ARCH_AARCH64, [
 	   MACHINE_TYPE_NAME=aa64])
 
+AM_COND_IF(ARCH_ARM, [
+	   MACHINE_TYPE_NAME=arm])
+
 AC_SUBST([ARCH])
 AC_SUBST([MACHINE_TYPE_NAME])
 AM_CONDITIONAL([ARCH_IS_X86], [test "$ARCH" = "ia32" -o "$ARCH" = "x86_64"])
+
+AX_CHECK_COMPILE_FLAG([-mgeneral-regs-only],
+	[CFLAGS_MGENERAL_REGS_ONLY=-mgeneral-regs-only],
+	[CFLAGS_MGENERAL_REGS_ONLY=])
+AC_SUBST([CFLAGS_MGENERAL_REGS_ONLY])
 
 # Checks from autoscan:
 AC_CHECK_FUNCS([getmntent])

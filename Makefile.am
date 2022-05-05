@@ -110,6 +110,10 @@ lib_LTLIBRARIES = libebgenv.la
 libebgenv_la_SOURCES = $(libebgenv_a_SOURCES)
 libebgenv_la_LDFLAGS = -version-info 0:0:0
 
+if ARCH_ARM
+libebgenv_la_LDFLAGS += -Wl,--no-wchar-size-warning
+endif
+
 #
 # bg_setenv binary
 #
@@ -123,6 +127,10 @@ bg_setenv_SOURCES = \
 
 bg_setenv_CFLAGS = \
 	$(AM_CFLAGS) -static
+
+if ARCH_ARM
+bg_setenv_LDFLAGS = -Wl,--no-wchar-size-warning
+endif
 
 bg_setenv_LDADD = \
 	$(top_builddir)/libebgenv.a \
@@ -207,6 +215,10 @@ efi_cflags += \
 	-mno-sse \
 	-mno-mmx \
 	-mno-red-zone
+endif
+if ARCH_ARM
+efi_cflags += \
+	$(CFLAGS_MGENERAL_REGS_ONLY)
 endif
 
 efi_ldflags = \
