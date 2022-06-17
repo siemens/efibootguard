@@ -101,6 +101,7 @@ AM_COND_IF(ARCH_AARCH64, [
 
 AC_SUBST([ARCH])
 AC_SUBST([MACHINE_TYPE_NAME])
+AM_CONDITIONAL([ARCH_IS_X86], [test "$ARCH" = "ia32" -o "$ARCH" = "x86_64"])
 
 # Checks from autoscan:
 AC_CHECK_FUNCS([getmntent])

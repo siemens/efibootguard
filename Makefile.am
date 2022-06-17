@@ -147,9 +147,8 @@ bin_SCRIPTS = tools/bg_gen_unified_kernel
 efi_loadername = efibootguard$(MACHINE_TYPE_NAME).efi
 
 if BOOTLOADER
-if ARCH_AARCH64
-efi_sources_watchdogs =
-else
+
+if ARCH_IS_X86
 # NOTE: wdat.c is placed first so it is tried before any other drivers
 # NOTE: ipc4x7e_wdt.c must be *before* itco.c
 efi_sources_watchdogs = \
@@ -160,6 +159,8 @@ efi_sources_watchdogs = \
 	drivers/watchdog/ipc4x7e_wdt.c \
 	drivers/watchdog/itco.c \
 	drivers/watchdog/hpwdt.c
+else
+efi_sources_watchdogs =
 endif
 
 efi_sources = \
@@ -220,13 +221,13 @@ efi_ldflags = \
 	-L $(GNUEFI_LIB_DIR) \
 	$(GNUEFI_LIB_DIR)/crt0-efi-$(ARCH).o
 
-if ARCH_AARCH64
-# aarch64's objcopy doesn't understand --target efi-[app|bsdrv|rtdrv],
+if ARCH_IS_X86
+objcopy_format = --target=efi-app-$(ARCH)
+else
+# aarch64's and arm's objcopy don't understand --target efi-[app|bsdrv|rtdrv],
 # hence set subsystem 0xa (EFI application) and binary format.
 objcopy_format = -O binary
 efi_ldflags += --defsym=EFI_SUBSYSTEM=0xa
-else
-objcopy_format = --target=efi-app-$(ARCH)
 endif
 
 efi_objects_pre1 = $(efi_sources:.c=.o)
