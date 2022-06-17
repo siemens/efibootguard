@@ -205,9 +205,9 @@ def main():
     cmdline_offs = align(len(stub), 512)
     cmdline_size = align(len(cmdline), 512)
     section = Section(b'.cmdline', cmdline_size, 0x30000,
-                    cmdline_size, cmdline_offs,
-                    Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
-                    Section.IMAGE_SCN_MEM_READ)
+                      cmdline_size, cmdline_offs,
+                      Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
+                      Section.IMAGE_SCN_MEM_READ)
     pe_headers.add_section(section)
 
     kernel = args.kernel.read()
@@ -217,9 +217,9 @@ def main():
     kernel_size = align(len(kernel), 512)
     kernel_virt_size = max(kernel_size, kernel_pe_headers.get_size_of_image())
     section = Section(b'.kernel', kernel_virt_size, 0x2000000,
-                    kernel_size, kernel_offs,
-                    Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
-                    Section.IMAGE_SCN_MEM_READ)
+                      kernel_size, kernel_offs,
+                      Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
+                      Section.IMAGE_SCN_MEM_READ)
     pe_headers.add_section(section)
     pe_headers.set_section_alignment(kernel_pe_headers.get_section_alignment())
 
@@ -229,9 +229,9 @@ def main():
         initrd = args.initrd.read()
         initrd_size = align(len(initrd), 512)
         section = Section(b'.initrd', initrd_size, 0x6000000,
-                        initrd_size, initrd_offs,
-                        Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
-                        Section.IMAGE_SCN_MEM_READ)
+                          initrd_size, initrd_offs,
+                          Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
+                          Section.IMAGE_SCN_MEM_READ)
         pe_headers.add_section(section)
 
     current_offs = initrd_offs + initrd_size
@@ -244,9 +244,9 @@ def main():
         dtb_offs.append(current_offs)
         dtb_size = align(len(dtb[n]), 512)
         section = Section(bytes('.dtb-{}'.format(n + 1), 'ascii'),
-                        dtb_size, dtb_virt, dtb_size, dtb_offs[n],
-                        Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
-                        Section.IMAGE_SCN_MEM_READ)
+                          dtb_size, dtb_virt, dtb_size, dtb_offs[n],
+                          Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
+                          Section.IMAGE_SCN_MEM_READ)
         pe_headers.add_section(section)
         dtb_virt += dtb_size
         current_offs += dtb_size
@@ -279,6 +279,7 @@ def main():
     image += bytearray(align(len(image), 512) - len(image))
 
     args.output.write(image)
+
 
 if __name__ == "__main__":
     main()
