@@ -50,6 +50,7 @@ class Section:
 class PEHeaders:
     OPT_OFFS_SIZE_OF_INIT_DATA = 0x8
     OPT_OFFS_SECTION_ALIGNMENT = 0x20
+    OPT_OFFS_FILE_ALIGNMENT = 0x24
     OPT_OFFS_SIZE_OF_IMAGE = 0x38
 
     def __init__(self, name, blob):
@@ -138,6 +139,9 @@ class PEHeaders:
                                   alignment)
         self.set_size_of_image(align(self.get_size_of_image(), alignment))
 
+    def get_file_alignment(self):
+        return self.get_opt_header_field(PEHeaders.OPT_OFFS_FILE_ALIGNMENT)
+
     def get_size_of_image(self):
         return self.get_opt_header_field(PEHeaders.OPT_OFFS_SIZE_OF_IMAGE)
 
@@ -200,10 +204,11 @@ def main():
     stub = args.stub.read()
 
     pe_headers = PEHeaders('stub image', stub)
+    file_align = pe_headers.get_file_alignment()
 
     # Add extra section headers
-    cmdline_offs = align(len(stub), 512)
-    cmdline_size = align(len(cmdline), 512)
+    cmdline_offs = align(len(stub), file_align)
+    cmdline_size = align(len(cmdline), file_align)
     section = Section(b'.cmdline', cmdline_size, 0x30000,
                       cmdline_size, cmdline_offs,
                       Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
@@ -214,7 +219,7 @@ def main():
     kernel_pe_headers = PEHeaders('kernel', kernel)
 
     kernel_offs = cmdline_offs + cmdline_size
-    kernel_size = align(len(kernel), 512)
+    kernel_size = align(len(kernel), file_align)
     kernel_virt_size = max(kernel_size, kernel_pe_headers.get_size_of_image())
     section = Section(b'.kernel', kernel_virt_size, 0x2000000,
                       kernel_size, kernel_offs,
@@ -227,7 +232,7 @@ def main():
     initrd_size = 0
     if args.initrd:
         initrd = args.initrd.read()
-        initrd_size = align(len(initrd), 512)
+        initrd_size = align(len(initrd), file_align)
         section = Section(b'.initrd', initrd_size, 0x6000000,
                           initrd_size, initrd_offs,
                           Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
@@ -242,7 +247,7 @@ def main():
     for n in range(len(args.dtb)):
         dtb.append(args.dtb[n].read())
         dtb_offs.append(current_offs)
-        dtb_size = align(len(dtb[n]), 512)
+        dtb_size = align(len(dtb[n]), file_align)
         section = Section(bytes('.dtb-{}'.format(n + 1), 'ascii'),
                           dtb_size, dtb_virt, dtb_size, dtb_offs[n],
                           Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
@@ -276,7 +281,7 @@ def main():
         image += dtb[n]
 
     # Align to promised size of last section
-    image += bytearray(align(len(image), 512) - len(image))
+    image += bytearray(align(len(image), file_align) - len(image))
 
     args.output.write(image)
 
