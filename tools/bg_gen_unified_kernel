@@ -108,7 +108,7 @@ class PEHeaders:
                       file=sys.stderr)
                 exit(1)
 
-            if section.data_offs < self.first_data:
+            if section.data_size and section.data_offs < self.first_data:
                 self.first_data = section.data_offs
 
             self.sections.append(section)
