@@ -49,6 +49,8 @@ class Section:
 
 class PEHeaders:
     OPT_OFFS_SIZE_OF_INIT_DATA = 0x8
+    OPT_OFFS_ADDRESS_OF_ENTRY_POINT = 0x10
+    OPT_OFFS_BASE_OF_CODE = 0x14
     OPT_OFFS_SECTION_ALIGNMENT = 0x20
     OPT_OFFS_FILE_ALIGNMENT = 0x24
     OPT_OFFS_SIZE_OF_IMAGE = 0x38
@@ -130,6 +132,20 @@ class PEHeaders:
 
     def set_size_of_init_data(self, size):
         self.set_opt_header_field(PEHeaders.OPT_OFFS_SIZE_OF_INIT_DATA, size)
+
+    def get_address_of_entry_point(self):
+        return self.get_opt_header_field(
+            PEHeaders.OPT_OFFS_ADDRESS_OF_ENTRY_POINT)
+
+    def set_address_of_entry_point(self, addr):
+        self.set_opt_header_field(PEHeaders.OPT_OFFS_ADDRESS_OF_ENTRY_POINT,
+                                  addr)
+
+    def get_base_of_code(self):
+        return self.get_opt_header_field(PEHeaders.OPT_OFFS_BASE_OF_CODE)
+
+    def set_base_of_code(self, base):
+        self.set_opt_header_field(PEHeaders.OPT_OFFS_BASE_OF_CODE, base)
 
     def get_section_alignment(self):
         return self.get_opt_header_field(PEHeaders.OPT_OFFS_SECTION_ALIGNMENT)
@@ -255,6 +271,27 @@ def main():
 
         dtb_virt += section.data_size
         current_offs = section.data_offs + section.data_size
+
+    #
+    # Some ARM toolchains use a minimal alignment and put the text section at
+    # a too low virtual address. This causes troubles when we relocated
+    # sections because the PE header is also loaded into memory.
+    #
+    # Align the virtual address of the text section to 4K therefore.
+    #
+    for sect in pe_headers.sections:
+        if sect.name == b'.text\0\0\0' and sect.virt_addr < 0x1000:
+            if pe_headers.first_data > 0x1000:
+                print("PE header too large - way too many DTBs?!",
+                      file=sys.stderr)
+                exit(1)
+            virt_relocation = 0x1000 - sect.virt_addr
+            sect.virt_addr = 0x1000
+            pe_headers.set_address_of_entry_point(
+                pe_headers.get_address_of_entry_point() + virt_relocation)
+            pe_headers.set_base_of_code(
+                pe_headers.get_base_of_code() + virt_relocation)
+            break
 
     # Build unified image header
     image = pe_headers.dos_header + pe_headers.coff_header + \
