@@ -32,7 +32,7 @@ extern CHAR16 *boot_medium_path;
 
 typedef EFI_STATUS (*WATCHDOG_PROBE)(EFI_PCI_IO *, UINT16, UINT16, UINTN);
 
-static EFI_STATUS probe_watchdogs(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
+static EFI_STATUS probe_watchdogs(UINTN timeout)
 {
 	if (init_array_end - init_array_start == 0) {
 		if (timeout > 0) {
@@ -85,8 +85,7 @@ static EFI_STATUS probe_watchdogs(EFI_LOADED_IMAGE *loaded_image, UINTN timeout)
 
 		for (const unsigned long *entry = init_array_start;
 		     entry < init_array_end; entry++) {
-			WATCHDOG_PROBE probe = (WATCHDOG_PROBE)
-				(UINT8 * ) loaded_image->ImageBase + *entry;
+			WATCHDOG_PROBE probe = (WATCHDOG_PROBE) *entry;
 			if ((status = probe(pci_io, PCI_GET_VENDOR_ID(value),
 					    PCI_GET_PRODUCT_ID(value),
 					    timeout)) == EFI_SUCCESS) {
@@ -173,7 +172,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		WARNING(L"Cannot close volumes.\n", status);
 	}
 
-	status = probe_watchdogs(loaded_image, bg_loader_params.timeout);
+	status = probe_watchdogs(bg_loader_params.timeout);
 	if (EFI_ERROR(status)) {
 		error_exit(L"Cannot probe watchdog", status);
 	}

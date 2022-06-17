@@ -274,8 +274,7 @@ $(efi_solib): $(efi_objects)
 
 $(efi_loadername): $(efi_solib)
 	$(AM_V_GEN) $(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic \
-	  -j .dynsym -j .rel -j .rela -j .reloc -j .init_array \
-	  -j .rela.got -j .rela.data $(objcopy_format) $< $@
+	  -j .dynsym -j .rel* -j .init_array $(objcopy_format) $< $@
 
 $(kernel_stub_solib): $(kernel_stub_objects)
 	$(AM_V_CCLD)$(LD) $(efi_ldflags) $(kernel_stub_objects) \
@@ -284,9 +283,9 @@ $(kernel_stub_solib): $(kernel_stub_objects)
 
 $(kernel_stub_name): $(kernel_stub_solib)
 	$(AM_V_GEN) $(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic \
-	  -j .dynsym -j .rel -j .rela -j .reloc -j .rela.got -j .rela.data \
-	  $(objcopy_format) $< $@
-endif
+	  -j .dynsym -j .rel* $(objcopy_format) $< $@
+
+endif # BOOTLOADER
 
 $(top_builddir)/tools/bg_setenv-bg_envtools.o: $(GEN_VERSION_H)
 
