@@ -29,6 +29,7 @@ jobs:
           - amd64
           - i386
           - arm64
+          - arm
           - cppcheck
     steps:
       - name: Checkout
@@ -68,6 +69,24 @@ jobs:
           sudo apt-get install --no-install-recommends \
               autoconf-archive gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
               gnu-efi:arm64 libz-dev:arm64 libpci-dev:arm64 check:arm64 \
+              qemu-user-static
+      - name: Install arm dependencies
+        if: ${{ matrix.target == 'arm' }}
+        run: |
+          sudo dpkg --add-architecture armhf
+          sudo sed -i 's/^deb /deb [arch=amd64] /g' /etc/apt/sources.list
+          sudo sh -c "cat <<EOF > /etc/apt/sources.list.d/ports.list
+          deb [arch=armhf] http://ports.ubuntu.com/ focal main restricted
+          deb [arch=armhf] http://ports.ubuntu.com/ focal-updates main restricted
+          deb [arch=armhf] http://ports.ubuntu.com/ focal universe
+          deb [arch=armhf] http://ports.ubuntu.com/ focal-updates universe
+          deb [arch=armhf] http://ports.ubuntu.com/ focal multiverse
+          deb [arch=armhf] http://ports.ubuntu.com/ focal-updates multiverse
+          EOF"
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends \
+              autoconf-archive gcc-arm-linux-gnueabihf libc6-dev-armhf-cross \
+              gnu-efi:armhf libz-dev:armhf libpci-dev:armhf check:armhf \
               qemu-user-static
       - name: Install cppcheck
         if: ${{ matrix.target == 'cppcheck' }}
@@ -112,6 +131,13 @@ jobs:
           cd build
           ../configure --host=aarch64-linux-gnu \
               PKG_CONFIG=/usr/bin/aarch64-linux-gnu-pkg-config
+          make check -j $(nproc)
+      - name: Build arm
+        if: ${{ matrix.target == 'arm' }}
+        run: |
+          cd build
+          ../configure --host=arm-linux-gnueabihf \
+              PKG_CONFIG=/usr/bin/arm-linux-gnueabihf-pkg-config
           make check -j $(nproc)
       - name: Run cppcheck
         if: ${{ matrix.target == 'cppcheck' }}

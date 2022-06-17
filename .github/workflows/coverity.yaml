@@ -1,7 +1,7 @@
 #
 # EFI Boot Guard
 #
-# Copyright (c) Siemens AG, 2021
+# Copyright (c) Siemens AG, 2021-2022
 #
 # Authors:
 #  Claudius Heine <ch@denx.de>
@@ -33,7 +33,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
-              gcc-multilib gnu-efi libz-dev libpci-dev check
+              autoconf-archive gcc-multilib gnu-efi libz-dev libpci-dev check
       - name: Install Coverity
         run: |
           wget https://scan.coverity.com/download/cxx/linux64 \
