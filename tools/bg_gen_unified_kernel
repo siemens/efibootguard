@@ -54,6 +54,7 @@ class PEHeaders:
     OPT_OFFS_SECTION_ALIGNMENT = 0x20
     OPT_OFFS_FILE_ALIGNMENT = 0x24
     OPT_OFFS_SIZE_OF_IMAGE = 0x38
+    OPT_OFFS_SIZE_OF_HEADERS = 0x3C
 
     def __init__(self, name, blob):
         # Parse headers: DOS, COFF, optional header
@@ -164,13 +165,19 @@ class PEHeaders:
     def set_size_of_image(self, size):
         self.set_opt_header_field(PEHeaders.OPT_OFFS_SIZE_OF_IMAGE, size)
 
+    def get_size_of_headers(self):
+        return self.get_opt_header_field(PEHeaders.OPT_OFFS_SIZE_OF_HEADERS)
+
+    def set_size_of_headers(self, size):
+        self.set_opt_header_field(PEHeaders.OPT_OFFS_SIZE_OF_HEADERS, size)
+
     def add_section(self, section):
         self.header_size += 0x28
-
-        # check space for adding extra sections
-        if self.first_data < self.header_size:
-            print("FIXME: section data requires relocation", file=sys.stderr)
-            exit(1)
+        size_of_headers = self.get_size_of_headers()
+        if self.header_size > size_of_headers:
+            size_of_headers = align(self.header_size,
+                                    self.get_file_alignment())
+            self.set_size_of_headers(size_of_headers)
 
         self.sections.append(section)
         self.coff_header = struct.pack('<6sH16s', self.coff_header[:6],
@@ -185,6 +192,13 @@ class PEHeaders:
         if section.chars & Section.IMAGE_SCN_CNT_INITIALIZED_DATA:
             new_size = self.get_size_of_init_data() + section.data_size
             self.set_size_of_init_data(new_size)
+
+        if size_of_headers > self.first_data:
+            file_relocation = size_of_headers - self.first_data
+            self.first_data += file_relocation
+            for sect in self.sections:
+                if sect.data_size > 0:
+                    sect.data_offs += file_relocation
 
 
 def main():
