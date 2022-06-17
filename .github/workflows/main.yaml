@@ -41,14 +41,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
-              gcc-multilib gnu-efi libz-dev libpci-dev check bats
+              autoconf-archive gcc-multilib gnu-efi libz-dev libpci-dev check \
+              bats
       - name: Install i386 dependencies
         if: ${{ matrix.target == 'i386' }}
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
-              gcc-multilib gnu-efi libz-dev:i386 libpci-dev:i386 check:i386
+              autoconf-archive gcc-multilib gnu-efi libz-dev:i386 \
+              libpci-dev:i386 check:i386
       - name: Install arm64 dependencies
         if: ${{ matrix.target == 'arm64' }}
         run: |
@@ -64,8 +66,9 @@ jobs:
           EOF"
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
-              gcc-aarch64-linux-gnu libc6-dev-arm64-cross gnu-efi:arm64 \
-              libz-dev:arm64 libpci-dev:arm64 check:arm64 qemu-user-static
+              autoconf-archive gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
+              gnu-efi:arm64 libz-dev:arm64 libpci-dev:arm64 check:arm64 \
+              qemu-user-static
       - name: Install cppcheck
         if: ${{ matrix.target == 'cppcheck' }}
         run: |
