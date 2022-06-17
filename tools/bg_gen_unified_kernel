@@ -204,57 +204,57 @@ def main():
     stub = args.stub.read()
 
     pe_headers = PEHeaders('stub image', stub)
+    stub_first_data = pe_headers.first_data
     file_align = pe_headers.get_file_alignment()
 
     # Add extra section headers
-    cmdline_offs = align(len(stub), file_align)
-    cmdline_size = align(len(cmdline), file_align)
-    section = Section(b'.cmdline', cmdline_size, 0x30000,
-                      cmdline_size, cmdline_offs,
-                      Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
-                      Section.IMAGE_SCN_MEM_READ)
-    pe_headers.add_section(section)
+    current_offs = align(len(stub), file_align)
+    sect_size = align(len(cmdline), file_align)
+    cmdline_section = Section(b'.cmdline', sect_size, 0x30000,
+                              sect_size, current_offs,
+                              Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
+                              Section.IMAGE_SCN_MEM_READ)
+    pe_headers.add_section(cmdline_section)
 
     kernel = args.kernel.read()
     kernel_pe_headers = PEHeaders('kernel', kernel)
 
-    kernel_offs = cmdline_offs + cmdline_size
-    kernel_size = align(len(kernel), file_align)
-    kernel_virt_size = max(kernel_size, kernel_pe_headers.get_size_of_image())
-    section = Section(b'.kernel', kernel_virt_size, 0x2000000,
-                      kernel_size, kernel_offs,
-                      Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
-                      Section.IMAGE_SCN_MEM_READ)
-    pe_headers.add_section(section)
+    current_offs = cmdline_section.data_offs + cmdline_section.data_size
+    sect_size = align(len(kernel), file_align)
+    virt_size = max(sect_size, kernel_pe_headers.get_size_of_image())
+    kernel_section = Section(b'.kernel', virt_size, 0x2000000,
+                             sect_size, current_offs,
+                             Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
+                             Section.IMAGE_SCN_MEM_READ)
+    pe_headers.add_section(kernel_section)
     pe_headers.set_section_alignment(kernel_pe_headers.get_section_alignment())
 
-    initrd_offs = kernel_offs + kernel_size
-    initrd_size = 0
+    current_offs = kernel_section.data_offs + kernel_section.data_size
     if args.initrd:
         initrd = args.initrd.read()
-        initrd_size = align(len(initrd), file_align)
-        section = Section(b'.initrd', initrd_size, 0x6000000,
-                          initrd_size, initrd_offs,
-                          Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
-                          Section.IMAGE_SCN_MEM_READ)
-        pe_headers.add_section(section)
+        sect_size = align(len(initrd), file_align)
+        initrd_section = Section(b'.initrd', sect_size, 0x6000000,
+                                 sect_size, current_offs,
+                                 Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
+                                 Section.IMAGE_SCN_MEM_READ)
+        pe_headers.add_section(initrd_section)
+        current_offs = initrd_section.data_offs + initrd_section.data_size
 
-    current_offs = initrd_offs + initrd_size
     dtb_virt = 0x40000
     dtb = []
-    dtb_offs = []
-    dtb_size = 0
+    dtb_section = []
     for n in range(len(args.dtb)):
         dtb.append(args.dtb[n].read())
-        dtb_offs.append(current_offs)
-        dtb_size = align(len(dtb[n]), file_align)
+        sect_size = align(len(dtb[n]), file_align)
         section = Section(bytes('.dtb-{}'.format(n + 1), 'ascii'),
-                          dtb_size, dtb_virt, dtb_size, dtb_offs[n],
+                          sect_size, dtb_virt, sect_size, current_offs,
                           Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
                           Section.IMAGE_SCN_MEM_READ)
         pe_headers.add_section(section)
-        dtb_virt += dtb_size
-        current_offs += dtb_size
+        dtb_section.append(section)
+
+        dtb_virt += section.data_size
+        current_offs = section.data_offs + section.data_size
 
     # Build unified image header
     image = pe_headers.dos_header + pe_headers.coff_header + \
@@ -262,22 +262,25 @@ def main():
     for section in pe_headers.sections:
         image += section.get_struct()
 
+    # Pad till first section data
+    image += bytearray(pe_headers.first_data - len(image))
+
     # Write remaining stub
-    image += stub[len(image):]
+    image += stub[stub_first_data:]
 
     # Write data of extra sections
-    image += bytearray(cmdline_offs - len(image))
+    image += bytearray(cmdline_section.data_offs - len(image))
     image += cmdline
 
-    image += bytearray(kernel_offs - len(image))
+    image += bytearray(kernel_section.data_offs - len(image))
     image += kernel
 
     if args.initrd:
-        image += bytearray(initrd_offs - len(image))
+        image += bytearray(initrd_section.data_offs - len(image))
         image += initrd
 
     for n in range(len(dtb)):
-        image += bytearray(dtb_offs[n] - len(image))
+        image += bytearray(dtb_section[n].data_offs - len(image))
         image += dtb[n]
 
     # Align to promised size of last section
