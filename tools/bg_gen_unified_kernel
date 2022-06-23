@@ -102,6 +102,7 @@ class PEHeaders:
             exit(1)
 
         self.first_data = len(blob)
+        self.end_of_sections = 0
 
         self.sections = []
         for n in range(num_sections):
@@ -114,6 +115,10 @@ class PEHeaders:
 
             if section.data_size and section.data_offs < self.first_data:
                 self.first_data = section.data_offs
+
+            end_of_section = section.data_offs + section.data_size
+            if end_of_section > self.end_of_sections:
+                self.end_of_sections = end_of_section
 
             self.sections.append(section)
 
@@ -200,6 +205,10 @@ class PEHeaders:
                 if sect.data_size > 0:
                     sect.data_offs += file_relocation
 
+        end_of_section = section.data_offs + section.data_size
+        if end_of_section > self.end_of_sections:
+            self.end_of_sections = end_of_section
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -235,10 +244,11 @@ def main():
 
     pe_headers = PEHeaders('stub image', stub)
     stub_first_data = pe_headers.first_data
+    stub_end_of_sections = pe_headers.end_of_sections
     file_align = pe_headers.get_file_alignment()
 
     # Add extra section headers
-    current_offs = align(len(stub), file_align)
+    current_offs = align(stub_end_of_sections, file_align)
     sect_size = align(len(cmdline), file_align)
     cmdline_section = Section(b'.cmdline', sect_size, 0x30000,
                               sect_size, current_offs,
@@ -314,7 +324,7 @@ def main():
     image += bytearray(pe_headers.first_data - len(image))
 
     # Write remaining stub
-    image += stub[stub_first_data:]
+    image += stub[stub_first_data:stub_end_of_sections]
 
     # Write data of extra sections
     image += bytearray(cmdline_section.data_offs - len(image))
