@@ -247,17 +247,14 @@ def main():
     pe_headers.add_section(cmdline_section)
 
     kernel = args.kernel.read()
-    kernel_pe_headers = PEHeaders('kernel', kernel)
 
     current_offs = cmdline_section.data_offs + cmdline_section.data_size
     sect_size = align(len(kernel), file_align)
-    virt_size = max(sect_size, kernel_pe_headers.get_size_of_image())
-    kernel_section = Section(b'.kernel', virt_size, 0x2000000,
+    kernel_section = Section(b'.kernel', sect_size, 0x2000000,
                              sect_size, current_offs,
                              Section.IMAGE_SCN_CNT_INITIALIZED_DATA |
                              Section.IMAGE_SCN_MEM_READ)
     pe_headers.add_section(kernel_section)
-    pe_headers.set_section_alignment(kernel_pe_headers.get_section_alignment())
 
     current_offs = kernel_section.data_offs + kernel_section.data_size
     if args.initrd:

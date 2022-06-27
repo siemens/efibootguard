@@ -34,7 +34,11 @@ typedef struct {
 typedef struct {
 	UINT8 Ignore1[16];
 	UINT32 AddressOfEntryPoint;
-	UINT8 Ignore2[220];
+	UINT8 Ignore2[12];
+	UINT32 SectionAlignment;
+	UINT8 Ignore3[20];
+	UINT32 SizeOfImage;
+	UINT8 Ignore4[180];
 } __attribute__((packed)) OPT_HEADER;
 
 typedef struct {
@@ -52,6 +56,12 @@ typedef struct {
 
 static EFI_HANDLE this_image;
 static EFI_LOADED_IMAGE kernel_image;
+
+EFI_PHYSICAL_ADDRESS align_addr(EFI_PHYSICAL_ADDRESS ptr,
+				EFI_PHYSICAL_ADDRESS align)
+{
+	return (ptr + align - 1) & ~(align - 1);
+}
 
 static VOID info(CHAR16 *message)
 {
@@ -92,6 +102,8 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	const SECTION *initrd_section = NULL;
 	EFI_HANDLE kernel_handle = NULL;
 	BOOLEAN has_dtbs = FALSE;
+	const VOID *kernel_source;
+	EFI_PHYSICAL_ADDRESS kernel_buffer;
 	const CHAR8 *fdt_compatible;
 	VOID *fdt, *alt_fdt = NULL;
 	EFI_IMAGE_ENTRY_POINT kernel_entry;
@@ -99,7 +111,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	const PE_HEADER *pe_header;
 	const SECTION *section;
 	EFI_STATUS status, cleanup_status;
-	UINTN n;
+	UINTN n, kernel_pages;
 
 	this_image = image_handle;
 	InitializeLib(image_handle, system_table);
@@ -145,10 +157,6 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		error_exit(L"Missing .kernel section", EFI_NOT_FOUND);
 	}
 
-	kernel_image.ImageBase = (UINT8 *) stub_image->ImageBase +
-		kernel_section->VirtualAddress;
-	kernel_image.ImageSize = kernel_section->VirtualSize;
-
 	if (cmdline_section) {
 		kernel_image.LoadOptions = (UINT8 *) stub_image->ImageBase +
 			cmdline_section->VirtualAddress;
@@ -162,12 +170,44 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 			initrd_section->VirtualSize);
 	}
 
+	/*
+	 * Allocate new home for the kernel image. This is needed because
+	 *  - its section is either not executable or not writable
+	 *  - section alignment in virtual memory may not fit
+	 *
+	 * The new buffer size is based from SizeOfImage, aligned according to
+	 * the kernels SectionAlignment. As SectionAlignment may be larger than
+	 * the page size, over-allocate in order to adjust the base as needed.
+	 */
+	kernel_source = (UINT8 *) stub_image->ImageBase +
+		kernel_section->VirtualAddress;
+
+	pe_header = get_pe_header(kernel_source);
+
+	kernel_pages = EFI_SIZE_TO_PAGES(pe_header->Opt.SizeOfImage +
+					 pe_header->Opt.SectionAlignment);
+	status = BS->AllocatePages(AllocateAnyPages, EfiLoaderData,
+				   kernel_pages, &kernel_buffer);
+	if (EFI_ERROR(status)) {
+		error(L"Error allocating memory for kernel image", status);
+		goto cleanup_initrd;
+	}
+
+	kernel_image.ImageBase = (VOID *)
+		align_addr(kernel_buffer, pe_header->Opt.SectionAlignment);
+	kernel_image.ImageSize = kernel_section->VirtualSize;
+
+	CopyMem(kernel_image.ImageBase, kernel_source, kernel_image.ImageSize);
+	/* Clear the rest so that .bss is definitely zero. */
+	SetMem((UINT8 *) kernel_image.ImageBase + kernel_image.ImageSize,
+	       pe_header->Opt.SizeOfImage - kernel_image.ImageSize, 0);
+
 	status = BS->InstallMultipleProtocolInterfaces(
 			&kernel_handle, &LoadedImageProtocol, &kernel_image,
 			NULL);
 	if (EFI_ERROR(status)) {
 		error(L"Error registering kernel image", status);
-		goto cleanup_initrd;
+		goto cleanup_buffer;
 	}
 
 	if (alt_fdt) {
@@ -183,7 +223,6 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		info(L"Using firmware-provided device tree");
 	}
 
-	pe_header = get_pe_header(kernel_image.ImageBase);
 	kernel_entry = (EFI_IMAGE_ENTRY_POINT)
 		((UINT8 *) kernel_image.ImageBase +
 		 pe_header->Opt.AddressOfEntryPoint);
@@ -200,6 +239,8 @@ cleanup_protocols:
 			status = cleanup_status;
 		}
 	}
+cleanup_buffer:
+	BS->FreePages(kernel_buffer, kernel_pages);
 cleanup_initrd:
 	uninstall_initrd_loader();
 
