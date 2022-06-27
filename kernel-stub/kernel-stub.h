@@ -16,6 +16,7 @@
 
 VOID error(CHAR16 *message, EFI_STATUS status);
 VOID __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status);
+VOID info(CHAR16 *message);
 
 const VOID *get_fdt_compatible(VOID);
 BOOLEAN match_fdt(const VOID *fdt, const CHAR8 *compatible);

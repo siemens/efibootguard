@@ -152,9 +152,24 @@ BOOLEAN match_fdt(const VOID *fdt, const CHAR8 *compatible)
 	return strcmpa(compatible, alt_compatible) == 0;
 }
 
-EFI_STATUS replace_fdt(const VOID *fdt)
+static VOID *clone_fdt(const VOID *fdt, UINTN size)
 {
 	const FDT_HEADER *header = fdt;
+	VOID *clone;
+
+	clone = AllocatePool(size);
+	if (!clone) {
+		error(L"Error allocating device tree buffer",
+		      EFI_OUT_OF_RESOURCES);
+		return NULL;
+	}
+
+	CopyMem(clone, fdt, BE32_TO_HOST(header->TotalSize));
+	return clone;
+}
+
+EFI_STATUS replace_fdt(const VOID *fdt)
+{
 	EFI_DT_FIXUP_PROTOCOL *protocol;
 	EFI_STATUS status;
 	VOID *fdt_buffer;
@@ -162,27 +177,39 @@ EFI_STATUS replace_fdt(const VOID *fdt)
 
 	status = LibLocateProtocol(&EfiDtFixupProtocol, (VOID **)&protocol);
 	if (EFI_ERROR(status)) {
-		error(L"Did not find device tree fixup protocol", status);
+		const FDT_HEADER *header = fdt;
+
+		info(L"Firmware does not provide device tree fixup protocol");
+
+		fdt_buffer = clone_fdt(fdt, BE32_TO_HOST(header->TotalSize));
+		if (!fdt_buffer) {
+			return EFI_OUT_OF_RESOURCES;
+		}
+
+		status = BS->InstallConfigurationTable(&EfiDtbTableGuid,
+						       fdt_buffer);
+		if (EFI_ERROR(status)) {
+			FreePool(fdt_buffer);
+			error(L"Failed to install alternative device tree",
+			      status);
+		}
 		return status;
 	}
 
 	/* Find out which size we need */
 	size = 0;
-	status = protocol->Fixup(protocol, (VOID *)fdt, &size,
+	status = protocol->Fixup(protocol, (VOID *) fdt, &size,
 				 EFI_DT_APPLY_FIXUPS);
 	if (status != EFI_BUFFER_TOO_SMALL) {
 		error(L"Device tree fixup: unexpected error", status);
 		return status;
 	}
 
-	fdt_buffer = AllocatePool(size);
+	fdt_buffer = clone_fdt(fdt, size);
 	if (!fdt_buffer) {
-		status = EFI_OUT_OF_RESOURCES;
-		error(L"Error allocating device tree buffer", status);
-		return status;
+		return EFI_OUT_OF_RESOURCES;
 	}
 
-	CopyMem(fdt_buffer, fdt, BE32_TO_HOST(header->TotalSize));
 	status = protocol->Fixup(protocol, fdt_buffer, &size,
 				 EFI_DT_APPLY_FIXUPS | EFI_DT_RESERVE_MEMORY |
 				 EFI_DT_INSTALL_TABLE);

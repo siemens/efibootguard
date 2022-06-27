@@ -63,7 +63,7 @@ EFI_PHYSICAL_ADDRESS align_addr(EFI_PHYSICAL_ADDRESS ptr,
 	return (ptr + align - 1) & ~(align - 1);
 }
 
-static VOID info(CHAR16 *message)
+VOID info(CHAR16 *message)
 {
 	Print(L"Unified kernel stub: %s\n", message);
 }
