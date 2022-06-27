@@ -140,7 +140,7 @@ BOOLEAN match_fdt(const VOID *fdt, const CHAR8 *compatible)
 	const CHAR8 *alt_compatible;
 
 	if (!compatible) {
-		error_exit(L"Found .dtb section but no firmware DTB\n",
+		error_exit(L"Found .dtb section but no firmware DTB",
 			   EFI_NOT_FOUND);
 	}
 
