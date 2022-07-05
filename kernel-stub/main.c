@@ -53,17 +53,22 @@ typedef struct {
 static EFI_HANDLE this_image;
 static EFI_LOADED_IMAGE kernel_image;
 
-VOID __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status)
-{
-	Print(L"Unified kernel stub: %s (%r).\n", message, status);
-	(VOID) BS->Stall(3 * 1000 * 1000);
-	(VOID) BS->Exit(this_image, status, 0, NULL);
-	__builtin_unreachable();
-}
-
 static VOID info(CHAR16 *message)
 {
 	Print(L"Unified kernel stub: %s\n", message);
+}
+
+VOID error(CHAR16 *message, EFI_STATUS status)
+{
+	Print(L"Unified kernel stub: %s (%r).\n", message, status);
+	(VOID) BS->Stall(3 * 1000 * 1000);
+}
+
+VOID __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status)
+{
+	error(message, status);
+	(VOID) BS->Exit(this_image, status, 0, NULL);
+	__builtin_unreachable();
 }
 
 static const PE_HEADER *get_pe_header(const VOID *image)
@@ -93,7 +98,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	EFI_LOADED_IMAGE *stub_image;
 	const PE_HEADER *pe_header;
 	const SECTION *section;
-	EFI_STATUS status, kernel_status;
+	EFI_STATUS status, cleanup_status;
 	UINTN n;
 
 	this_image = image_handle;
@@ -161,12 +166,15 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 			&kernel_handle, &LoadedImageProtocol, &kernel_image,
 			NULL);
 	if (EFI_ERROR(status)) {
-		uninstall_initrd_loader();
-		error_exit(L"Error registering kernel image", status);
+		error(L"Error registering kernel image", status);
+		goto cleanup_initrd;
 	}
 
 	if (alt_fdt) {
-		replace_fdt(alt_fdt);
+		status = replace_fdt(alt_fdt);
+		if (EFI_ERROR(status)) {
+			goto cleanup_protocols;
+		}
 		info(L"Using matched embedded device tree");
 	} else if (fdt_compatible) {
 		if (has_dtbs) {
@@ -180,15 +188,20 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		((UINT8 *) kernel_image.ImageBase +
 		 pe_header->Opt.AddressOfEntryPoint);
 
-	kernel_status = kernel_entry(kernel_handle, system_table);
+	status = kernel_entry(kernel_handle, system_table);
 
-	status = BS->UninstallMultipleProtocolInterfaces(
+cleanup_protocols:
+	cleanup_status = BS->UninstallMultipleProtocolInterfaces(
 			kernel_handle, &LoadedImageProtocol, &kernel_image,
 			NULL);
-	if (EFI_ERROR(status)) {
-		error_exit(L"Error unregistering kernel image", status);
+	if (EFI_ERROR(cleanup_status)) {
+		error(L"Error unregistering kernel image", status);
+		if (!EFI_ERROR(status)) {
+			status = cleanup_status;
+		}
 	}
+cleanup_initrd:
 	uninstall_initrd_loader();
 
-	return kernel_status;
+	return status;
 }

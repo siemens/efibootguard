@@ -152,7 +152,7 @@ BOOLEAN match_fdt(const VOID *fdt, const CHAR8 *compatible)
 	return strcmpa(compatible, alt_compatible) == 0;
 }
 
-VOID replace_fdt(const VOID *fdt)
+EFI_STATUS replace_fdt(const VOID *fdt)
 {
 	const FDT_HEADER *header = fdt;
 	EFI_DT_FIXUP_PROTOCOL *protocol;
@@ -162,7 +162,8 @@ VOID replace_fdt(const VOID *fdt)
 
 	status = LibLocateProtocol(&EfiDtFixupProtocol, (VOID **)&protocol);
 	if (EFI_ERROR(status)) {
-		error_exit(L"Did not find device tree fixup protocol", status);
+		error(L"Did not find device tree fixup protocol", status);
+		return status;
 	}
 
 	/* Find out which size we need */
@@ -170,13 +171,15 @@ VOID replace_fdt(const VOID *fdt)
 	status = protocol->Fixup(protocol, (VOID *)fdt, &size,
 				 EFI_DT_APPLY_FIXUPS);
 	if (status != EFI_BUFFER_TOO_SMALL) {
-		error_exit(L"Device tree fixup: unexpected error", status);
+		error(L"Device tree fixup: unexpected error", status);
+		return status;
 	}
 
 	fdt_buffer = AllocatePool(size);
 	if (!fdt_buffer) {
-		error_exit(L"Error allocating device tree buffer",
-			   EFI_OUT_OF_RESOURCES);
+		status = EFI_OUT_OF_RESOURCES;
+		error(L"Error allocating device tree buffer", status);
+		return status;
 	}
 
 	CopyMem(fdt_buffer, fdt, BE32_TO_HOST(header->TotalSize));
@@ -185,6 +188,8 @@ VOID replace_fdt(const VOID *fdt)
 				 EFI_DT_INSTALL_TABLE);
 	if (EFI_ERROR(status)) {
 		FreePool(fdt_buffer);
-		error_exit(L"Device tree fixup failed", status);
+		error(L"Device tree fixup failed", status);
 	}
+
+	return status;
 }
