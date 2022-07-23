@@ -241,6 +241,8 @@ else
 # hence set subsystem 0xa (EFI application) and binary format.
 objcopy_format = -O binary
 efi_ldflags += --defsym=EFI_SUBSYSTEM=0xa
+# Also suppress RWX segment warnings until we have a better solution
+efi_ldflags += $(LDFLAGS_NO_WARN_RWX_SEGMENTS)
 endif
 
 efi_objects_pre1 = $(efi_sources:.c=.o)

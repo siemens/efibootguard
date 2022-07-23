@@ -112,6 +112,11 @@ AX_CHECK_COMPILE_FLAG([-mgeneral-regs-only],
 	[CFLAGS_MGENERAL_REGS_ONLY=])
 AC_SUBST([CFLAGS_MGENERAL_REGS_ONLY])
 
+AX_CHECK_LINK_FLAG([-Wl,--no-warn-rwx-segments],
+	[LDFLAGS_NO_WARN_RWX_SEGMENTS=--no-warn-rwx-segments],
+	[LDFLAGS_NO_WARN_RWX_SEGMENTS=])
+AC_SUBST([LDFLAGS_NO_WARN_RWX_SEGMENTS])
+
 # Checks from autoscan:
 AC_CHECK_FUNCS([getmntent])
 AC_CHECK_FUNCS([memset])
