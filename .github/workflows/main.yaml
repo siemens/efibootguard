@@ -172,6 +172,9 @@ jobs:
           suppress+=" --suppress=nullPointerRedundantCheck:kernel-stub/main.c"
           # Avoid noise regarding Ignore* fields
           suppress+=" --suppress=unusedStructMember:kernel-stub/main.c"
+          # Not applicable because of API requirements
+          suppress+=" --suppress=constParameter:drivers/watchdog/ipc4x7e_wdt.c"
+          suppress+=" --suppress=constParameter:kernel-stub/initrd.c"
 
           enable="--enable=warning \
                   --enable=style \
