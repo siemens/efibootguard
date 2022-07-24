@@ -129,8 +129,9 @@ bool write_env(CONFIG_PART *part, BG_ENVDATA *env)
 	return result;
 }
 
-CONFIG_PART config_parts[ENV_NUM_CONFIG_PARTS];
-BG_ENVDATA envdata[ENV_NUM_CONFIG_PARTS];
+/* Weaken the symbols in order to permit overloading in the test cases. */
+CONFIG_PART __attribute__((weak)) config_parts[ENV_NUM_CONFIG_PARTS];
+BG_ENVDATA __attribute__((weak)) envdata[ENV_NUM_CONFIG_PARTS];
 
 static bool initialized;
 

@@ -48,7 +48,15 @@ check_LIBRARIES = libtest_env_api_fat.a
 libtest_env_api_fat_a_SOURCES = $(libtest_env_api_fat_a_SRC)
 
 libenvapi_testlib_fat.a: libtest_env_api_fat.a
-	$(OBJCOPY) --weaken $^ $@
+	$(OBJCOPY) \
+		--weaken-symbol=read_env \
+		--weaken-symbol=ped_device_probe_all \
+		--weaken-symbol=ped_device_get_next \
+		--weaken-symbol=write_env \
+		--weaken-symbol=get_mountpoint \
+		--weaken-symbol=bgenv_init \
+		--weaken-symbol=bgenv_write \
+		$^ $@
 
 check_PROGRAMS = test_bgenv_init_retval \
 		 test_probe_config_partitions \
