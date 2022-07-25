@@ -31,7 +31,7 @@ Debian 8 or newer:
 apt-get install gnu-efi libpci-dev
 
 # build tools
-apt-get install make automake autoconf libtool pkg-config python3
+apt-get install make automake autoconf autoconf-archive libtool pkg-config python3
 
 # test dependencies
 apt-get install check bats
