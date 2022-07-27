@@ -226,6 +226,7 @@ efi_ldflags = \
 	-shared \
 	-Bsymbolic \
 	-nostdlib \
+	-znoexecstack \
 	-znocombreloc \
 	--warn-common \
 	--no-undefined \
