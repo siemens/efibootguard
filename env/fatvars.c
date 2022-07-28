@@ -94,7 +94,7 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 	UINTN i;
 	int env_invalid[ENV_NUM_CONFIG_PARTS] = {0};
 
-	env = (BG_ENVDATA *)AllocatePool(sizeof(BG_ENVDATA) *
+	env = (BG_ENVDATA *)AllocateZeroPool(sizeof(BG_ENVDATA) *
 					 ENV_NUM_CONFIG_PARTS);
 	if (!env) {
 		ERROR(L"Could not allocate memory for config data.\n");
