@@ -31,6 +31,7 @@
 #include <zlib.h>
 #include "envdata.h"
 #include "ebgenv.h"
+#include <uchar.h>
 
 #ifdef DEBUG
 #define printf_debug(fmt, ...) printf(fmt, __VA_ARGS__)
@@ -74,8 +75,8 @@ typedef struct gc_item {
 
 extern void bgenv_be_verbose(bool v);
 
-extern char *str16to8(char *buffer, const wchar_t *src);
-extern wchar_t *str8to16(wchar_t *buffer, const char *src);
+extern char *str16to8(char *buffer, const char16_t *src);
+extern char16_t *str8to16(char16_t *buffer, const char *src);
 
 extern bool bgenv_init(void);
 extern void bgenv_finalize(void);

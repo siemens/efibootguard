@@ -43,11 +43,11 @@ BG_ENVDATA envdata[ENV_NUM_CONFIG_PARTS];
 
 START_TEST(ebgenv_api_internal_strXtoY)
 {
-	wchar_t *exp_res = L"This is a test";
-	wchar_t bufferw[16];
+	char16_t *exp_res = L"This is a test";
+	char16_t bufferw[16];
 	char buffer[16];
 	char *input = "This is a test";
-	wchar_t *resw;
+	char16_t *resw;
 	char *res;
 
 	/* Test conversion from ASCII bits to 16 bit encoding
@@ -259,7 +259,7 @@ START_TEST(ebgenv_api_internal_bgenv_get)
 	BGENV *handle = bgenv_open_latest();
 	ck_assert(handle != NULL);
 
-	wchar_t buffer[ENV_STRING_LENGTH];
+	char16_t buffer[ENV_STRING_LENGTH];
 	char *test_strings[] = {
 		"kernelfile_test123",
 		"kernelparams_test123",

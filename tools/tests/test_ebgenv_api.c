@@ -87,7 +87,7 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 {
 	ebgenv_t e;
 	int ret;
-	wchar_t bufferw[10];
+	char16_t bufferw[10];
 	char buffer[10];
 	char *kernelfile = "kernel123";
 	char *kernelparams = "param456";

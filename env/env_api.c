@@ -26,7 +26,7 @@
  * Thus, the needed conversion by truncation function is
  * reimplemented here.
  */
-char *str16to8(char *buffer, const wchar_t *src)
+char *str16to8(char *buffer, const char16_t *src)
 {
 	if (!src || !buffer) {
 		return NULL;
@@ -41,14 +41,14 @@ char *str16to8(char *buffer, const wchar_t *src)
 	return tmp;
 }
 
-wchar_t *str8to16(wchar_t *buffer, const char *src)
+char16_t *str8to16(char16_t *buffer, const char *src)
 {
 	if (!src || !buffer) {
 		return NULL;
 	}
-	wchar_t *tmp = buffer;
+	char16_t *tmp = buffer;
 	while (*src) {
-		*buffer = (wchar_t)*src;
+		*buffer = (char16_t)*src;
 		src++;
 		buffer++;
 	}

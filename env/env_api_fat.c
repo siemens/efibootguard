@@ -277,7 +277,7 @@ static int bgenv_get_uint(char *buffer, uint64_t *type, void *data,
 }
 
 static int bgenv_get_string(char *buffer, uint64_t *type, void *data,
-			    wchar_t *srcstr)
+			    const char16_t *srcstr)
 {
 	str16to8(buffer, srcstr);
 	if (!data) {
