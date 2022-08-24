@@ -16,7 +16,7 @@ git submodule update --init
 pacman -S gnu-efi-libs pciutils
 
 # build tools
-pacman -S gcc make automake autoconf libtool pkg-config python
+pacman -S gcc make automake autoconf autoconf-archive libtool pkg-config python
 
 # test dependencies
 pacman -S check bash-bats
