@@ -185,8 +185,7 @@ AC_DEFINE_UNQUOTED([ENV_MEM_USERVARS], [${ENV_MEM_USERVARS}], [Reserved memory f
 
 AC_ARG_ENABLE([bootloader],
     AS_HELP_STRING([--disable-bootloader], [Compile the bootloader disabled, only make the tools]),
-	[enable_bootloader="no"],
-	[enable_bootloader="yes"])
+	, [enable_bootloader="yes"])
 
 dnl pkg-config
 PKG_PROG_PKG_CONFIG()
@@ -206,7 +205,8 @@ AC_SUBST(LIBEBGENV_VERSION, $(echo $VERSION | cut -dv -f2))
 
 dnl shell completion
 AC_ARG_ENABLE([completion],
-    AS_HELP_STRING([--disable-completion], [do not generate shell completion files]))
+    AS_HELP_STRING([--disable-completion], [do not generate shell completion files]),
+	, [enable_completion="yes"])
 
 AS_IF([test "x$enable_completion" != "xno"],
       [
