@@ -16,6 +16,8 @@
 
 #include <efi.h>
 
+#include "envdata.h"
+
 /* The following definitions regarding status and error constants are
  * implemented the same way the corresponding gnu-efi constants are
  * defined. This is done for symmetry reasons and for the sake of
@@ -30,8 +32,6 @@ typedef int BG_STATUS;
 #define BG_NOT_IMPLEMENTED BGERR(200)
 
 #define DEFAULT_TIMEOUT_SEC 60
-
-#define ENV_FILE_NAME L"BGENV.DAT"
 
 extern EFI_HANDLE this_image;
 

@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 
+#define ENV_FILE_NAME L"BGENV.DAT"
 #define FAT_ENV_FILENAME "BGENV.DAT"
 #define ENV_STRING_LENGTH 255
 
