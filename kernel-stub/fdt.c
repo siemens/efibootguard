@@ -185,37 +185,35 @@ EFI_STATUS replace_fdt(const VOID *fdt)
 		if (!fdt_buffer) {
 			return EFI_OUT_OF_RESOURCES;
 		}
+	} else {
+		/* Find out which size we need */
+		size = 0;
+		status = protocol->Fixup(protocol, (VOID *) fdt, &size,
+					 EFI_DT_APPLY_FIXUPS);
+		if (status != EFI_BUFFER_TOO_SMALL) {
+			error(L"Device tree fixup: unexpected error", status);
+			return status;
+		}
 
-		status = BS->InstallConfigurationTable(&EfiDtbTableGuid,
-						       fdt_buffer);
+		fdt_buffer = clone_fdt(fdt, size);
+		if (!fdt_buffer) {
+			return EFI_OUT_OF_RESOURCES;
+		}
+
+		status = protocol->Fixup(protocol, fdt_buffer, &size,
+					 EFI_DT_APPLY_FIXUPS |
+					 EFI_DT_RESERVE_MEMORY);
 		if (EFI_ERROR(status)) {
 			FreePool(fdt_buffer);
-			error(L"Failed to install alternative device tree",
-			      status);
+			error(L"Device tree fixup failed", status);
+			return status;
 		}
-		return status;
 	}
 
-	/* Find out which size we need */
-	size = 0;
-	status = protocol->Fixup(protocol, (VOID *) fdt, &size,
-				 EFI_DT_APPLY_FIXUPS);
-	if (status != EFI_BUFFER_TOO_SMALL) {
-		error(L"Device tree fixup: unexpected error", status);
-		return status;
-	}
-
-	fdt_buffer = clone_fdt(fdt, size);
-	if (!fdt_buffer) {
-		return EFI_OUT_OF_RESOURCES;
-	}
-
-	status = protocol->Fixup(protocol, fdt_buffer, &size,
-				 EFI_DT_APPLY_FIXUPS | EFI_DT_RESERVE_MEMORY |
-				 EFI_DT_INSTALL_TABLE);
+	status = BS->InstallConfigurationTable(&EfiDtbTableGuid, fdt_buffer);
 	if (EFI_ERROR(status)) {
 		FreePool(fdt_buffer);
-		error(L"Device tree fixup failed", status);
+		error(L"Failed to install alternative device tree", status);
 	}
 
 	return status;
