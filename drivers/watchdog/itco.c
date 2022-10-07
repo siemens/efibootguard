@@ -39,6 +39,7 @@ enum iTCO_chipsets {
 	ITCO_INTEL_LPC_LP,
 	ITCO_INTEL_WBG,
 	ITCO_INTEL_EHL,
+	ITCO_INTEL_TLH,
 };
 
 enum iTCO_versions {
@@ -154,6 +155,12 @@ static const iTCO_info iTCO_chipset_info[] = {
 	{
 	    .name = L"Elkhart Lake",
 	    .pci_id = 0x4b23,
+	    .itco_version = ITCO_V6,
+	},
+    [ITCO_INTEL_TLH] =
+	{
+	    .name = L"Tiger Lake-H",
+	    .pci_id = 0x43a3,
 	    .itco_version = ITCO_V6,
 	},
 };
