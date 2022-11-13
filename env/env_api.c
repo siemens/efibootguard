@@ -144,9 +144,9 @@ uint32_t ebg_env_user_free(ebgenv_t *e)
 uint16_t ebg_env_getglobalstate(ebgenv_t *e)
 {
 	BGENV *env;
-	int res = 4;
+	int res = USTATE_UNKNOWN;
 
-	/* find all environments with revision 0 */
+	/* Test for rolled-back condition. */
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 		env = bgenv_open_by_index(i);
 
@@ -158,10 +158,10 @@ uint16_t ebg_env_getglobalstate(ebgenv_t *e)
 		 * with ustate == USTATE_FAILED */
 		if (env->data->revision == REVISION_FAILED &&
 		    env->data->ustate == USTATE_FAILED) {
-			res = 3;
+			res = USTATE_FAILED;
 		}
 		bgenv_close(env);
-		if (res == 3) {
+		if (res == USTATE_FAILED) {
 			return res;
 		}
 	}
