@@ -31,8 +31,6 @@ typedef int BG_STATUS;
 #define BG_CONFIG_ERROR BGERR(110)
 #define BG_NOT_IMPLEMENTED BGERR(200)
 
-#define DEFAULT_TIMEOUT_SEC 60
-
 extern EFI_HANDLE this_image;
 
 typedef struct _BG_LOADER_PARAMS {

@@ -450,7 +450,7 @@ BGENV *bgenv_create_new(void)
 	env_new->data->revision = new_rev;
 	env_new->data->in_progress = 1;
 	/* set default watchdog timeout */
-	env_new->data->watchdog_timeout_sec = 30;
+	env_new->data->watchdog_timeout_sec = DEFAULT_TIMEOUT_SEC;
 
 	return env_new;
 

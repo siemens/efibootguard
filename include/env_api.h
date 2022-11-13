@@ -41,6 +41,8 @@
 	}
 #endif
 
+#define DEFAULT_TIMEOUT_SEC 30
+
 extern bool bgenv_verbosity;
 
 #define VERBOSE(o, ...)                                                       \
