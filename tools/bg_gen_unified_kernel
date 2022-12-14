@@ -258,6 +258,9 @@ def main():
 
     kernel = args.kernel.read()
 
+    # Just to perform an integrity test for the kernel image
+    PEHeaders('kernel', kernel)
+
     current_offs = cmdline_section.data_offs + cmdline_section.data_size
     sect_size = align(len(kernel), file_align)
     kernel_section = Section(b'.kernel', sect_size, 0x2000000,
