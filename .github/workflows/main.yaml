@@ -1,7 +1,7 @@
 #
 # EFI Boot Guard
 #
-# Copyright (c) Siemens AG, 2021
+# Copyright (c) Siemens AG, 2021-2023
 #
 # Authors:
 #  Claudius Heine <ch@denx.de>
@@ -30,6 +30,7 @@ jobs:
           - i386
           - arm64
           - arm
+          - riscv64
           - cppcheck
     steps:
       - name: Checkout
@@ -88,6 +89,24 @@ jobs:
               autoconf-archive gcc-arm-linux-gnueabihf libc6-dev-armhf-cross \
               gnu-efi:armhf libz-dev:armhf libpci-dev:armhf check:armhf \
               qemu-user-static
+      - name: Install riscv64 dependencies
+        if: ${{ matrix.target == 'riscv64' }}
+        run: |
+          sudo dpkg --add-architecture riscv64
+          sudo sed -i 's/^deb /deb [arch=amd64] /g' /etc/apt/sources.list
+          sudo sh -c "cat <<EOF > /etc/apt/sources.list.d/ports.list
+          deb [arch=riscv64] http://ports.ubuntu.com/ jammy main restricted
+          deb [arch=riscv64] http://ports.ubuntu.com/ jammy-updates main restricted
+          deb [arch=riscv64] http://ports.ubuntu.com/ jammy universe
+          deb [arch=riscv64] http://ports.ubuntu.com/ jammy-updates universe
+          deb [arch=riscv64] http://ports.ubuntu.com/ jammy multiverse
+          deb [arch=riscv64] http://ports.ubuntu.com/ jammy-updates multiverse
+          EOF"
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends \
+              autoconf-archive gcc-riscv64-linux-gnu libc6-dev-riscv64-cross \
+              gnu-efi:riscv64 libz-dev:riscv64 libpci-dev:riscv64 check:riscv64 \
+              qemu-user-static
       - name: Install cppcheck
         if: ${{ matrix.target == 'cppcheck' }}
         run: |
@@ -131,6 +150,13 @@ jobs:
           cd build
           ../configure --host=arm-linux-gnueabihf \
               PKG_CONFIG=/usr/bin/arm-linux-gnueabihf-pkg-config
+          make check -j $(nproc)
+      - name: Build riscv64
+        if: ${{ matrix.target == 'riscv64' }}
+        run: |
+          cd build
+          ../configure --host=riscv64-linux-gnu \
+              PKG_CONFIG=/usr/bin/riscv64-linux-gnu-pkg-config
           make check -j $(nproc)
       - name: Run cppcheck
         if: ${{ matrix.target == 'cppcheck' }}
