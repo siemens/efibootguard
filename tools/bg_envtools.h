@@ -29,10 +29,9 @@
 	    "Environment to use. Expects a file name, "                        \
 	    "usually called BGENV.DAT.")                                       \
 	, OPT("part", 'p', "ENV_PART", 0,                                      \
-	      "Set environment partition to update. If no partition is "       \
-	      "specified, "                                                    \
-	      "the one with the smallest revision value above zero is "        \
-	      "updated.")                                                      \
+	      "Set environment partition to use. If no partition is "          \
+	      "specified, the one with the smallest revision value above "     \
+	      "zero is selected.")                                             \
 	, OPT("verbose", 'v', 0, 0, "Be verbose")                              \
 	, OPT("version", 'V', 0, 0, "Print version")
 

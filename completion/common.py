@@ -16,7 +16,7 @@ def add_common_opts(parser):
     parser.add_argument(
         "-f", "--filepath", metavar="ENVFILE", help="Environment to use. Expects a file name, usually called BGENV.DAT."
     ).complete = shtab.FILE
-    parser.add_argument("-p", "--part", metavar="ENV_PART", type=int, help="Set environment partition to update")
+    parser.add_argument("-p", "--part", metavar="ENV_PART", type=int, help="Set environment partition to use")
     parser.add_argument("-v", "--verbose", action="store_true", help="Be verbose")
     parser.add_argument("-V", "--version", action="store_true", help="Print version")
     # there is a bug in shtab which currently prohibits "-?"
