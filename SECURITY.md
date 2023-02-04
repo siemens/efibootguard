@@ -22,11 +22,12 @@ Guard code.
 ## Reporting a Vulnerability
 
 Please DO NOT report any potential security vulnerability via a public channel
-(mailing list, github issue etc.). Instead, contact the maintainers
-jan.kiszka@siemens.com and christian.storm@siemens.com via email directly.
-Please provide a detailed description of the issue, the steps to reproduce it,
-the affected versions and, if already available, a proposal for a fix. You
-should receive a response withing 5 working days. If the issue is confirmed as
-a vulnerability by us, we will open a Security Advisory on github and give
-credits for your report if desired. This project follows a 90 day disclosure
-timeline.
+(mailing list, github issue etc.). Instead, create a report via
+https://github.com/siemens/efibootguard/security/advisories/new or contact the
+maintainers jan.kiszka@siemens.com and christian.storm@siemens.com via email
+directly. Please provide a detailed description of the issue, the steps to
+reproduce it, the affected versions and, if already available, a proposal for a
+fix. You should receive a response within 5 working days. If the issue is
+confirmed as a vulnerability by us, we will open a Security Advisory on github
+and give credits for your report if desired. This project follows a 90 day
+disclosure timeline.
