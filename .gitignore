@@ -85,6 +85,7 @@ m4/lt*
 version.h
 libtool
 .libs
+*.pc
 
 # Test binaries
 test_bgenv_init_retval
