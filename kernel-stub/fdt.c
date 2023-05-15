@@ -25,6 +25,8 @@
 #define BE32_TO_HOST(val)	(val)
 #endif
 
+#define SIZE_IN_PAGES(size) ((size + EFI_PAGE_SIZE - 1) / EFI_PAGE_SIZE)
+
 #define FDT_BEGIN_NODE	0x1
 #define FDT_END_NODE	0x2
 #define FDT_PROP	0x3
@@ -152,27 +154,27 @@ BOOLEAN match_fdt(const VOID *fdt, const CHAR8 *compatible)
 	return strcmpa(compatible, alt_compatible) == 0;
 }
 
-static VOID *clone_fdt(const VOID *fdt, UINTN size)
+static EFI_STATUS clone_fdt(const VOID *fdt, UINTN size,
+			    EFI_PHYSICAL_ADDRESS *fdt_buffer)
 {
 	const FDT_HEADER *header = fdt;
-	VOID *clone;
+	EFI_STATUS status;
 
-	clone = AllocatePool(size);
-	if (!clone) {
-		error(L"Error allocating device tree buffer",
-		      EFI_OUT_OF_RESOURCES);
-		return NULL;
+	status = BS->AllocatePages(AllocateAnyPages, EfiACPIReclaimMemory,
+				   SIZE_IN_PAGES(size), fdt_buffer);
+	if (EFI_ERROR(status)) {
+		error(L"Error allocating device tree buffer", status);
+		return status;
 	}
-
-	CopyMem(clone, fdt, BE32_TO_HOST(header->TotalSize));
-	return clone;
+	CopyMem((VOID *)*fdt_buffer, fdt, BE32_TO_HOST(header->TotalSize));
+	return EFI_SUCCESS;
 }
 
 EFI_STATUS replace_fdt(const VOID *fdt)
 {
 	EFI_DT_FIXUP_PROTOCOL *protocol;
+	EFI_PHYSICAL_ADDRESS fdt_buffer;
 	EFI_STATUS status;
-	VOID *fdt_buffer;
 	UINTN size;
 
 	status = LibLocateProtocol(&EfiDtFixupProtocol, (VOID **)&protocol);
@@ -181,9 +183,10 @@ EFI_STATUS replace_fdt(const VOID *fdt)
 
 		info(L"Firmware does not provide device tree fixup protocol");
 
-		fdt_buffer = clone_fdt(fdt, BE32_TO_HOST(header->TotalSize));
-		if (!fdt_buffer) {
-			return EFI_OUT_OF_RESOURCES;
+		size = BE32_TO_HOST(header->TotalSize);
+		status = clone_fdt(fdt, size, &fdt_buffer);
+		if (EFI_ERROR(status)) {
+			return status;
 		}
 	} else {
 		/* Find out which size we need */
@@ -195,24 +198,25 @@ EFI_STATUS replace_fdt(const VOID *fdt)
 			return status;
 		}
 
-		fdt_buffer = clone_fdt(fdt, size);
-		if (!fdt_buffer) {
-			return EFI_OUT_OF_RESOURCES;
+		status = clone_fdt(fdt, size, &fdt_buffer);
+		if (EFI_ERROR(status)) {
+			return status;
 		}
 
-		status = protocol->Fixup(protocol, fdt_buffer, &size,
+		status = protocol->Fixup(protocol, (VOID *)fdt_buffer, &size,
 					 EFI_DT_APPLY_FIXUPS |
 					 EFI_DT_RESERVE_MEMORY);
 		if (EFI_ERROR(status)) {
-			FreePool(fdt_buffer);
+			(VOID) BS->FreePages(fdt_buffer, SIZE_IN_PAGES(size));
 			error(L"Device tree fixup failed", status);
 			return status;
 		}
 	}
 
-	status = BS->InstallConfigurationTable(&EfiDtbTableGuid, fdt_buffer);
+	status = BS->InstallConfigurationTable(&EfiDtbTableGuid,
+					       (VOID *)fdt_buffer);
 	if (EFI_ERROR(status)) {
-		FreePool(fdt_buffer);
+		(VOID) BS->FreePages(fdt_buffer, SIZE_IN_PAGES(size));
 		error(L"Failed to install alternative device tree", status);
 	}
 
