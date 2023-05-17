@@ -49,6 +49,7 @@ jobs:
         if: ${{ matrix.target == 'i386' }}
         run: |
           sudo dpkg --add-architecture i386
+          sudo rm -f /etc/apt/sources.list.d/ubuntu-toolchain-r-ubuntu-test-jammy.list
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
               autoconf-archive gcc-multilib gnu-efi libz-dev:i386 \
