@@ -58,7 +58,7 @@ bool mount_partition(CONFIG_PART *cfgpart)
 		VERBOSE(stderr, "Error creating temporary mount point.\n");
 		return false;
 	}
-	if (mount(cfgpart->devpath, mountpoint, "vfat", 0, "")) {
+	if (mount(cfgpart->devpath, mountpoint, "vfat", MS_SYNCHRONOUS, NULL)) {
 		VERBOSE(stderr, "Error mounting to temporary mount point.\n");
 		if (rmdir(tmpdir_template)) {
 			VERBOSE(stderr,

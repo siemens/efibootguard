@@ -18,9 +18,12 @@ Generation of a valid configuration partition is described in
 
 *NOTE*: To access configuration data on FAT partitions, the partition must
 either already be mounted, with access rights for the user using the tool, or
-the tool can mount the partition by itself. The latter is only possible if the
-tool has the `CAP_SYS_ADMIN` capability. This is the case if the user is `root`
-or the corresponding capability is set in the filesystem.
+the tool can mount the partition by itself. In the former case, it's advised
+to mount with `-o sync` to flush written data and associated metadata to the
+underlying hardware immediately so to reduce data loss probability on power
+cuts. The latter is only possible if the tool has the `CAP_SYS_ADMIN`
+capability. This is the case if the user is `root` or the corresponding
+capability is set in the filesystem.
 
 ## Updating a configuration ##
 
