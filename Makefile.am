@@ -159,12 +159,14 @@ if BOOTLOADER
 if ARCH_IS_X86
 # NOTE: wdat.c is placed first so it is tried before any other drivers
 # NOTE: ipc4x7e_wdt.c must be *before* itco.c
+# NOTE: ipmi_wdt.c must be *before* itco.c
 efi_sources_watchdogs = \
 	drivers/watchdog/wdat.c \
 	drivers/watchdog/amdfch_wdt.c \
 	drivers/watchdog/i6300esb.c \
 	drivers/watchdog/atom-quark.c \
 	drivers/watchdog/ipc4x7e_wdt.c \
+	drivers/watchdog/ipmi_wdt.c \
 	drivers/watchdog/itco.c \
 	drivers/watchdog/hpwdt.c
 else
