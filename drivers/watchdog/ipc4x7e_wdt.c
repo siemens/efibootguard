@@ -80,31 +80,6 @@ static UINT32 get_station_id(SMBIOS_STRUCTURE_POINTER oem_strct)
 	return 0;
 }
 
-static SMBIOS_STRUCTURE_POINTER
-smbios_find_struct(SMBIOS_STRUCTURE_TABLE *table, UINT16 type)
-{
-	SMBIOS_STRUCTURE_POINTER strct;
-	UINT8 *str;
-	UINTN n;
-
-	strct.Raw = (UINT8 *)(uintptr_t)table->TableAddress;
-
-	for (n = 0; n < table->NumberOfSmbiosStructures; n++) {
-		if (strct.Hdr->Type == type) {
-			return strct;
-		}
-		/* Read over any appended strings. */
-		str = strct.Raw + strct.Hdr->Length;
-		while (str[0] != 0 || str[1] != 0) {
-			str++;
-		}
-		strct.Raw = str + 2;
-	}
-
-	strct.Raw = NULL;
-	return strct;
-}
-
 static UINTN mmcfg_address(UINTN bus, UINTN device, UINTN function,
 			   UINTN offset)
 {
