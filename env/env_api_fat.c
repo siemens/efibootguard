@@ -437,20 +437,22 @@ BGENV *bgenv_create_new(void)
 
 	int new_rev = env_latest->data->revision + 1;
 
-	bgenv_close(env_latest);
-
 	env_new = bgenv_open_oldest();
 	if (!env_new) {
+		bgenv_close(env_latest);
 		goto create_new_io_error;
 	}
 
-	/* zero fields */
-	memset(env_new->data, 0, sizeof(BG_ENVDATA));
+	if (env_latest->data != env_new->data) {
+		/* zero fields */
+		memset(env_new->data, 0, sizeof(BG_ENVDATA));
+		/* set default watchdog timeout */
+		env_new->data->watchdog_timeout_sec = DEFAULT_TIMEOUT_SEC;
+	}
+	bgenv_close(env_latest);
 	/* update revision field and testing mode */
 	env_new->data->revision = new_rev;
 	env_new->data->in_progress = 1;
-	/* set default watchdog timeout */
-	env_new->data->watchdog_timeout_sec = DEFAULT_TIMEOUT_SEC;
 
 	return env_new;
 
