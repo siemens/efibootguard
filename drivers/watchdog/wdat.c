@@ -135,6 +135,8 @@ typedef struct {
 
 #pragma pack()
 
+static BOOLEAN probed_before;
+
 /* --------------------------------------------------------------------------
  * Parsing of ACPI/WDAT structures for efibootguard
  * --------------------------------------------------------------------------
@@ -425,6 +427,11 @@ init(EFI_PCI_IO __attribute__((unused)) *pci_io,
 	EFI_STATUS status;
 	UINT32 boot_status;
 	UINTN n;
+
+	/* We do not use PCI, and machines may have many PCI devices */
+	if (probed_before)
+		return EFI_UNSUPPORTED;
+	probed_before = TRUE;
 
 	/* Locate WDAT in ACPI tables */
 	status = locate_and_parse_rsdp(&wdat_table);
