@@ -87,10 +87,10 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 {
 	ebgenv_t e;
 	int ret;
-	char16_t bufferw[10];
 	char buffer[10];
 	char *kernelfile = "kernel123";
 	char *kernelparams = "param456";
+	int watchdogtimeout = 44;
 
 	memset(&e, 0, sizeof(e));
 	memset(envdata, 0, sizeof(envdata));
@@ -110,13 +110,22 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 	 * environment is created. The new environment must overwrite the
 	 * oldest environment and revision and ustate must be set correctly.
 	 */
-	envdata[ENV_NUM_CONFIG_PARTS-1].watchdog_timeout_sec = 44;
-	(void)str8to16(bufferw, kernelfile);
-	memcpy(envdata[ENV_NUM_CONFIG_PARTS-1].kernelfile, bufferw,
-	       strlen(kernelfile) * 2 + 2);
-	(void)str8to16(bufferw, kernelparams);
-	memcpy(envdata[ENV_NUM_CONFIG_PARTS-1].kernelparams, bufferw,
-	       strlen(kernelparams) * 2 + 2);
+	if (ENV_NUM_CONFIG_PARTS > 1) {
+		char16_t bufferw[10];
+
+		envdata[ENV_NUM_CONFIG_PARTS-1].watchdog_timeout_sec =
+			watchdogtimeout;
+		(void)str8to16(bufferw, kernelfile);
+		memcpy(envdata[ENV_NUM_CONFIG_PARTS-1].kernelfile, bufferw,
+		       strlen(kernelfile) * 2 + 2);
+		(void)str8to16(bufferw, kernelparams);
+		memcpy(envdata[ENV_NUM_CONFIG_PARTS-1].kernelparams, bufferw,
+		       strlen(kernelparams) * 2 + 2);
+	} else {
+		kernelfile = "";
+		kernelparams = "";
+		watchdogtimeout = 0;
+	}
 	errno = 0;
 
 	bgenv_init_fake.return_val = true;
@@ -132,7 +141,8 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 		((BGENV *)e.bgenv)->data->revision, ENV_NUM_CONFIG_PARTS+1);
 
 	ck_assert_int_eq(((BGENV *)e.bgenv)->data->ustate, USTATE_OK);
-	ck_assert_int_eq(((BGENV *)e.bgenv)->data->watchdog_timeout_sec, 44);
+	ck_assert_int_eq(((BGENV *)e.bgenv)->data->watchdog_timeout_sec,
+			 watchdogtimeout);
 	(void)str16to8(buffer, ((BGENV *)e.bgenv)->data->kernelfile);
 	ck_assert_int_eq(strcmp(buffer, kernelfile), 0);
 	(void)str16to8(buffer, ((BGENV *)e.bgenv)->data->kernelparams);

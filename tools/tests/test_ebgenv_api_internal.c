@@ -248,7 +248,7 @@ START_TEST(ebgenv_api_internal_bgenv_create_new)
 	ck_assert(handle != NULL);
 	ck_assert(handle->data == &envdata[max-1]);
 	ck_assert(envdata[max-1].revision == max+1);
-	ck_assert(envdata[max-1].watchdog_timeout_sec == 30);
+	ck_assert(envdata[max-1].watchdog_timeout_sec == (max == 1 ? 0 : 30));
 
 	free(handle);
 }
