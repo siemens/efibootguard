@@ -73,6 +73,8 @@ bool probe_config_partitions(CONFIG_PART *cfgpart)
 					return false;
 				}
 				count++;
+			} else {
+				free(tmp.devpath);
 			}
 			part = ped_disk_next_partition(pd, part);
 		}
