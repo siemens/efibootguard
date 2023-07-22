@@ -13,6 +13,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <check.h>
 #include <fff.h>
 
@@ -20,7 +21,7 @@ extern Suite *ebg_test_suite(void);
 
 int main(void)
 {
-	int number_failed;
+	int number_failed = 1;
 
 	Suite *s;
 	SRunner *sr;
@@ -28,9 +29,13 @@ int main(void)
 	s = ebg_test_suite();
 	sr = srunner_create(s);
 
-	srunner_run_all(sr, CK_NORMAL);
-	number_failed = srunner_ntests_failed(sr);
-	srunner_free(sr);
+	if (srunner_fork_status(sr) != CK_FORK) {
+		fprintf(stderr, "Tests assume fork() support");
+	} else {
+		srunner_run_all(sr, CK_NORMAL);
+		number_failed = srunner_ntests_failed(sr);
+		srunner_free(sr);
+	}
 
 	return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
