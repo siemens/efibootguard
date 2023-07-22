@@ -101,8 +101,58 @@ bool bgenv_validate_uservars(uint8_t *udata)
 	return true;
 }
 
-void bgenv_serialize_uservar(uint8_t *p, char *key, uint64_t type, void *data,
-			    uint32_t record_size)
+static uint8_t *bgenv_uservar_alloc(uint8_t *udata, uint32_t datalen)
+{
+	uint32_t spaceleft;
+
+	if (!udata) {
+		errno = EINVAL;
+		return NULL;
+	}
+	spaceleft = bgenv_user_free(udata);
+	VERBOSE(stdout, "uservar_alloc: free: %lu requested: %lu \n",
+		(unsigned long)spaceleft, (unsigned long)datalen);
+
+	/* To find the end of user variables, a 2nd 0 must be there after the
+	 * last variable content, thus, we need one extra byte if appending a
+	 * new variable. */
+	if (spaceleft < datalen + 1) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	return udata + (ENV_MEM_USERVARS - spaceleft);
+}
+
+static uint8_t *bgenv_uservar_realloc(uint8_t *udata, uint32_t new_rsize,
+				      uint8_t *p)
+{
+	uint32_t spaceleft;
+	uint32_t rsize;
+
+	bgenv_map_uservar(p, NULL, NULL, NULL, &rsize, NULL);
+
+	/* Is the new record size equal to the old, so that we can
+	 * keep the variable in place? */
+	if (new_rsize == rsize) {
+		return p;
+	}
+
+	/* Delete variable and return pointer to end of whole user vars */
+	bgenv_del_uservar(udata, p);
+
+	spaceleft = bgenv_user_free(udata);
+
+	if (spaceleft < new_rsize - 1) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	return udata + ENV_MEM_USERVARS - spaceleft;
+}
+
+static void bgenv_serialize_uservar(uint8_t *p, char *key, uint64_t type,
+				    void *data, uint32_t record_size)
 {
 	uint32_t payload_size, data_size;
 
@@ -211,56 +261,6 @@ uint8_t *bgenv_next_uservar(uint8_t *udata)
 	bgenv_map_uservar(udata, NULL, NULL, NULL, &record_size, NULL);
 
 	return udata + record_size;
-}
-
-uint8_t *bgenv_uservar_alloc(uint8_t *udata, uint32_t datalen)
-{
-	uint32_t spaceleft;
-
-	if (!udata) {
-		errno = EINVAL;
-		return NULL;
-	}
-	spaceleft = bgenv_user_free(udata);
-	VERBOSE(stdout, "uservar_alloc: free: %lu requested: %lu \n",
-		(unsigned long)spaceleft, (unsigned long)datalen);
-
-	/* To find the end of user variables, a 2nd 0 must be there after the
-	 * last variable content, thus, we need one extra byte if appending a
-	 * new variable. */
-	if (spaceleft < datalen + 1) {
-		errno = ENOMEM;
-		return NULL;
-	}
-
-	return udata + (ENV_MEM_USERVARS - spaceleft);
-}
-
-uint8_t *bgenv_uservar_realloc(uint8_t *udata, uint32_t new_rsize,
-			       uint8_t *p)
-{
-	uint32_t spaceleft;
-	uint32_t rsize;
-
-	bgenv_map_uservar(p, NULL, NULL, NULL, &rsize, NULL);
-
-	/* Is the new record size equal to the old, so that we can
-	 * keep the variable in place? */
-	if (new_rsize == rsize) {
-		return p;
-	}
-
-	/* Delete variable and return pointer to end of whole user vars */
-	bgenv_del_uservar(udata, p);
-
-	spaceleft = bgenv_user_free(udata);
-
-	if (spaceleft < new_rsize - 1) {
-		errno = ENOMEM;
-		return NULL;
-	}
-
-	return udata + ENV_MEM_USERVARS - spaceleft;
 }
 
 void bgenv_del_uservar(uint8_t *udata, uint8_t *var)
