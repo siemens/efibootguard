@@ -155,9 +155,13 @@ bool get_env(char *configfilepath, BG_ENVDATA *data)
 			"Error closing environment file after reading.\n");
 	};
 
+	if (result == false) {
+		return false;
+	}
+
 	/* enforce NULL-termination of strings */
 	data->kernelfile[ENV_STRING_LENGTH - 1] = 0;
 	data->kernelparams[ENV_STRING_LENGTH - 1] = 0;
 
-	return result;
+	return validate_envdata(data);
 }

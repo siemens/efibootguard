@@ -72,6 +72,35 @@ void bgenv_map_uservar(uint8_t *udata, char **key, uint64_t *type, uint8_t **val
 	}
 }
 
+bool bgenv_validate_uservars(uint8_t *udata)
+{
+	uint32_t spaceleft = ENV_MEM_USERVARS;
+
+	while (*udata) {
+		uint32_t key_len = strnlen((char *)udata, spaceleft);
+
+		/* we need space for the key string + null termination +
+		 * the payload size field */
+		if (key_len + 1 + sizeof(uint32_t) >= spaceleft) {
+			return false;
+		}
+
+		spaceleft -= key_len + 1;
+		udata += key_len + 1;
+
+		uint32_t payload_size = *(uint32_t *)udata;
+
+		/* the payload must leave at least one byte free */
+		if (payload_size >= spaceleft) {
+			return false;
+		}
+
+		spaceleft -= payload_size;
+		udata += payload_size;
+	}
+	return true;
+}
+
 void bgenv_serialize_uservar(uint8_t *p, char *key, uint64_t type, void *data,
 			    uint32_t record_size)
 {

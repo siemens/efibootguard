@@ -51,6 +51,33 @@ void bgenv_be_verbose(bool v)
 	ebgpart_beverbose(v);
 }
 
+static void clear_envdata(BG_ENVDATA *data)
+{
+	memset(data, 0, sizeof(BG_ENVDATA));
+	data->crc32 = crc32(0, (Bytef *)data,
+			    sizeof(BG_ENVDATA) - sizeof(data->crc32));
+}
+
+bool validate_envdata(BG_ENVDATA *data)
+{
+	uint32_t sum = crc32(0, (Bytef *)data,
+			     sizeof(BG_ENVDATA) - sizeof(data->crc32));
+
+	if (data->crc32 != sum) {
+		VERBOSE(stderr, "Invalid CRC32!\n");
+		/* clear invalid environment */
+		clear_envdata(data);
+		return false;
+	}
+	if (!bgenv_validate_uservars(data->userdata)) {
+		VERBOSE(stderr, "Corrupt uservars!\n");
+		/* clear invalid environment */
+		clear_envdata(data);
+		return false;
+	}
+	return true;
+}
+
 bool read_env(CONFIG_PART *part, BG_ENVDATA *env)
 {
 	if (!part) {
@@ -86,10 +113,16 @@ bool read_env(CONFIG_PART *part, BG_ENVDATA *env)
 	if (part->not_mounted) {
 		unmount_partition(part);
 	}
+	if (result == false) {
+		clear_envdata(env);
+		return false;
+	}
+
 	/* enforce NULL-termination of strings */
 	env->kernelfile[ENV_STRING_LENGTH - 1] = 0;
 	env->kernelparams[ENV_STRING_LENGTH - 1] = 0;
-	return result;
+
+	return validate_envdata(env);
 }
 
 bool write_env(CONFIG_PART *part, BG_ENVDATA *env)
@@ -147,15 +180,6 @@ bool bgenv_init(void)
 	}
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {
 		read_env(&config_parts[i], &envdata[i]);
-		uint32_t sum = crc32(0, (Bytef *)&envdata[i],
-		    sizeof(BG_ENVDATA) - sizeof(envdata[i].crc32));
-		if (envdata[i].crc32 != sum) {
-			VERBOSE(stderr, "Invalid CRC32!\n");
-			/* clear invalid environment */
-			memset(&envdata[i], 0, sizeof(BG_ENVDATA));
-			envdata[i].crc32 = crc32(0, (Bytef *)&envdata[i],
-			    sizeof(BG_ENVDATA) - sizeof(envdata[i].crc32));
-		}
 	}
 	initialized = true;
 	return true;

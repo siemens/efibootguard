@@ -95,3 +95,5 @@ extern int bgenv_get(BGENV *env, char *key, uint64_t *type, void *data,
 extern int bgenv_set(BGENV *env, char *key, uint64_t type, void *data,
 		     uint32_t datalen);
 extern uint8_t *bgenv_find_uservar(uint8_t *userdata, char *key);
+
+extern bool validate_envdata(BG_ENVDATA *data);

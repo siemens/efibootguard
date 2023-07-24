@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 void bgenv_map_uservar(uint8_t *udata, char **key, uint64_t *type,
@@ -35,3 +36,5 @@ uint8_t *bgenv_uservar_realloc(uint8_t *udata, uint32_t new_rsize,
 			       uint8_t *p);
 void bgenv_del_uservar(uint8_t *udata, uint8_t *var);
 uint32_t bgenv_user_free(uint8_t *udata);
+
+bool bgenv_validate_uservars(uint8_t *udata);
