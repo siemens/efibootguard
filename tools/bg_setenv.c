@@ -115,7 +115,6 @@ newaction_nomem:
 static void journal_process_action(BGENV *env, struct env_action *action)
 {
 	ebgenv_t e;
-	char *tmp;
 
 	switch (action->task) {
 	case ENV_TASK_SET:
@@ -123,22 +122,16 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 			action->key, (long long unsigned int)action->type,
 			(char *)action->data);
 		if (strcmp(action->key, "ustate") == 0) {
-			uint16_t ustate;
-			unsigned long t;
+			int ustate;
 			char *arg;
 			int ret;
 			e.bgenv = env;
 			arg = (char *)action->data;
-			errno = 0;
-			t = strtol(arg, &tmp, 10);
-			if ((errno == ERANGE && (t == LONG_MAX ||
-			                         t == LONG_MIN)) ||
-			    (errno != 0 && t == 0) || tmp == arg) {
-				fprintf(stderr, "Invalid value for ustate: %s",
-						(char *)action->data);
+			ustate = parse_int(arg);
+			if (ustate < 0 || ustate > UINT16_MAX) {
+				fprintf(stderr, "Invalid ustate value: %s", arg);
 				return;
 			}
-			ustate = (uint16_t)t;;
 			if ((ret = ebg_env_setglobalstate(&e, ustate)) != 0) {
 				fprintf(stderr,
 					"Error setting global state: %s.",
