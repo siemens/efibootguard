@@ -553,7 +553,7 @@ PedDisk *ped_disk_new(const PedDevice *dev)
 	return &g_ped_dummy_disk;
 }
 
-PedPartition *ped_disk_next_partition(const PedDisk *__attribute__((unused)) pd,
+PedPartition *ped_disk_next_partition(const PedDisk __attribute__((unused)) *pd,
 				      const PedPartition *part)
 {
 	return part->next;

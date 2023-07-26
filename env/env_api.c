@@ -56,7 +56,7 @@ char16_t *str8to16(char16_t *buffer, const char *src)
 	return tmp;
 }
 
-void ebg_beverbose(ebgenv_t *e, bool v)
+void ebg_beverbose(ebgenv_t __attribute__((unused)) *e, bool v)
 {
 	bgenv_be_verbose(v);
 }
@@ -141,7 +141,7 @@ uint32_t ebg_env_user_free(ebgenv_t *e)
 	return bgenv_user_free(((BGENV *)e->bgenv)->data->userdata);
 }
 
-uint16_t ebg_env_getglobalstate(ebgenv_t *e)
+uint16_t ebg_env_getglobalstate(ebgenv_t __attribute__((unused)) *e)
 {
 	BGENV *env;
 	int res = USTATE_UNKNOWN;
