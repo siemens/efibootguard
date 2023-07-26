@@ -18,9 +18,12 @@
 
 #include "env_api.h"
 
-#define OPT(name, key, arg, flags, doc)                                        \
-	{                                                                      \
-		name, key, arg, flags, doc                                     \
+#define OPT(_name, _key, _arg, _flags, _doc)                                        \
+	{ .name = (_name) \
+	, .key = (_key) \
+	, .arg = (_arg) \
+	, .flags = (_flags) \
+	, .doc = (_doc) \
 	}
 
 /* if you change these, do not forget to update completion/common.py */

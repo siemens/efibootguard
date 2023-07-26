@@ -42,7 +42,7 @@ static struct argp_option options_setenv[] = {
 	    "use this option multiple times."),
 	OPT("in_progress", 'i', "IN_PROGRESS", 0,
 	    "Set in_progress variable to simulate a running update process."),
-	{},
+	{0},
 };
 
 /* Arguments used by bg_setenv. */

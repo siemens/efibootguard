@@ -32,7 +32,7 @@ static struct argp_option options_printenv[] = {
 	    "watchdog_timeout, ustate, user. "
 	    "If omitted, all available fields are printed."),
 	OPT("raw", 'r', 0, 0, "Raw output mode, e.g. for shell scripting"),
-	{},
+	{0},
 };
 
 /* Arguments used by bg_printenv. */
