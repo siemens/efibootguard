@@ -191,7 +191,7 @@ BGENV *bgenv_open_by_index(uint32_t index)
 	return handle;
 }
 
-BGENV *bgenv_open_oldest()
+BGENV *bgenv_open_oldest(void)
 {
 	uint32_t minrev = 0xFFFFFFFF;
 	uint32_t min_idx = 0;
@@ -205,7 +205,7 @@ BGENV *bgenv_open_oldest()
 	return bgenv_open_by_index(min_idx);
 }
 
-BGENV *bgenv_open_latest()
+BGENV *bgenv_open_latest(void)
 {
 	uint32_t maxrev = 0;
 	uint32_t max_idx = 0;
