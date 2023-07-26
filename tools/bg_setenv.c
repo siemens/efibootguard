@@ -216,13 +216,15 @@ static error_t parse_setenv_opt(int key, char *arg, struct argp_state *state)
 				return 1;
 			}
 		}
-		if (i < 0 || i > 3) {
+		if (i < 0 || i >= USTATE_MAX) {
 			fprintf(stderr,
 				"Invalid ustate value specified. Possible "
-				"values: "
-				"0 (%s), 1 (%s), 2 (%s), 3 (%s)\n",
-				ustate2str(0), ustate2str(1), ustate2str(2),
-				ustate2str(3));
+				"values: ");
+			for (int j = 0; j < USTATE_MAX; j++) {
+				fprintf(stderr, "%d (%s)%s", j,
+					ustate2str(j),
+					j < USTATE_MAX - 1 ? ", " : "\n");
+			}
 			return 1;
 		} else {
 			res = asprintf(&tmp, "%u", i);
