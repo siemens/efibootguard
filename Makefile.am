@@ -23,7 +23,11 @@ efibootguarddir = $(libdir)/efibootguard
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir) -include config.h
 
 AM_CFLAGS = \
-	-Wno-unused-parameter \
+	-Wall \
+	-Wextra \
+	-pedantic \
+	-Wstrict-prototypes \
+	-Wold-style-definition \
 	-Wmissing-prototypes \
 	-fshort-wchar \
 	-DHAVE_ENDIAN_H \
