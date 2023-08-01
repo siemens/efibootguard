@@ -1,0 +1,36 @@
+# Copyright (c) Siemens AG, 2023
+#
+# Author: Michael Adler <michael.adler@siemens.com>
+#
+# This work is licensed under the terms of the GNU GPL, version 2.  See
+# the COPYING file in the top-level directory.
+#
+# SPDX-License-Identifier:	GPL-2.0
+
+# This file is meant to set up your editor, see https://editorconfig.org.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+tab_width = 8
+
+[{Makefile,*.am}]
+indent_style = tab
+indent_size = tab
+trim_trailing_whitespace = true
+max_line_length = 80
+
+[*.{c,h}]
+indent_style = tab
+indent_size = tab
+trim_trailing_whitespace = true
+max_line_length = 80
+
+[configure.ac]
+indent_style = tab
+indent_size = tab
+tab_width = 8
+trim_trailing_whitespace = true
+max_line_length = 100
