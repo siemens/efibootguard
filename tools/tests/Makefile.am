@@ -41,7 +41,8 @@ libtest_env_api_fat_a_SRC = \
 	../../env/env_config_file.c \
 	../../env/env_config_partitions.c \
 	../../env/env_disk_utils.c \
-	../../env/uservars.c
+	../../env/uservars.c \
+	../../tools/bg_envtools.c
 
 CLEANFILES =
 
@@ -63,7 +64,8 @@ check_PROGRAMS = test_bgenv_init_retval \
 		 test_probe_config_partitions \
 		 test_probe_config_file \
 		 test_ebgenv_api_internal \
-		 test_ebgenv_api
+		 test_ebgenv_api \
+		 test_uservars
 
 FAT_TESTLIB=libenvapi_testlib_fat.a
 
@@ -93,5 +95,9 @@ test_ebgenv_api_internal_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
 test_ebgenv_api_CFLAGS = $(AM_CFLAGS) -Wl,--wrap=bgenv_set -Wl,--wrap=bgenv_get
 test_ebgenv_api_SOURCES = test_ebgenv_api.c $(SRC_TEST_COMMON)
 test_ebgenv_api_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
+
+test_uservars_CFLAGS = $(AM_CFLAGS)
+test_uservars_SOURCES = test_uservars.c $(SRC_TEST_COMMON)
+test_uservars_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
 
 TESTS = $(check_PROGRAMS)

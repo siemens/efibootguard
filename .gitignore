@@ -36,6 +36,7 @@ bg_setenv
 tools/tests/test_partitions
 tools/tests/test_environment
 tools/tests/test_api
+tools/tests/test_uservars
 tools/tests/*.log
 tools/tests/*.trs
 
