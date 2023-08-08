@@ -17,7 +17,9 @@ utmost importance. In scope for us is the bootloader itself, the Linux stub for
 unified images provided by this project and all signed artifacts the bootloader
 or the stub load and execute. All unsigned artifacts such as the EBGENV.DAT
 environment files, are considered untrusted and handled accordingly in EFI Boot
-Guard code.
+Guard code. Furthermore in scope is the processing of the untrusted environment
+files by userspace tools and libraries that come with EFI Boot Guard and which
+may be used under raised privileges.
 
 ## Reporting a Vulnerability
 
