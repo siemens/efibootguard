@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# Copyright (c) Siemens AG, 2021
+# Copyright (c) Siemens AG, 2021-2023
 #
 # Authors:
 #  Michael Adler <michael.adler@siemens.com>
@@ -17,6 +17,12 @@ setup() {
     # file respectively
     DIR="$( cd "$( dirname "$BATS_TEST_FILENAME" )" >/dev/null 2>&1 && pwd )"
     PATH="$DIR/..:$PATH"
+
+    # BATS_TEST_TMPDIR was introduced by BATS 1.4.0, account for older versions
+    [ -n "${BATS_TEST_TMPDIR:++}" ] || {
+        BATS_TEST_TMPDIR="$BATS_RUN_TMPDIR/test/$BATS_TEST_NUMBER"
+        mkdir -p "$BATS_TEST_TMPDIR"
+    }
 }
 
 create_sample_bgenv() {
@@ -29,7 +35,7 @@ create_sample_bgenv() {
 
 @test "ensure BGENV.DAT backwards compatbility" {
     local envfile
-    envfile="$(mktemp -d)/BGENV.DAT"
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
     create_sample_bgenv "$envfile"
 
     run bg_printenv -f "$envfile"
@@ -50,7 +56,7 @@ foo = bar" ]]
 
 @test "create an empty BGENV.DAT" {
     local envfile
-    envfile="$(mktemp -d)/BGENV.DAT"
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
 
     run bg_setenv -f "$envfile"
     [[ "$output" = "Output written to $envfile." ]]
@@ -72,7 +78,7 @@ user variables:" ]]
 
 @test "modify BGENV, discard existing values" {
     local envfile
-    envfile="$(mktemp -d)/BGENV.DAT"
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
 
     create_sample_bgenv "$envfile"
     run bg_setenv -f "$envfile" -k C:BOOTNEW:kernel.efi
@@ -94,7 +100,7 @@ user variables:" ]]
 
 @test "modify BGENV, preserve existing values" {
     local envfile
-    envfile="$(mktemp -d)/BGENV.DAT"
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
 
     create_sample_bgenv "$envfile"
     run bg_setenv -f "$envfile" -k C:BOOTNEW:kernel.efi -P
@@ -117,7 +123,7 @@ foo = bar" ]]
 
 @test "bg_printenv ustate" {
     local envfile
-    envfile="$(mktemp -d)/BGENV.DAT"
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
 
     create_sample_bgenv "$envfile"
     run bg_printenv "--filepath=$envfile" --output ustate
@@ -127,7 +133,7 @@ ustate:           0 (OK)" ]]
 
 @test "bg_printenv with all fields is the same as omitting fields" {
     local envfile
-    envfile="$(mktemp -d)/BGENV.DAT"
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
 
     create_sample_bgenv "$envfile"
     expected_output=$(bg_printenv "--filepath=$envfile")
@@ -137,7 +143,7 @@ ustate:           0 (OK)" ]]
 
 @test "bg_printenv ustate raw" {
     local envfile
-    envfile="$(mktemp -d)/BGENV.DAT"
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
 
     create_sample_bgenv "$envfile"
     run bg_printenv "--filepath=$envfile" --output ustate --raw
@@ -146,7 +152,7 @@ ustate:           0 (OK)" ]]
 
 @test "bg_printenv multiple fields raw" {
     local envfile
-    envfile="$(mktemp -d)/BGENV.DAT"
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
 
     create_sample_bgenv "$envfile"
     run bg_printenv "--filepath=$envfile" --output ustate,kernel,kernelargs --raw
