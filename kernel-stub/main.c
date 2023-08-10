@@ -104,6 +104,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	BOOLEAN has_dtbs = FALSE;
 	const VOID *kernel_source;
 	EFI_PHYSICAL_ADDRESS kernel_buffer;
+	EFI_PHYSICAL_ADDRESS aligned_kernel_buffer;
 	const CHAR8 *fdt_compatible;
 	VOID *fdt, *alt_fdt = NULL;
 	EFI_IMAGE_ENTRY_POINT kernel_entry;
@@ -193,8 +194,14 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		goto cleanup_initrd;
 	}
 
-	kernel_image.ImageBase = (VOID *)
+	aligned_kernel_buffer =
 		align_addr(kernel_buffer, pe_header->Opt.SectionAlignment);
+	if ((uintptr_t) aligned_kernel_buffer != aligned_kernel_buffer) {
+		error(L"Alignment overflow for kernel image", EFI_LOAD_ERROR);
+		goto cleanup_buffer;
+	}
+
+	kernel_image.ImageBase = (VOID *) (uintptr_t) aligned_kernel_buffer;
 	kernel_image.ImageSize = kernel_section->VirtualSize;
 
 	CopyMem(kernel_image.ImageBase, kernel_source, kernel_image.ImageSize);
