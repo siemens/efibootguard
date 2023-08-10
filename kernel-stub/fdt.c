@@ -166,7 +166,8 @@ static EFI_STATUS clone_fdt(const VOID *fdt, UINTN size,
 		error(L"Error allocating device tree buffer", status);
 		return status;
 	}
-	CopyMem((VOID *)*fdt_buffer, fdt, BE32_TO_HOST(header->TotalSize));
+	CopyMem((VOID *)(uintptr_t)*fdt_buffer, fdt,
+		BE32_TO_HOST(header->TotalSize));
 	return EFI_SUCCESS;
 }
 
@@ -203,7 +204,8 @@ EFI_STATUS replace_fdt(const VOID *fdt)
 			return status;
 		}
 
-		status = protocol->Fixup(protocol, (VOID *)fdt_buffer, &size,
+		status = protocol->Fixup(protocol,
+					 (VOID *)(uintptr_t)fdt_buffer, &size,
 					 EFI_DT_APPLY_FIXUPS |
 					 EFI_DT_RESERVE_MEMORY);
 		if (EFI_ERROR(status)) {
@@ -214,7 +216,7 @@ EFI_STATUS replace_fdt(const VOID *fdt)
 	}
 
 	status = BS->InstallConfigurationTable(&EfiDtbTableGuid,
-					       (VOID *)fdt_buffer);
+					       (VOID *)(uintptr_t)fdt_buffer);
 	if (EFI_ERROR(status)) {
 		(VOID) BS->FreePages(fdt_buffer, SIZE_IN_PAGES(size));
 		error(L"Failed to install alternative device tree", status);
