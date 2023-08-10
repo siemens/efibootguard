@@ -214,6 +214,7 @@ efi_cflags = \
 	-fno-stack-protector \
 	-Wsign-compare \
 	-DGNU_EFI_USE_MS_ABI \
+	-Werror \
 	$(CFLAGS)
 
 if ARCH_X86_64
