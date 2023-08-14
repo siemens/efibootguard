@@ -352,6 +352,12 @@ all-local: bg_printenv bash-completion zsh-completion
 
 CLEANFILES += bg_printenv $(BASH_COMPLETION_FILES) $(ZSH_COMPLETION_FILES)
 
+clean-local: clean-local-completion-pycache
+.PHONY: clean-local-completion-pycache
+clean-local-completion-pycache:
+	rm -rf $(top_builddir)/completion/bg_printenv/__pycache__
+	rm -rf $(top_builddir)/completion/bg_setenv/__pycache__
+
 # Tests depend on libraries being built - start with "."
 SUBDIRS = . tools/tests
 
