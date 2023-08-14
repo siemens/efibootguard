@@ -63,9 +63,6 @@ START_TEST(bgenv_get_from_manipulated)
 		int fd = mkstemp(configfilepath);
 		ck_assert_int_ne(fd, -1);
 
-		BGENV bgenv = {.desc = configfilepath, .data = &data};
-		ebgenv_t e = {.bgenv = &bgenv};
-
 		FILE *of = fdopen(fd, "w");
 		ck_assert_ptr_nonnull(of);
 		int count = fwrite(&data, sizeof(BG_ENVDATA), 1, of);
@@ -86,8 +83,10 @@ START_TEST(bgenv_get_from_manipulated)
 	memset(out, 0, sizeof(out));
 	/* must not crash */
 	ebg_env_get(&e, key, out);
+	/* silences cppcheck nullPointerRedundantCheck over ck_assert_str_eq */
+	const char *empty_str = "";
 	/* ensure we did not read invalid data */
-	ck_assert_str_eq(out, "");
+	ck_assert_str_eq(out, empty_str);
 
 	/* assert that get_env reports an error */
 	ck_assert_int_eq(result, false);
