@@ -44,7 +44,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
               autoconf-archive gcc-multilib gnu-efi libz-dev libpci-dev check \
-              bats
+              bats libarchive-zip-perl
       - name: Install i386 dependencies
         if: ${{ matrix.target == 'i386' }}
         run: |
@@ -126,8 +126,8 @@ jobs:
           ../configure
           make check -j $(nproc)
           sudo make install
+          time bats --tap ../tests
           popd >/dev/null
-          time bats --tap tests
       - name: Build i386
         if: ${{ matrix.target == 'i386' }}
         run: |
