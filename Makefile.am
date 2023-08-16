@@ -94,7 +94,8 @@ libebgenv_a_SOURCES = \
 	env/env_config_partitions.c \
 	env/env_disk_utils.c \
 	env/uservars.c \
-	tools/ebgpart.c
+	tools/ebgpart.c \
+	tools/fat.c
 
 libebgenv_a_CPPFLAGS = \
 	$(AM_CPPFLAGS) \

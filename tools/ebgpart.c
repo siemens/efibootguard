@@ -18,6 +18,7 @@
 
 #include "ebgpart.h"
 #include <sys/sysmacros.h>
+#include "fat.h"
 
 static PedDevice *first_device = NULL;
 static PedDisk g_ped_dummy_disk;
@@ -93,54 +94,41 @@ static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
 			strerror(errno));
 		return false;
 	}
-	/* Look if it is a FAT12 or FAT16 */
-	off64_t dest = (off64_t)e->start_LBA * LB_SIZE + 0x36;
-	if (lseek64(fd, dest, SEEK_SET) == -1) {
-		VERBOSE(stderr, "Error seeking FAT12/16 Id String: %s\n",
+
+	/* seek to partition start */
+	off64_t offset_start = (off64_t)e->start_LBA * LB_SIZE;
+	if (lseek64(fd, offset_start, SEEK_SET) == -1) {
+		VERBOSE(stderr, "Error seeking to partition start: %s\n",
 			strerror(errno));
 		return false;
 	}
-	char FAT_id[9];
-	if (read(fd, FAT_id, 8) != 8) {
-		VERBOSE(stderr, "Error reading FAT12/16 Id String: %s\n",
+
+	/* read FAT header */
+	struct fat_boot_sector header;
+	if (read(fd, &header, sizeof(header)) != sizeof(header)) {
+		VERBOSE(stderr, "Error reading FAT header: %s\n",
 			strerror(errno));
 		return false;
-	};
-	FAT_id[8] = 0;
-	if (strcmp(FAT_id, "FAT12   ") != 0 &&
-	    strcmp(FAT_id, "FAT16   ") != 0) {
-		/* No FAT12/16 so read ID field for FAT32 */
-		dest = (off64_t)e->start_LBA * LB_SIZE + 0x52;
-		if (lseek64(fd, dest, SEEK_SET) == -1) {
-			VERBOSE(stderr, "Error seeking FAT32 Id String: %s\n",
-				strerror(errno));
-			return false;
-		}
-		if (read(fd, FAT_id, 8) != 8) {
-			VERBOSE(stderr, "Error reading FAT32 Id String: %s\n",
-				strerror(errno));
-			return false;
-		}
 	}
-	if (strcmp(FAT_id, "FAT12   ") == 0) {
-		if (asprintf(&pfst->name, "%s", "fat12") == -1) {
-			goto error_asprintf;
-		}
-	} else if (strcmp(FAT_id, "FAT16   ") == 0) {
-		if (asprintf(&pfst->name, "%s", "fat16") == -1) {
-			goto error_asprintf;
-		}
-	} else {
-		if (asprintf(&pfst->name, "%s", "fat32") == -1) {
-			goto error_asprintf;
-		}
-	}
-	VERBOSE(stdout, "GPT Partition #%u is %s.\n", i, pfst->name);
+
+	/* restore pos */
 	if (lseek64(fd, curr, SEEK_SET) == -1) {
 		VERBOSE(stderr, "Error restoring seek position (%s)",
 			strerror(errno));
 		return false;
 	}
+
+	int fat_bits = determine_FAT_bits(&header);
+	if (fat_bits <= 0) {
+		/* not a FAT header */
+		return false;
+	}
+	if (asprintf(&pfst->name, "fat%d", fat_bits) == -1) {
+		VERBOSE(stderr,
+			"Error in asprintf - possibly out of memory.\n");
+		return false;
+	}
+	VERBOSE(stdout, "GPT Partition #%u is %s.\n", i, pfst->name);
 	return true;
 
 error_asprintf:
