@@ -18,5 +18,4 @@
 
 FILE *open_config_file_from_part(CONFIG_PART *cfgpart, char *mode);
 FILE *open_config_file(char *configfilepath, char *mode);
-int close_config_file(FILE *config_file_handle);
 bool probe_config_file(CONFIG_PART *cfgpart);

@@ -150,7 +150,7 @@ bool get_env(char *configfilepath, BG_ENVDATA *data)
 		result = false;
 	}
 
-	if (close_config_file(config)) {
+	if (fclose(config)) {
 		VERBOSE(stderr,
 			"Error closing environment file after reading.\n");
 	};

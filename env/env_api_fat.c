@@ -106,7 +106,7 @@ bool read_env(CONFIG_PART *part, BG_ENVDATA *env)
 		}
 		result = false;
 	}
-	if (close_config_file(config)) {
+	if (fclose(config)) {
 		VERBOSE(stderr,
 			"Error closing environment file after reading.\n");
 	};
@@ -151,7 +151,7 @@ bool write_env(CONFIG_PART *part, BG_ENVDATA *env)
 			part->devpath);
 		result = false;
 	}
-	if (close_config_file(config)) {
+	if (fclose(config)) {
 		VERBOSE(stderr,
 			"Error closing environment file after writing.\n");
 		result = false;
