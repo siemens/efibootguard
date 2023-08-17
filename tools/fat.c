@@ -66,7 +66,8 @@ static inline int fat_valid_media(u8 media)
 }
 
 static int fat_read_bpb(void __attribute__((unused)) *sb,
-	struct fat_boot_sector *b, int silent, struct fat_bios_param_block *bpb)
+	const struct fat_boot_sector *b, int silent,
+	struct fat_bios_param_block *bpb)
 {
 	int error = -EINVAL;
 
@@ -146,7 +147,7 @@ out:
  /* end of Linux kernel code */
  /*****************************************************************************/
 
-int determine_FAT_bits(struct fat_boot_sector *sector)
+int determine_FAT_bits(const struct fat_boot_sector *sector)
 {
 	struct fat_bios_param_block bpb;
 	if (fat_read_bpb(NULL, sector, !verbosity, &bpb)) {
