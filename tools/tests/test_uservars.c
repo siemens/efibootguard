@@ -53,8 +53,9 @@ START_TEST(bgenv_get_from_manipulated)
 		/* manipulate payload_size */
 		*payload_size = UINT32_MAX;
 		/* fix checksum */
-		data.crc32 = crc32(0, (Bytef *)&data,
-				   sizeof(BG_ENVDATA) - sizeof(data.crc32));
+		data.crc32 =
+			bgenv_crc32(0, &data,
+				    sizeof(BG_ENVDATA) - sizeof(data.crc32));
 	}
 
 	/* persist BGENV to a temporary file */

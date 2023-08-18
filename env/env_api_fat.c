@@ -54,14 +54,14 @@ void bgenv_be_verbose(bool v)
 static void clear_envdata(BG_ENVDATA *data)
 {
 	memset(data, 0, sizeof(BG_ENVDATA));
-	data->crc32 = crc32(0, (Bytef *)data,
-			    sizeof(BG_ENVDATA) - sizeof(data->crc32));
+	data->crc32 = bgenv_crc32(0, data,
+				  sizeof(BG_ENVDATA) - sizeof(data->crc32));
 }
 
 bool validate_envdata(BG_ENVDATA *data)
 {
-	uint32_t sum = crc32(0, (Bytef *)data,
-			     sizeof(BG_ENVDATA) - sizeof(data->crc32));
+	uint32_t sum = bgenv_crc32(0, data,
+				   sizeof(BG_ENVDATA) - sizeof(data->crc32));
 
 	if (data->crc32 != sum) {
 		VERBOSE(stderr, "Invalid CRC32!\n");

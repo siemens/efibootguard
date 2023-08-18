@@ -28,7 +28,6 @@
 #include <sys/file.h>
 #include <sys/mount.h>
 #include "config.h"
-#include <zlib.h>
 #include "envdata.h"
 #include "ebgenv.h"
 #include <uchar.h>
@@ -79,6 +78,8 @@ extern void bgenv_be_verbose(bool v);
 
 extern char *str16to8(char *buffer, const char16_t *src);
 extern char16_t *str8to16(char16_t *buffer, const char *src);
+
+extern uint32_t bgenv_crc32(uint32_t, const void *, size_t);
 
 extern bool bgenv_init(void);
 extern void bgenv_finalize(void);

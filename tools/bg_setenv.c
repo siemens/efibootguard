@@ -322,8 +322,9 @@ static void update_environment(BGENV *env, bool verbosity)
 		journal_free_action(action);
 	}
 
-	env->data->crc32 = crc32(0, (const Bytef *)env->data,
-				 sizeof(BG_ENVDATA) - sizeof(env->data->crc32));
+	env->data->crc32 =
+		bgenv_crc32(0, env->data,
+			    sizeof(BG_ENVDATA) - sizeof(env->data->crc32));
 
 }
 

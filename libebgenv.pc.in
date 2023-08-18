@@ -18,6 +18,5 @@ Name: libebgenv
 URL: https://github.com/siemens/efibootguard
 Description: Library to access the EFI Boot Guard environment
 Version: @LIBEBGENV_VERSION@
-Requires.private: zlib
 Libs: -L${libdir} -lebgenv
 Cflags: -I${includedir}

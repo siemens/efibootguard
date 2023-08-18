@@ -43,7 +43,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
-              autoconf-archive gcc-multilib gnu-efi libz-dev libpci-dev check \
+              autoconf-archive gcc-multilib gnu-efi libpci-dev check \
               bats libarchive-zip-perl
       - name: Install i386 dependencies
         if: ${{ matrix.target == 'i386' }}
@@ -52,7 +52,7 @@ jobs:
           sudo rm -f /etc/apt/sources.list.d/ubuntu-toolchain-r-ubuntu-test-jammy.list
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
-              autoconf-archive gcc-multilib gnu-efi libz-dev:i386 \
+              autoconf-archive gcc-multilib gnu-efi \
               libpci-dev:i386 check:i386
       - name: Install arm64 dependencies
         if: ${{ matrix.target == 'arm64' }}
@@ -70,7 +70,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
               autoconf-archive gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
-              gnu-efi:arm64 libz-dev:arm64 libpci-dev:arm64 check:arm64 \
+              gnu-efi:arm64 libpci-dev:arm64 check:arm64 \
               qemu-user-static
       - name: Install arm dependencies
         if: ${{ matrix.target == 'arm' }}
@@ -88,7 +88,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
               autoconf-archive gcc-arm-linux-gnueabihf libc6-dev-armhf-cross \
-              gnu-efi:armhf libz-dev:armhf libpci-dev:armhf check:armhf \
+              gnu-efi:armhf libpci-dev:armhf check:armhf \
               qemu-user-static
       - name: Install riscv64 dependencies
         if: ${{ matrix.target == 'riscv64' }}
@@ -106,7 +106,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
               autoconf-archive gcc-riscv64-linux-gnu libc6-dev-riscv64-cross \
-              gnu-efi:riscv64 libz-dev:riscv64 libpci-dev:riscv64 check:riscv64 \
+              gnu-efi:riscv64 libpci-dev:riscv64 check:riscv64 \
               qemu-user-static
       - name: Install cppcheck
         if: ${{ matrix.target == 'cppcheck' }}

@@ -202,7 +202,7 @@ int ebg_env_setglobalstate(ebgenv_t *e, uint16_t ustate)
 		}
 		if (env->data->ustate != ustate) {
 			env->data->ustate = ustate;
-			env->data->crc32 = crc32(0, (Bytef *)env->data,
+			env->data->crc32 = bgenv_crc32(0, env->data,
 				sizeof(BG_ENVDATA) - sizeof(env->data->crc32));
 			if (!bgenv_write(env)) {
 				bgenv_close(env);
@@ -228,8 +228,8 @@ int ebg_env_close(ebgenv_t *e)
 
 	/* recalculate checksum */
 	env_current->data->crc32 =
-	    crc32(0, (Bytef *)env_current->data,
-		  sizeof(BG_ENVDATA) - sizeof(env_current->data->crc32));
+	    bgenv_crc32(0, env_current->data,
+			sizeof(BG_ENVDATA) - sizeof(env_current->data->crc32));
 	/* save */
 	if (!bgenv_write(env_current)) {
 		res = EIO;

@@ -37,6 +37,7 @@ endif
 libtest_env_api_fat_a_SRC = \
 	../../env/env_api.c \
 	../../env/env_api_fat.c \
+	../../env/env_api_crc32.c \
 	../../tools/ebgpart.c \
 	../../env/env_config_file.c \
 	../../env/env_config_partitions.c \

@@ -138,8 +138,6 @@ AC_CHECK_HEADERS([sys/mount.h])
 AC_CHECK_HEADERS([unistd.h])
 AC_CHECK_HEADERS([wchar.h])
 AC_CHECK_HEADER_STDBOOL
-AC_CHECK_HEADERS([zlib.h])
-AC_CHECK_LIB([z], [crc32], [], [AC_MSG_ERROR([need crc32 implementation from libz])])
 AC_FUNC_GETMNTENT
 AC_PROG_CXX
 AC_TYPE_INT32_T

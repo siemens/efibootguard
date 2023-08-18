@@ -33,7 +33,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
-              autoconf-archive gcc-multilib gnu-efi libz-dev libpci-dev check
+              autoconf-archive gcc-multilib gnu-efi libpci-dev check
       - name: Install Coverity
         run: |
           wget https://scan.coverity.com/download/cxx/linux64 \

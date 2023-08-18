@@ -90,6 +90,7 @@ lib_LIBRARIES = libebgenv.a
 libebgenv_a_SOURCES = \
 	env/@env_api_file@.c \
 	env/env_api.c \
+	env/env_api_crc32.c \
 	env/env_config_file.c \
 	env/env_config_partitions.c \
 	env/env_disk_utils.c \
@@ -138,8 +139,7 @@ bg_setenv_LDFLAGS = -Wl,--no-wchar-size-warning
 endif
 
 bg_setenv_LDADD = \
-	$(top_builddir)/libebgenv.a \
-	-lz
+	$(top_builddir)/libebgenv.a
 
 install-exec-hook:
 	$(AM_V_at)$(LN_S) -f bg_setenv$(EXEEXT) \
