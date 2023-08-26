@@ -111,6 +111,7 @@ AC_SUBST([ARCH])
 AC_SUBST([MACHINE_TYPE_NAME])
 AM_CONDITIONAL([ARCH_IS_X86], [test "$ARCH" = "ia32" -o "$ARCH" = "x86_64"])
 
+# -mgeneral-regs-only was introduced with gcc-9 to ARM, and RISCV64 does not support it until now
 AX_CHECK_COMPILE_FLAG([-mgeneral-regs-only],
 	[CFLAGS_MGENERAL_REGS_ONLY=-mgeneral-regs-only],
 	[CFLAGS_MGENERAL_REGS_ONLY=])

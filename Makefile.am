@@ -216,17 +216,12 @@ efi_cflags = \
 	-Wsign-compare \
 	-DGNU_EFI_USE_MS_ABI \
 	-Werror \
+	$(CFLAGS_MGENERAL_REGS_ONLY) \
 	$(CFLAGS)
 
 if ARCH_X86_64
 efi_cflags += \
-	-mno-sse \
-	-mno-mmx \
 	-mno-red-zone
-endif
-if ARCH_ARM
-efi_cflags += \
-	$(CFLAGS_MGENERAL_REGS_ONLY)
 endif
 
 efi_ldflags = \
