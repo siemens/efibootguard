@@ -1,10 +1,11 @@
 /*
  * EFI Boot Guard
  *
- * Copyright (c) Siemens AG, 2017
+ * Copyright (c) Siemens AG, 2017-2023
  *
  * Authors:
  *  Andreas Reichel <andreas.reichel.ext@siemens.com>
+ *  Felix Moessbauer <felix.moessbauer@siemens.com>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -15,6 +16,9 @@
 #include "env_api.h"
 #include "ebgenv.h"
 #include "uservars.h"
+
+/* global EBG options */
+ebgenv_opts_t ebgenv_opts;
 
 /* UEFI uses 16-bit wide unicode strings.
  * However, wchar_t support functions are fixed to 32-bit wide
@@ -54,6 +58,30 @@ char16_t *str8to16(char16_t *buffer, const char *src)
 	}
 	*buffer = 0;
 	return tmp;
+}
+
+int ebg_set_opt_bool(ebg_opt_t opt, bool value)
+{
+	switch (opt) {
+	case EBG_OPT_PROBE_ALL_DEVICES:
+		ebgenv_opts.search_all_devices = value;
+		break;
+	default:
+		return EINVAL;
+	}
+	return 0;
+}
+
+int ebg_get_opt_bool(ebg_opt_t opt, bool *value)
+{
+	switch (opt) {
+	case EBG_OPT_PROBE_ALL_DEVICES:
+		*value = ebgenv_opts.search_all_devices;
+		break;
+	default:
+		return EINVAL;
+	}
+	return 0;
 }
 
 void ebg_beverbose(ebgenv_t __attribute__((unused)) *e, bool v)

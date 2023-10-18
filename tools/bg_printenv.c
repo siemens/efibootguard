@@ -344,6 +344,9 @@ error_t bg_printenv(int argc, char **argv)
 	}
 
 	/* not in file mode */
+	if (arguments.common.search_all_devices) {
+		ebg_set_opt_bool(EBG_OPT_PROBE_ALL_DEVICES, true);
+	}
 	if (!bgenv_init()) {
 		fprintf(stderr, "Error initializing FAT environment.\n");
 		return 1;

@@ -416,9 +416,9 @@ static int get_major_minor(char *filename, unsigned int *major, unsigned int *mi
 	return 0;
 }
 
-void ped_device_probe_all(void)
+void ped_device_probe_all(char *rootdev)
 {
-	struct dirent *sysblockfile;
+	struct dirent *sysblockfile = NULL;
 	char fullname[DEV_FILENAME_LEN+16];
 
 	DIR *sysblockdir = opendir(SYSBLOCKDIR);
@@ -429,16 +429,21 @@ void ped_device_probe_all(void)
 
 	/* get all files from sysblockdir */
 	do {
-		sysblockfile = readdir(sysblockdir);
-		if (!sysblockfile) {
-			break;
+		char *devname = rootdev;
+		if (!rootdev) {
+			sysblockfile = readdir(sysblockdir);
+			if (!sysblockfile) {
+				break;
+			}
+			if (strcmp(sysblockfile->d_name, ".") == 0 ||
+			    strcmp(sysblockfile->d_name, "..") == 0) {
+				continue;
+			}
+			devname = sysblockfile->d_name;
 		}
-		if (strcmp(sysblockfile->d_name, ".") == 0 ||
-		    strcmp(sysblockfile->d_name, "..") == 0) {
-			continue;
-		}
+
 		(void)snprintf(fullname, sizeof(fullname), "/sys/block/%s/dev",
-			 sysblockfile->d_name);
+			       devname);
 		/* Get major and minor revision from /sys/block/sdX/dev */
 		unsigned int fmajor, fminor;
 		if (get_major_minor(fullname, &fmajor, &fminor) < 0) {
@@ -449,7 +454,7 @@ void ped_device_probe_all(void)
 			fmajor, fminor, fullname);
 		/* Check if this file is really in the dev directory */
 		(void)snprintf(fullname, sizeof(fullname), "%s/%s", DEVDIR,
-			 sysblockfile->d_name);
+			       devname);
 		struct stat statbuf;
 		if (stat(fullname, &statbuf) == -1) {
 			/* Node with same name not found in /dev, thus search

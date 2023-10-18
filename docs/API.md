@@ -51,6 +51,9 @@ int main(void)
 {
     ebgenv_t e;
 
+    // optionally set ebg options before creating the environment
+    ebg_set_opt_bool(EBG_OPT_PROBE_ALL_DEVICES, true);
+
     ebg_env_create_new(&e);
     ebg_env_set(&e, "kernelfile", "vmlinux-new");
     ebg_env_set(&e, "kernelparams", "root=/dev/bootdevice");

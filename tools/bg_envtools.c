@@ -67,6 +67,10 @@ error_t parse_common_opt(int key, char *arg, bool compat_mode,
 	bool found = false;
 	int i;
 	switch (key) {
+	case 'A':
+		found = true;
+		arguments->search_all_devices = true;
+		break;
 	case 'f':
 		found = true;
 		free(arguments->envfilepath);

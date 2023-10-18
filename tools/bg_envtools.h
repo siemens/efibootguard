@@ -35,6 +35,8 @@
 	      "Set environment partition to use. If no partition is "          \
 	      "specified, the one with the smallest revision value above "     \
 	      "zero is selected.")                                             \
+	, OPT("all", 'A', 0, 0,                                                \
+	      "search on all devices instead of root device only")             \
 	, OPT("verbose", 'v', 0, 0, "Be verbose")                              \
 	, OPT("version", 'V', 0, 0, "Print version")
 
@@ -46,6 +48,8 @@ struct arguments_common {
 	 * was specified. */
 	int which_part;
 	bool part_specified;
+	/* inspect all devices for bootenvs instead of current root only */
+	bool search_all_devices;
 };
 
 int parse_int(char *arg);

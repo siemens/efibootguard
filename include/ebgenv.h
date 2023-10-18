@@ -37,9 +37,32 @@
 #define USERVAR_STANDARD_TYPE_MASK ((1ULL << 32) - 1)
 
 typedef struct {
+	bool search_all_devices;
+} ebgenv_opts_t;
+
+typedef struct {
 	void *bgenv;
 	void *gc_registry;
+	ebgenv_opts_t opts;
 } ebgenv_t;
+
+typedef enum { EBG_OPT_PROBE_ALL_DEVICES } ebg_opt_t;
+
+/**
+ * @brief Set a global EBG option. Call before creating the ebg env.
+ * @param opt option to set
+ * @param value option value
+ * @return 0 on success
+ */
+int ebg_set_opt_bool(ebg_opt_t opt, bool value);
+
+/**
+ * @brief Get a global EBG option.
+ * @param opt option to set
+ * @param value out variable to retrieve option value
+ * @return 0 on success
+ */
+int ebg_get_opt_bool(ebg_opt_t opt, bool *value);
 
 /** @brief Tell the library to output information for the user.
  *  @param e A pointer to an ebgenv_t context.

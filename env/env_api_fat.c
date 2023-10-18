@@ -21,6 +21,7 @@
 #include "ebgpart.h"
 
 bool bgenv_verbosity = false;
+extern ebgenv_opts_t ebgenv_opts;
 
 EBGENVKEY bgenv_str2enum(char *key)
 {
@@ -174,7 +175,8 @@ bool bgenv_init(void)
 		return true;
 	}
 	/* enumerate all config partitions */
-	if (!probe_config_partitions(config_parts)) {
+	if (!probe_config_partitions(config_parts,
+				     ebgenv_opts.search_all_devices)) {
 		VERBOSE(stderr, "Error finding config partitions.\n");
 		return false;
 	}
