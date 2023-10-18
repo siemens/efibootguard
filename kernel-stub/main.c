@@ -17,6 +17,7 @@
 
 #include "kernel-stub.h"
 #include "version.h"
+#include "loader_interface.h"
 
 typedef struct {
 	UINT8 Ignore[60];
@@ -113,6 +114,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	const SECTION *section;
 	EFI_STATUS status, cleanup_status;
 	UINTN n, kernel_pages;
+	BG_INTERFACE_PARAMS bg_interface_params;
 
 	this_image = image_handle;
 	InitializeLib(image_handle, system_table);
@@ -229,6 +231,15 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		}
 		info(L"Using firmware-provided device tree");
 	}
+
+	UINT16 *boot_medium_uuidstr =
+		disk_get_part_uuid(stub_image->DeviceHandle);
+	bg_interface_params.loader_device_part_uuid = boot_medium_uuidstr;
+	status = set_bg_interface_vars(&bg_interface_params);
+	if (EFI_ERROR(status)) {
+		error(L"could not set interface vars", status);
+	}
+	FreePool(boot_medium_uuidstr);
 
 	kernel_entry = (EFI_IMAGE_ENTRY_POINT)
 		((UINT8 *) kernel_image.ImageBase +

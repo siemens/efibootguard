@@ -22,6 +22,7 @@
 #include <configuration.h>
 #include "version.h"
 #include "utils.h"
+#include "loader_interface.h"
 
 extern const unsigned long init_array_start[];
 extern const unsigned long init_array_end[];
@@ -113,6 +114,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	EFI_STATUS status;
 	BG_STATUS bg_status;
 	BG_LOADER_PARAMS bg_loader_params;
+	BG_INTERFACE_PARAMS bg_interface_params;
 	CHAR16 *tmp;
 
 	ZeroMem(&bg_loader_params, sizeof(bg_loader_params));
@@ -184,6 +186,16 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		error_exit(L"Cannot load specified kernel image", status);
 	}
 
+	UINT16 *boot_medium_uuidstr =
+		disk_get_part_uuid(loaded_image->DeviceHandle);
+	bg_interface_params.loader_device_part_uuid = boot_medium_uuidstr;
+	status = set_bg_interface_vars(&bg_interface_params);
+	if (EFI_ERROR(status)) {
+		error_exit(L"Cannot set bootloader interface variables",
+			   status);
+	}
+	INFO(L"LoaderDevicePartUUID=%s\n", boot_medium_uuidstr);
+	FreePool(boot_medium_uuidstr);
 	FreePool(payload_dev_path);
 	FreePool(boot_medium_path);
 

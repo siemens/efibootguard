@@ -185,12 +185,14 @@ efi_sources = \
 	env/syspart.c \
 	env/fatvars.c \
 	utils.c \
+	loader_interface.c \
 	bootguard.c \
 	main.c
 
 kernel_stub_name = kernel-stub$(MACHINE_TYPE_NAME).efi
 
 kernel_stub_sources = \
+	loader_interface.c \
 	kernel-stub/fdt.c \
 	kernel-stub/initrd.c \
 	kernel-stub/main.c
