@@ -66,6 +66,10 @@ int ebg_set_opt_bool(ebg_opt_t opt, bool value)
 	case EBG_OPT_PROBE_ALL_DEVICES:
 		ebgenv_opts.search_all_devices = value;
 		break;
+	case EBG_OPT_VERBOSE:
+		ebgenv_opts.verbose = value;
+		bgenv_be_verbose(value);
+		break;
 	default:
 		return EINVAL;
 	}
@@ -78,15 +82,18 @@ int ebg_get_opt_bool(ebg_opt_t opt, bool *value)
 	case EBG_OPT_PROBE_ALL_DEVICES:
 		*value = ebgenv_opts.search_all_devices;
 		break;
+	case EBG_OPT_VERBOSE:
+		*value = ebgenv_opts.verbose;
+		break;
 	default:
 		return EINVAL;
 	}
 	return 0;
 }
 
-void ebg_beverbose(ebgenv_t __attribute__((unused)) *e, bool v)
+void ebg_beverbose(ebgenv_t __attribute__((unused)) * e, bool v)
 {
-	bgenv_be_verbose(v);
+	ebg_set_opt_bool(EBG_OPT_VERBOSE, v);
 }
 
 int ebg_env_create_new(ebgenv_t *e)

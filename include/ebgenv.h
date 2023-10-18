@@ -38,6 +38,7 @@
 
 typedef struct {
 	bool search_all_devices;
+	bool verbose;
 } ebgenv_opts_t;
 
 typedef struct {
@@ -46,7 +47,7 @@ typedef struct {
 	ebgenv_opts_t opts;
 } ebgenv_t;
 
-typedef enum { EBG_OPT_PROBE_ALL_DEVICES } ebg_opt_t;
+typedef enum { EBG_OPT_PROBE_ALL_DEVICES, EBG_OPT_VERBOSE } ebg_opt_t;
 
 /**
  * @brief Set a global EBG option. Call before creating the ebg env.
@@ -67,8 +68,9 @@ int ebg_get_opt_bool(ebg_opt_t opt, bool *value);
 /** @brief Tell the library to output information for the user.
  *  @param e A pointer to an ebgenv_t context.
  *  @param v A boolean to set verbosity.
+ *  @note deprecated. Use \c ebg_set_opt_bool(EBG_OPT_VERBOSE,true) instead
  */
-void ebg_beverbose(ebgenv_t *e, bool v);
+void __attribute__((deprecated)) ebg_beverbose(ebgenv_t *e, bool v);
 
 /** @brief Initialize environment library and open environment. The first
  *         time this function is called, it will create a new environment with

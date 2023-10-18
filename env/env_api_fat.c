@@ -20,7 +20,6 @@
 #include "test-interface.h"
 #include "ebgpart.h"
 
-bool bgenv_verbosity = false;
 extern ebgenv_opts_t ebgenv_opts;
 
 EBGENVKEY bgenv_str2enum(char *key)
@@ -48,7 +47,6 @@ EBGENVKEY bgenv_str2enum(char *key)
 
 void bgenv_be_verbose(bool v)
 {
-	bgenv_verbosity = v;
 	ebgpart_beverbose(v);
 }
 

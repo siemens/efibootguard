@@ -83,6 +83,24 @@ int __wrap_bgenv_set(BGENV *env, char *key, uint64_t type, void *buffer,
 CONFIG_PART config_parts[ENV_NUM_CONFIG_PARTS];
 BG_ENVDATA envdata[ENV_NUM_CONFIG_PARTS];
 
+START_TEST(ebgenv_api_ebg_env_options)
+{
+	int status;
+	status = ebg_set_opt_bool(EBG_OPT_VERBOSE, true);
+	ck_assert_int_eq(status, 0);
+	bool verbose;
+	status = ebg_get_opt_bool(EBG_OPT_VERBOSE, &verbose);
+	ck_assert_int_eq(status, 0);
+	ck_assert_int_eq(verbose, 1);
+
+	// try invalid option
+	status = ebg_set_opt_bool(0xffff, false);
+	ck_assert_int_ne(status, 0);
+	status = ebg_get_opt_bool(0xffff, &verbose);
+	ck_assert_int_ne(status, 0);
+}
+END_TEST
+
 START_TEST(ebgenv_api_ebg_env_create_new)
 {
 	ebgenv_t e;
@@ -665,6 +683,7 @@ Suite *ebg_test_suite(void)
 
 	tc_core = tcase_create("Core");
 
+	tcase_add_test(tc_core, ebgenv_api_ebg_env_options);
 	tcase_add_test(tc_core, ebgenv_api_ebg_env_create_new);
 	tcase_add_test(tc_core, ebgenv_api_ebg_env_open_current);
 	tcase_add_test(tc_core, ebgenv_api_ebg_env_get);

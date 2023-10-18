@@ -42,11 +42,10 @@
 
 #define DEFAULT_TIMEOUT_SEC 30
 
-extern bool bgenv_verbosity;
+extern ebgenv_opts_t ebgenv_opts;
 
-#define VERBOSE(o, ...)                                                       \
-	if (bgenv_verbosity)                                                    \
-	fprintf(o, __VA_ARGS__)
+#define VERBOSE(o, ...)                                                        \
+	if (ebgenv_opts.verbose) fprintf(o, __VA_ARGS__)
 
 typedef enum {
 	EBGENV_KERNELFILE,
