@@ -40,8 +40,9 @@ suppress+=" --suppress=comparePointers:main.c"
 suppress+=" --suppress=unusedFunction:drivers/watchdog/amdfch_wdt.c"
 # False positive, noreturn is not recognized
 suppress+=" --suppress=nullPointerRedundantCheck:kernel-stub/main.c"
-# Avoid noise regarding Ignore* fields
+# Avoid noise regarding Ignore* or otherwise unused fields
 suppress+=" --suppress=unusedStructMember:kernel-stub/main.c"
+suppress+=" --suppress=unusedStructMember:kernel-stub/fdt.c"
 # Not applicable because of API requirements
 suppress+=" --suppress=constParameter:drivers/watchdog/ipc4x7e_wdt.c"
 suppress+=" --suppress=constParameter:drivers/watchdog/w83627hf_wdt.c"
