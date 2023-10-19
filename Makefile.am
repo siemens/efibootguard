@@ -171,6 +171,7 @@ efi_sources_watchdogs = \
 	drivers/watchdog/i6300esb.c \
 	drivers/watchdog/atom-quark.c \
 	drivers/watchdog/ipc4x7e_wdt.c \
+	drivers/watchdog/w83627hf_wdt.c \
 	drivers/watchdog/ipmi_wdt.c \
 	drivers/watchdog/itco.c \
 	drivers/watchdog/hpwdt.c

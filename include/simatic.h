@@ -23,8 +23,9 @@
 
 #define SIMATIC_OEM_ENTRY_TYPE_BINARY		0xff
 
-#define SIMATIC_IPC427E				0xa01
-#define SIMATIC_IPC477E				0xa02
+#define SIMATIC_IPC427E				0x0a01
+#define SIMATIC_IPC477E				0x0a02
+#define SIMATIC_IPCBX_59A			0x1202
 
 typedef struct {
 	UINT8	type;
