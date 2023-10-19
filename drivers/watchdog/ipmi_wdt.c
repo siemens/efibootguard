@@ -132,7 +132,7 @@ handle_ipmi_error(UINT16 io_base)
 static EFI_STATUS
 send_ipmi_cmd(UINT16 io_base, UINT8 cmd, UINT8 *data, UINTN datalen)
 {
-	EFI_STATUS timerstatus = EFI_NOT_READY;
+	EFI_STATUS timerstatus;
 	EFI_STATUS status;
 
 	/*
@@ -141,13 +141,13 @@ send_ipmi_cmd(UINT16 io_base, UINT8 cmd, UINT8 *data, UINTN datalen)
 	 */
 	BS->SetTimer(cmdtimer, TimerRelative, 50000000);
 
-	while (timerstatus == EFI_NOT_READY) {
+	do {
 		status = _send_ipmi_cmd(io_base, cmd, data, datalen);
 		if (status == EFI_SUCCESS)
 			return status;
 		handle_ipmi_error(io_base);
 		timerstatus = BS->CheckEvent(cmdtimer);
-	}
+	} while (timerstatus == EFI_NOT_READY);
 
 	return status;
 }
