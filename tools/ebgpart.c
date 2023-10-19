@@ -44,7 +44,7 @@ static void add_block_dev(PedDevice *dev)
 	d->next = dev;
 }
 
-static char *GUID_to_str(uint8_t *g)
+static char *GUID_to_str(const uint8_t *g)
 {
 	(void)snprintf(buffer, 37,
 		       "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-"
@@ -73,26 +73,33 @@ static char *type_to_name(char t)
 	return "not supported";
 }
 
-static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
-				PedFileSystemType *pfst, uint32_t i)
+/**
+ * @brief Determines the FAT bit size of a disk or partition.
+ *
+ * @param fd        File descriptor to inspect.
+ * @param e         A pointer to the EFI partition entry.
+ *
+ * @return >0: FAT bit size of the disk or partition
+ *         =0: non-FAT partition
+ *         <0: I/O error
+ **/
+static int check_GPT_FAT_entry(int fd, const struct EFIpartitionentry *e)
 {
 	char *guid_str = GUID_to_str(e->type_GUID);
 	if (strcmp(GPT_PARTITION_GUID_FAT_NTFS, guid_str) != 0 &&
 	    strcmp(GPT_PARTITION_GUID_ESP, guid_str) != 0) {
-		if (asprintf(&pfst->name, "%s", "not supported") == -1) {
-			goto error_asprintf;
-		}
 		VERBOSE(stderr, "GPT entry has unsupported GUID: %s\n",
 			guid_str);
-		return true;
+		return 0;
 	}
-	VERBOSE(stdout, "GPT Partition #%u is FAT/NTFS.\n", i);
+	VERBOSE(stdout, "GPT Partition has a FAT/NTFS GUID\n");
+
 	/* Save current file offset */
 	off64_t curr = lseek64(fd, 0, SEEK_CUR);
 	if (curr == -1) {
 		VERBOSE(stderr, "Error getting current seek position: %s\n",
 			strerror(errno));
-		return false;
+		return -1;
 	}
 
 	/* seek to partition start */
@@ -100,7 +107,7 @@ static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
 	if (lseek64(fd, offset_start, SEEK_SET) == -1) {
 		VERBOSE(stderr, "Error seeking to partition start: %s\n",
 			strerror(errno));
-		return false;
+		return -1;
 	}
 
 	/* read FAT header */
@@ -108,32 +115,16 @@ static bool check_GPT_FAT_entry(int fd, struct EFIpartitionentry *e,
 	if (read(fd, &header, sizeof(header)) != sizeof(header)) {
 		VERBOSE(stderr, "Error reading FAT header: %s\n",
 			strerror(errno));
-		return false;
+		return -1;
 	}
 
 	/* restore pos */
 	if (lseek64(fd, curr, SEEK_SET) == -1) {
 		VERBOSE(stderr, "Error restoring seek position (%s)",
 			strerror(errno));
-		return false;
+		return -1;
 	}
-
-	int fat_bits = determine_FAT_bits(&header);
-	if (fat_bits <= 0) {
-		/* not a FAT header */
-		return false;
-	}
-	if (asprintf(&pfst->name, "fat%d", fat_bits) == -1) {
-		VERBOSE(stderr,
-			"Error in asprintf - possibly out of memory.\n");
-		return false;
-	}
-	VERBOSE(stdout, "GPT Partition #%u is %s.\n", i, pfst->name);
-	return true;
-
-error_asprintf:
-	VERBOSE(stderr, "Error in asprintf - possibly out of memory.\n");
-	return false;
+	return determine_FAT_bits(&header);
 }
 
 static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
@@ -178,12 +169,25 @@ static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
 		tmpp->num = i + 1;
 		tmpp->fs_type = pfst;
 
-		if (!check_GPT_FAT_entry(fd, &e, pfst, i)) {
+		int result = check_GPT_FAT_entry(fd, &e);
+		if (result < 0) {
+			VERBOSE(stderr, "%u: I/O error, skipping device\n", i);
 			free(pfst->name);
 			free(pfst);
 			free(tmpp);
 			dev->part_list = NULL;
 			continue;
+		}
+		if (result > 0) { /* result is the FAT bit size */
+			VERBOSE(stdout, "GPT Partition #%u is fat%d.\n", i,
+				result);
+			if (asprintf(&pfst->name, "fat%d", result) == -1) {
+				VERBOSE(stderr, "Error in asprintf - possibly "
+						"out of memory.\n");
+				return;
+			}
+		} else {
+			VERBOSE(stderr, "%u: not a FAT partition\n", i);
 		}
 
 		*list_end = tmpp;
