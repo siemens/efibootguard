@@ -186,6 +186,7 @@ efi_sources = \
 	env/fatvars.c \
 	utils.c \
 	loader_interface.c \
+	simatic.c \
 	bootguard.c \
 	main.c
 

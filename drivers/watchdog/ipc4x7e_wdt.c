@@ -18,23 +18,10 @@
 #include <pci/header.h>
 #include <sys/io.h>
 #include <mmio.h>
+#include "simatic.h"
 #include "utils.h"
 
 #define PCI_DEVICE_ID_INTEL_SUNRISEPOINT_H_LPC	0xa150
-
-#define SMBIOS_TYPE_OEM_129			129
-
-#define SIMATIC_OEM_ENTRY_TYPE_BINARY		0xff
-
-#define SIMATIC_IPC427E				0xa01
-#define SIMATIC_IPC477E				0xa02
-
-typedef struct {
-	UINT8	type;
-	UINT8	length;
-	UINT8	reserved[3];
-	UINT32	station_id;
-} __attribute__((packed)) SIMATIC_OEM_ENTRY;
 
 #define SIMATIC_WD_ENABLE_REG			0x62
 #define  SIMATIC_WD_ENABLE			(1 << 0)
@@ -56,29 +43,6 @@ typedef struct {
 /* drives SAFE_EN_N */
 #define PAD_CFG_DW0_GPP_A_23			0x4b8
 #define  PAD_CFG_GPIOTXSTATE			(1 << 0)
-
-static UINT32 get_station_id(SMBIOS_STRUCTURE_POINTER oem_strct)
-{
-	SIMATIC_OEM_ENTRY *entry;
-	UINTN n;
-
-	entry = (SIMATIC_OEM_ENTRY *)(oem_strct.Raw + sizeof(*oem_strct.Hdr));
-
-	/* Find 4th entry in OEM data. */
-	for (n = 0; n < 3; n++) {
-		if (entry->type != SIMATIC_OEM_ENTRY_TYPE_BINARY) {
-			return 0;
-		}
-		entry = (SIMATIC_OEM_ENTRY *)((UINT8 *)entry + entry->length);
-	}
-
-	if (entry->type == SIMATIC_OEM_ENTRY_TYPE_BINARY &&
-	    entry->length == sizeof(SIMATIC_OEM_ENTRY)) {
-		return entry->station_id;
-	}
-
-	return 0;
-}
 
 static UINTN mmcfg_address(UINTN bus, UINTN device, UINTN function,
 			   UINTN offset)
@@ -114,9 +78,6 @@ static EFI_STATUS __attribute__((constructor))
 init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
      UINTN timeout)
 {
-	SMBIOS_STRUCTURE_TABLE *smbios_table;
-	SMBIOS_STRUCTURE_POINTER smbios_struct;
-	EFI_STATUS status;
 	UINTN pad_cfg;
 	UINT8 val;
 
@@ -125,18 +86,7 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 		return EFI_UNSUPPORTED;
 	}
 
-	status = LibGetSystemConfigurationTable(&SMBIOSTableGuid,
-						(VOID **)&smbios_table);
-	if (status != EFI_SUCCESS) {
-		return EFI_UNSUPPORTED;
-	}
-
-	smbios_struct = smbios_find_struct(smbios_table, SMBIOS_TYPE_OEM_129);
-	if (smbios_struct.Raw == NULL) {
-		return EFI_UNSUPPORTED;
-	}
-
-	switch (get_station_id(smbios_struct)) {
+	switch (simatic_station_id()) {
 	case SIMATIC_IPC427E:
 	case SIMATIC_IPC477E:
 		INFO(L"Detected SIMATIC IPC4x7E watchdog\n");
