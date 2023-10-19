@@ -121,10 +121,9 @@ bool probe_config_partitions(CONFIG_PART *cfgpart, bool search_all_devices)
 		}
 		PedPartition *part = pd->part_list;
 		while (part) {
-			if (!part->fs_type || !part->fs_type->name ||
-			    (strcmp(part->fs_type->name, "fat12") != 0 &&
-			     strcmp(part->fs_type->name, "fat16") != 0 &&
-			     strcmp(part->fs_type->name, "fat32") != 0)) {
+			if (part->fs_type != FS_TYPE_FAT12 &&
+			    part->fs_type != FS_TYPE_FAT16 &&
+			    part->fs_type != FS_TYPE_FAT32) {
 				part = ped_disk_next_partition(pd, part);
 				continue;
 			}

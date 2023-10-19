@@ -54,23 +54,23 @@ static char *GUID_to_str(const uint8_t *g)
 	return buffer;
 }
 
-static char *type_to_name(char t)
+static EbgFileSystemType type_to_fstype(char t)
 {
 	switch (t) {
 	case MBR_TYPE_FAT12:
-		return "fat12";
+		return FS_TYPE_FAT12;
 	case MBR_TYPE_FAT16A:
 	case MBR_TYPE_FAT16:
 	case MBR_TYPE_FAT16_LBA:
-		return "fat16";
+		return FS_TYPE_FAT16;
 	case MBR_TYPE_FAT32:
 	case MBR_TYPE_FAT32_LBA:
-		return "fat32";
+		return FS_TYPE_FAT32;
 	case MBR_TYPE_EXTENDED_LBA:
 	case MBR_TYPE_EXTENDED:
-		return "extended";
+		return FS_TYPE_EXTENDED;
 	}
-	return "not supported";
+	return FS_TYPE_UNKNOWN;
 }
 
 /**
@@ -127,13 +127,33 @@ static int check_GPT_FAT_entry(int fd, const struct EFIpartitionentry *e)
 	return determine_FAT_bits(&header);
 }
 
+static inline EbgFileSystemType fat_size_to_fs_type(int fat_size)
+{
+	switch (fat_size) {
+	case 0:
+		VERBOSE(stderr, "Not a FAT partition\n");
+		return FS_TYPE_UNKNOWN;
+	case 12:
+		VERBOSE(stdout, "Partition is fat12\n");
+		return FS_TYPE_FAT12;
+	case 16:
+		VERBOSE(stdout, "Partition is fat16\n");
+		return FS_TYPE_FAT16;
+	case 32:
+		VERBOSE(stdout, "Partition is fat32\n");
+		return FS_TYPE_FAT32;
+	default:
+		VERBOSE(stderr, "Error: Invalid FAT size %d\n", fat_size);
+		return FS_TYPE_UNKNOWN;
+	}
+}
+
 static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
 			     PedDevice *dev)
 {
 	off64_t offset;
 	struct EFIpartitionentry e;
 	PedPartition *tmpp;
-	PedFileSystemType *pfst = NULL;
 
 	offset = LB_SIZE * table_LBA;
 	if (lseek64(fd, offset, SEEK_SET) != offset) {
@@ -154,41 +174,22 @@ static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
 			return;
 		}
 		VERBOSE(stdout, "%u: %s\n", i, GUID_to_str(e.type_GUID));
-		pfst = calloc(sizeof(PedFileSystemType), 1);
-		if (!pfst) {
-			VERBOSE(stderr, "Out of memory\n");
-			return;
-		}
 
 		tmpp = calloc(sizeof(PedPartition), 1);
 		if (!tmpp) {
 			VERBOSE(stderr, "Out of memory\n");
-			free(pfst);
 			return;
 		}
 		tmpp->num = i + 1;
-		tmpp->fs_type = pfst;
 
 		int result = check_GPT_FAT_entry(fd, &e);
 		if (result < 0) {
 			VERBOSE(stderr, "%u: I/O error, skipping device\n", i);
-			free(pfst->name);
-			free(pfst);
 			free(tmpp);
 			dev->part_list = NULL;
 			continue;
 		}
-		if (result > 0) { /* result is the FAT bit size */
-			VERBOSE(stdout, "GPT Partition #%u is fat%d.\n", i,
-				result);
-			if (asprintf(&pfst->name, "fat%d", result) == -1) {
-				VERBOSE(stderr, "Error in asprintf - possibly "
-						"out of memory.\n");
-				return;
-			}
-		} else {
-			VERBOSE(stderr, "%u: not a FAT partition\n", i);
-		}
+		tmpp->fs_type = fat_size_to_fs_type(result);
 
 		*list_end = tmpp;
 		list_end = &((*list_end)->next);
@@ -200,7 +201,6 @@ static void scanLogicalVolumes(int fd, off64_t extended_start_LBA,
 			       PedPartition *partition, int lognum)
 {
 	struct Masterbootrecord next_ebr;
-	PedFileSystemType *pfst = NULL;
 
 	off64_t offset = extended_start_LBA + ebr->parttable[i].start_LBA;
 	if (extended_start_LBA == 0) {
@@ -238,21 +238,13 @@ static void scanLogicalVolumes(int fd, off64_t extended_start_LBA,
 		if (!partition->next) {
 			goto scl_out_of_mem;
 		}
-		pfst = calloc(sizeof(PedFileSystemType), 1);
-		if (!pfst) {
-			goto scl_out_of_mem;
-		}
-		if (asprintf(&pfst->name, "%s", type_to_name(t)) == -1) {
-			goto scl_out_of_mem;
-		};
 		partition = partition->next;
 		partition->num = lognum;
-		partition->fs_type = pfst;
+		partition->fs_type = type_to_fstype(t);
 	}
 	return;
 scl_out_of_mem:
 	VERBOSE(stderr, "Out of memory\n");
-	free(pfst);
 	free(partition->next);
 }
 
@@ -321,26 +313,18 @@ static bool check_partition_table(PedDevice *dev)
 					 efihdr.partitions, dev);
 			break;
 		}
-		PedFileSystemType *pfst = calloc(sizeof(PedFileSystemType), 1);
-		if (!pfst) {
-			goto cpt_out_of_mem;
-		}
-
 		tmp = calloc(sizeof(PedPartition), 1);
 		if (!tmp) {
 			goto cpt_out_of_mem;
 		}
 
 		tmp->num = i + 1;
-		tmp->fs_type = pfst;
 
 		*list_end = tmp;
 		list_end = &((*list_end)->next);
 
 		if (t == MBR_TYPE_EXTENDED || t == MBR_TYPE_EXTENDED_LBA) {
-			if (asprintf(&pfst->name, "%s", "extended") == -1) {
-				goto cpt_out_of_mem;
-			}
+			tmp->fs_type = FS_TYPE_EXTENDED;
 			scanLogicalVolumes(fd, 0, &mbr, i, tmp, 5);
 			/* Could be we still have MBR entries after
 			 * logical volumes */
@@ -348,15 +332,12 @@ static bool check_partition_table(PedDevice *dev)
 				list_end = &((*list_end)->next);
 			}
 		} else {
-			if (asprintf(&pfst->name, "%s", type_to_name(t)) == -1) {
-				goto cpt_out_of_mem;
-			}
+			tmp->fs_type = type_to_fstype(t);
 		}
 		continue;
 	cpt_out_of_mem:
 		close(fd);
 		VERBOSE(stderr, "Out of mem while checking partition table\n.");
-		free(pfst);
 		free(tmp);
 		return false;
 	}
@@ -494,15 +475,8 @@ pedprobe_error:
 	closedir(sysblockdir);
 }
 
-static void ped_partition_destroy(PedPartition *p)
+static inline void ped_partition_destroy(PedPartition *p)
 {
-	if (!p) {
-		return;
-	}
-	if (p->fs_type) {
-		free(p->fs_type->name);
-		free(p->fs_type);
-	}
 	free(p);
 }
 

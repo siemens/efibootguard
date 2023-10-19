@@ -106,13 +106,18 @@ struct EFIpartitionentry {
 };
 #pragma pack(pop)
 
+typedef enum {
+	FS_TYPE_UNKNOWN = 0,
+	FS_TYPE_FAT12 = 1,
+	FS_TYPE_FAT16 = 2,
+	FS_TYPE_FAT32 = 3,
+	FS_TYPE_EXTENDED = 4
+} EbgFileSystemType;
+
 /* Implementing a minimalistic API replacing used libparted functions */
-typedef struct _PedFileSystemType {
-	char *name;
-} PedFileSystemType;
 
 typedef struct _PedPartition {
-	PedFileSystemType *fs_type;
+	EbgFileSystemType fs_type;
 	uint16_t num;
 	struct _PedPartition *next;
 } PedPartition;

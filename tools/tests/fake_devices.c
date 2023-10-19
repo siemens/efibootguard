@@ -16,7 +16,7 @@
 #include <env_api.h>
 #include <env_config_file.h>
 #include <env_config_partitions.h>
-#include <fake_devices.h>
+#include "fake_devices.h"
 
 PedDevice *fake_devices;
 int num_fake_devices;
@@ -64,15 +64,7 @@ void add_fake_partition(int devnum)
 		goto allocate_fake_part_error;
 	}
 	(*pp)->num = num;
-	(*pp)->fs_type =
-		(PedFileSystemType *)calloc(1, sizeof(PedFileSystemType));
-	if (!(*pp)->fs_type) {
-		goto allocate_fake_part_error;
-	}
-	if (asprintf(&(*pp)->fs_type->name, "%s", "fat16") == -1) {
-		(*pp)->fs_type->name = NULL;
-		goto allocate_fake_part_error;
-	}
+	(*pp)->fs_type = FS_TYPE_FAT16;
 	return;
 
 allocate_fake_part_error:
@@ -86,10 +78,6 @@ void remove_fake_partitions(int n)
 	PedPartition *next;
 	while(pp) {
 		next = pp->next;
-		if (pp->fs_type) {
-			free(pp->fs_type->name);
-			free(pp->fs_type);
-		}
 		free(pp);
 		pp = next;
 	}
