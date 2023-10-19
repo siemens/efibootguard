@@ -17,6 +17,7 @@
 #include <efi.h>
 #include <efilib.h>
 #include "simatic.h"
+#include "smbios.h"
 #include "utils.h"
 
 static UINT32 get_station_id(SMBIOS_STRUCTURE_POINTER oem_strct)

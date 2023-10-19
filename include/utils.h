@@ -56,6 +56,3 @@ VOID PrintC(const UINT8 color, const CHAR16 *fmt, ...);
 
 #define INFO(fmt, ...)                                                         \
 	PrintC(EFI_LIGHTGRAY, fmt, ##__VA_ARGS__)
-
-SMBIOS_STRUCTURE_POINTER smbios_find_struct(SMBIOS_STRUCTURE_TABLE *table,
-					    UINT16 type);

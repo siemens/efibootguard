@@ -174,7 +174,8 @@ efi_sources_watchdogs = \
 	drivers/watchdog/w83627hf_wdt.c \
 	drivers/watchdog/ipmi_wdt.c \
 	drivers/watchdog/itco.c \
-	drivers/watchdog/hpwdt.c
+	drivers/watchdog/hpwdt.c \
+	drivers/utils/smbios.c
 else
 efi_sources_watchdogs =
 endif
@@ -282,6 +283,9 @@ $(top_builddir)/drivers/watchdog/%.o: $(top_srcdir)/drivers/watchdog/%.c
 	$(call gnuefi_compile)
 
 $(top_builddir)/drivers/watchdog/%.o: $(top_srcdir)/drivers/watchdog/%.S
+	$(call gnuefi_compile)
+
+$(top_builddir)/drivers/utils/%.o: $(top_srcdir)/drivers/utils/%.c
 	$(call gnuefi_compile)
 
 $(top_builddir)/kernel-stub/%.o: $(top_srcdir)/kernel-stub/%.c
