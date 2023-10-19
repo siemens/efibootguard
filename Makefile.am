@@ -175,6 +175,7 @@ efi_sources_watchdogs = \
 	drivers/watchdog/ipmi_wdt.c \
 	drivers/watchdog/itco.c \
 	drivers/watchdog/hpwdt.c \
+	drivers/utils/simatic.c \
 	drivers/utils/smbios.c
 else
 efi_sources_watchdogs =
@@ -188,7 +189,6 @@ efi_sources = \
 	env/fatvars.c \
 	utils.c \
 	loader_interface.c \
-	simatic.c \
 	bootguard.c \
 	main.c
 
