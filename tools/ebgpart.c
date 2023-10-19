@@ -358,9 +358,8 @@ static int scan_devdir(unsigned int fmajor, unsigned int fminor, char *fullname,
 		VERBOSE(stderr, "Failed to open %s\n", DEVDIR);
 		return result;
 	}
-	struct dirent *devfile;
-	do {
-		devfile = readdir(devdir);
+	while (true) {
+		struct dirent *devfile = readdir(devdir);
 		if (!devfile) {
 			break;
 		}
@@ -377,7 +376,7 @@ static int scan_devdir(unsigned int fmajor, unsigned int fminor, char *fullname,
 			result = 0;
 			break;
 		}
-	} while (devfile);
+	}
 	closedir(devdir);
 
 	return result;
