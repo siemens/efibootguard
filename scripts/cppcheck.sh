@@ -44,6 +44,7 @@ suppress+=" --suppress=nullPointerRedundantCheck:kernel-stub/main.c"
 suppress+=" --suppress=unusedStructMember:kernel-stub/main.c"
 # Not applicable because of API requirements
 suppress+=" --suppress=constParameter:drivers/watchdog/ipc4x7e_wdt.c"
+suppress+=" --suppress=constParameter:drivers/watchdog/w83627hf_wdt.c"
 suppress+=" --suppress=constParameter:kernel-stub/initrd.c"
 
 enable="--enable=warning \
