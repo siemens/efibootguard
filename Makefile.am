@@ -114,7 +114,7 @@ pkginclude_HEADERS = \
 #
 lib_LTLIBRARIES = libebgenv.la
 libebgenv_la_SOURCES = $(libebgenv_a_SOURCES)
-libebgenv_la_LDFLAGS = -version-info 0:0:0
+libebgenv_la_LDFLAGS = -version-info 1:0:1
 
 if ARCH_ARM
 libebgenv_la_LDFLAGS += -Wl,--no-wchar-size-warning
