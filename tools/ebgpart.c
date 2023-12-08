@@ -124,7 +124,7 @@ static int check_GPT_FAT_entry(int fd, const struct EFIpartitionentry *e)
 			strerror(errno));
 		return -1;
 	}
-	return determine_FAT_bits(&header);
+	return determine_FAT_bits(&header, verbosity);
 }
 
 static inline EbgFileSystemType fat_size_to_fs_type(int fat_size)

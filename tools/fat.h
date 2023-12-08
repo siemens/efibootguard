@@ -22,4 +22,4 @@
  * to ensure it is a valid FAT boot sector. If the provided boot sector is not valid or an error
  * occurs during the determination process, the function returns a value less than or equal to 0.
  */
-int determine_FAT_bits(const struct fat_boot_sector *sector);
+int determine_FAT_bits(const struct fat_boot_sector *sector, bool verbosity);

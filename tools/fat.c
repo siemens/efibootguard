@@ -22,9 +22,11 @@
 #include "linux_util.h"
 #include "ebgpart.h"
 
-static bool verbosity = true;
-
-#define fat_msg(sb, lvl, ...) do { VERBOSE(stderr, __VA_ARGS__); VERBOSE(stderr, "\n"); } while(0);
+#define fat_msg(sb, lvl, ...)                                                  \
+	do {                                                                   \
+		fprintf(stderr, __VA_ARGS__);                                  \
+		fprintf(stderr, "\n");                                         \
+	} while (0);
 #define KERN_ERR "ERROR"
 
 /******************************************************************************
@@ -147,7 +149,7 @@ out:
  /* end of Linux kernel code */
  /*****************************************************************************/
 
-int determine_FAT_bits(const struct fat_boot_sector *sector)
+int determine_FAT_bits(const struct fat_boot_sector *sector, bool verbosity)
 {
 	struct fat_bios_param_block bpb;
 	if (fat_read_bpb(NULL, sector, !verbosity, &bpb)) {

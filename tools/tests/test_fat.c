@@ -34,7 +34,7 @@ START_TEST(test_determine_FAT_bits_empty)
 {
 	struct fat_boot_sector sector;
 	memset(&sector, 0, sizeof(sector));
-	int ret = determine_FAT_bits(&sector);
+	int ret = determine_FAT_bits(&sector, true);
 	ck_assert_int_eq(ret, 0);
 }
 END_TEST
@@ -48,7 +48,7 @@ START_TEST(test_determine_FAT_bits_sec_per_clus_zero)
 		.media = 0xf8,
 	};
 	u16_to_le(512, sector.sector_size);
-	int ret = determine_FAT_bits(&sector);
+	int ret = determine_FAT_bits(&sector, true);
 	ck_assert_int_eq(ret, 0);
 }
 END_TEST
@@ -62,7 +62,7 @@ START_TEST(test_determine_FAT_bits_fat_sector_size_zero)
 		.fats = 16,
 		.media = 0xf8,
 	};
-	int ret = determine_FAT_bits(&sector);
+	int ret = determine_FAT_bits(&sector, true);
 	ck_assert_int_eq(ret, 0);
 }
 END_TEST
@@ -124,7 +124,8 @@ START_TEST(test_determine_FAT_bits_12)
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x55, 0xaa,
 	};
-	int ret = determine_FAT_bits((const struct fat_boot_sector*) &sector);
+	int ret = determine_FAT_bits((const struct fat_boot_sector *)&sector,
+				     true);
 	ck_assert_int_eq(ret, 12);
 }
 END_TEST
@@ -186,7 +187,8 @@ START_TEST(test_determine_FAT_bits_16)
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x55, 0xaa,
 	};
-	int ret = determine_FAT_bits((const struct fat_boot_sector*) &sector);
+	int ret = determine_FAT_bits((const struct fat_boot_sector *)&sector,
+				     true);
 	ck_assert_int_eq(ret, 16);
 }
 END_TEST
@@ -248,7 +250,8 @@ START_TEST(test_determine_FAT_bits_32)
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x55, 0xaa,
 	};
-	int ret = determine_FAT_bits((const struct fat_boot_sector*) &sector);
+	int ret = determine_FAT_bits((const struct fat_boot_sector *)&sector,
+				     true);
 	ck_assert_int_eq(ret, 32);
 }
 END_TEST
@@ -312,7 +315,8 @@ START_TEST(test_determine_FAT_bits_fat16_swupdate)
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x55, 0xaa,
 	};
-	int ret = determine_FAT_bits((const struct fat_boot_sector*) &sector);
+	int ret = determine_FAT_bits((const struct fat_boot_sector *)&sector,
+				     true);
 	ck_assert_int_eq(ret, 16);
 }
 END_TEST
@@ -373,7 +377,8 @@ START_TEST(test_determine_FAT_bits_squashfs)
 		0xd7, 0x40, 0xc1, 0xcc, 0x43, 0x7b, 0xbf, 0x8d, 0x76, 0x39,
 		0x3c, 0xd5,
 	};
-	int ret = determine_FAT_bits((const struct fat_boot_sector *)&sector);
+	int ret = determine_FAT_bits((const struct fat_boot_sector *)&sector,
+				     true);
 	ck_assert_int_eq(ret, 0);
 }
 END_TEST
