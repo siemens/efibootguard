@@ -199,9 +199,10 @@ fi
 AS_IF([test "x$enable_bootloader" != "xno"],
     [
 	PKG_CHECK_MODULES(LIBPCI, libpci)
-	PKG_CHECK_MODULES(LIBCHECK, check)
     ])
 AM_CONDITIONAL([BOOTLOADER], [test "x$enable_bootloader" != "xno"])
+
+PKG_CHECK_MODULES(LIBCHECK, check)
 
 PKG_INSTALLDIR
 AC_SUBST(LIBEBGENV_VERSION, $(echo $VERSION | cut -dv -f2))
