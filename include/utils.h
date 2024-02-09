@@ -54,5 +54,9 @@ VOID PrintC(const UINT8 color, const CHAR16 *fmt, ...);
 		PrintC(EFI_LIGHTGRAY, fmt, ##__VA_ARGS__);                     \
 	} while (0)
 
+#if !defined(SILENT_BOOT)
 #define INFO(fmt, ...)                                                         \
 	PrintC(EFI_LIGHTGRAY, fmt, ##__VA_ARGS__)
+#else
+#define INFO(fmt, ...) do { } while (0)
+#endif

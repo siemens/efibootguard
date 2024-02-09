@@ -190,6 +190,15 @@ AC_ARG_ENABLE([bootloader],
     AS_HELP_STRING([--disable-bootloader], [Compile the bootloader disabled, only make the tools]),
 	, [enable_bootloader="yes"])
 
+AC_ARG_ENABLE([silent-boot],
+    AS_HELP_STRING([--enable-silent-boot], [Do not output informational messages while booting]),
+	[silent_boot="yes"], [silent_boot="no"]
+)
+
+if test "x$silent_boot" != "xno"; then
+    AC_DEFINE([SILENT_BOOT], [] , [Silent Boot])
+fi
+
 dnl pkg-config
 PKG_PROG_PKG_CONFIG()
 if test "x$PKG_CONFIG" = "xno"; then
@@ -249,4 +258,5 @@ AC_MSG_RESULT([
 	environment backend:     ${ENV_API_FILE}.c
 	number of config parts:  ${ENV_NUM_CONFIG_PARTS}
 	reserved for uservars:   ${ENV_MEM_USERVARS} bytes
+	silent boot:             ${silent_boot}
 ])
