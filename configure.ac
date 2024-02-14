@@ -231,6 +231,12 @@ AS_IF([test "x$enable_completion" != "xno"],
       ])
 AM_CONDITIONAL([COMPLETION], [test "x$enable_completion" != "xno"])
 
+AX_VALGRIND_DFLT(memcheck, on)
+AX_VALGRIND_DFLT(helgrind, off)
+AX_VALGRIND_DFLT(drd, off)
+AX_VALGRIND_DFLT(sgcheck, off)
+AX_VALGRIND_CHECK
+
 # ------------------------------------------------------------------------------
 AC_CONFIG_FILES([
 	Makefile

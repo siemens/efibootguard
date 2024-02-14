@@ -44,7 +44,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
               autoconf-archive gcc-multilib gnu-efi libpci-dev check \
-              bats libarchive-zip-perl
+              bats libarchive-zip-perl valgrind
       - name: Install i386 dependencies
         if: ${{ matrix.target == 'i386' }}
         run: |
@@ -124,6 +124,7 @@ jobs:
           pushd build >/dev/null
           ../configure
           make check -j $(nproc)
+          make check-valgrind -j $(nproc)
           sudo make install
           time bats --tap ../tests
           popd >/dev/null

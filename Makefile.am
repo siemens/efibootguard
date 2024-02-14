@@ -15,7 +15,7 @@
 # Copyright (C) 2013 Karel Zak <kzak@redhat.com>
 #
 
-ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
+ACLOCAL_AMFLAGS = -I m4 --install ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
 
 efibootguarddir = $(libdir)/efibootguard
@@ -361,6 +361,8 @@ clean-local: clean-local-completion-pycache
 clean-local-completion-pycache:
 	rm -rf $(top_builddir)/completion/bg_printenv/__pycache__
 	rm -rf $(top_builddir)/completion/bg_setenv/__pycache__
+
+check-valgrind-local: $(GEN_VERSION_H)
 
 # Tests depend on libraries being built - start with "."
 SUBDIRS = . tools/tests

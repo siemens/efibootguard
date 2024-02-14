@@ -165,12 +165,14 @@ END_TEST
 
 START_TEST(ebgenv_api_internal_bgenv_write)
 {
+	bool err = true;
+
 	bool res;
 	BGENV *dummy_env;
 
 	dummy_env = calloc(1, sizeof(BGENV));
 	if (!dummy_env) {
-		goto bgew_error;
+		goto finally;
 	}
 
 	RESET_FAKE(write_env);
@@ -194,25 +196,29 @@ START_TEST(ebgenv_api_internal_bgenv_write)
 	 */
 	dummy_env->desc = calloc(1, sizeof(CONFIG_PART));
 	if (!dummy_env->desc) {
-		goto bgew_error;
+		goto finally;
 	}
 
 	dummy_env->data = calloc(1, sizeof(BG_ENVDATA));
 	if (!dummy_env->data) {
-		goto bgew_error;
+		goto finally;
 	}
 
 	res = bgenv_write(dummy_env);
 	ck_assert(write_env_fake.call_count == 1);
 	ck_assert(res == true);
 
-	return;
+	err = false;
 
-bgew_error:
-	free(dummy_env->data);
-	free(dummy_env->desc);
-	free(dummy_env);
-	exit(errno);
+finally:
+	if (dummy_env) {
+		free(dummy_env->data);
+		free(dummy_env->desc);
+		free(dummy_env);
+	}
+
+	if (err)
+		ck_abort();
 }
 END_TEST
 

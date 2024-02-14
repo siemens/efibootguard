@@ -108,3 +108,5 @@ test_fat_SOURCES = test_fat.c $(SRC_TEST_COMMON)
 test_fat_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
 
 TESTS = $(check_PROGRAMS)
+
+@VALGRIND_CHECK_RULES@
