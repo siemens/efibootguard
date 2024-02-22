@@ -137,9 +137,8 @@ static void amdfch_wdt_ping(VOID)
 	writel(val, AMDFCH_WDT_CONTROL(watchdog.base));
 }
 
-static EFI_STATUS __attribute__((constructor))
-init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
-     UINTN timeout)
+static EFI_STATUS init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id,
+		       UINT16 pci_device_id, UINTN timeout)
 {
 	EFI_STATUS status;
 	UINT8 pci_revision_id = 0;
@@ -185,3 +184,5 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 
 	return EFI_SUCCESS;
 }
+
+WATCHDOG_REGISTER(init);

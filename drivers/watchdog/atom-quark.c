@@ -53,9 +53,8 @@ static void write_timer_regs(UINT32 wdt_base, UINT32 timer, UINT32 value)
 	}
 }
 
-static EFI_STATUS __attribute__((constructor))
-init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
-     UINTN timeout)
+static EFI_STATUS init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id,
+		       UINT16 pci_device_id, UINTN timeout)
 {
 	UINT32 wdt_base;
 	EFI_STATUS status;
@@ -91,3 +90,5 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 
 	return status;
 }
+
+WATCHDOG_REGISTER(init);

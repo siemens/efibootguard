@@ -417,11 +417,10 @@ run_action(ACPI_TABLE_WDAT *wdat_table, UINT8 action, UINT32 param, UINT32 *retv
 	return status;
 }
 
-static EFI_STATUS __attribute__((constructor))
-init(EFI_PCI_IO __attribute__((unused)) *pci_io,
-     UINT16 __attribute__((unused)) pci_vendor_id,
-     UINT16 __attribute__((unused)) pci_device_id,
-     UINTN timeout)
+static EFI_STATUS init(EFI_PCI_IO __attribute__((unused)) * pci_io,
+		       UINT16 __attribute__((unused)) pci_vendor_id,
+		       UINT16 __attribute__((unused)) pci_device_id,
+		       UINTN timeout)
 {
 	ACPI_TABLE_WDAT *wdat_table;
 	EFI_STATUS status;
@@ -485,3 +484,5 @@ init(EFI_PCI_IO __attribute__((unused)) *pci_io,
 
 	return EFI_SUCCESS;
 }
+
+WATCHDOG_REGISTER(init);

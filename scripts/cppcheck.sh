@@ -34,7 +34,7 @@ suppress+=" --suppress=unusedFunction:env/env_api_fat.c"
 # Some functions are used by linker wrapping
 suppress+=" --suppress=unusedFunction:tools/tests/test_probe_config_file.c"
 suppress+=" --suppress=unusedFunction:tools/tests/test_ebgenv_api.c"
-# False positive on init_array iteration
+# False positive on wdfuncs iteration
 suppress+=" --suppress=comparePointers:main.c"
 # False positive on constructors, first hit
 suppress+=" --suppress=unusedFunction:drivers/watchdog/amdfch_wdt.c"

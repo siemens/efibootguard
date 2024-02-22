@@ -273,9 +273,8 @@ static void update_no_reboot_flag_apl(const iTCO_info *itco)
 	}
 }
 
-static EFI_STATUS __attribute__((constructor))
-init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
-     UINTN timeout)
+static EFI_STATUS init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id,
+		       UINT16 pci_device_id, UINTN timeout)
 {
 	UINT32 pm_base, tco_base, value;
 	UINT8 itco_chip;
@@ -341,3 +340,5 @@ init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id, UINT16 pci_device_id,
 
 	return EFI_SUCCESS;
 }
+
+WATCHDOG_REGISTER(init);

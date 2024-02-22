@@ -24,18 +24,17 @@
 #include "utils.h"
 #include "loader_interface.h"
 
-extern const unsigned long init_array_start[];
-extern const unsigned long init_array_end[];
+extern const unsigned long wdfuncs_start[];
+extern const unsigned long wdfuncs_end[];
 extern CHAR16 *boot_medium_path;
 
 #define PCI_GET_VENDOR_ID(id)	(UINT16)(id)
 #define PCI_GET_PRODUCT_ID(id)	(UINT16)((id) >> 16)
 
-typedef EFI_STATUS (*WATCHDOG_PROBE)(EFI_PCI_IO *, UINT16, UINT16, UINTN);
 
 static EFI_STATUS probe_watchdogs(UINTN timeout)
 {
-	if (init_array_end - init_array_start == 0) {
+	if (wdfuncs_end - wdfuncs_start - 1 == 0) {
 		if (timeout > 0) {
 			ERROR(L"No watchdog drivers registered, but timeout is non-zero.\n");
 			return EFI_UNSUPPORTED;
@@ -84,8 +83,8 @@ static EFI_STATUS probe_watchdogs(UINTN timeout)
 			continue;
 		}
 
-		for (const unsigned long *entry = init_array_start;
-		     entry < init_array_end; entry++) {
+		const unsigned long *entry = wdfuncs_start;
+		for (entry++; entry < wdfuncs_end; entry++) {
 			WATCHDOG_PROBE probe = (WATCHDOG_PROBE) *entry;
 			if ((status = probe(pci_io, PCI_GET_VENDOR_ID(value),
 					    PCI_GET_PRODUCT_ID(value),

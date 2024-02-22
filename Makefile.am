@@ -182,9 +182,9 @@ efi_sources_watchdogs =
 endif
 
 efi_sources = \
-	drivers/watchdog/init_array_start.S \
+	drivers/watchdog/wdfuncs_start.c \
 	$(efi_sources_watchdogs) \
-	drivers/watchdog/init_array_end.S \
+	drivers/watchdog/wdfuncs_end.c \
 	env/syspart.c \
 	env/fatvars.c \
 	utils.c \
@@ -299,8 +299,8 @@ $(efi_solib): $(efi_objects)
 	nm -D -u $@ | grep ' U ' && exit 1 || :
 
 $(efi_loadername): $(efi_solib)
-	$(AM_V_GEN) $(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic \
-	  -j .dynsym -j .rel* -j .init_array $(objcopy_format) $< $@
+	$(AM_V_GEN) $(OBJCOPY) -j .text -j .wdfuncs -j .sdata -j .data -j .dynamic \
+	  -j .dynsym -j .rel*  $(objcopy_format) $< $@
 
 $(kernel_stub_solib): $(kernel_stub_objects)
 	$(AM_V_CCLD)$(LD) $(efi_ldflags) $(kernel_stub_objects) \

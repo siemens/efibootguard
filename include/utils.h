@@ -41,6 +41,13 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 CHAR16 *GetBootMediumPath(CHAR16 *input);
 BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp);
 
+typedef EFI_STATUS (*WATCHDOG_PROBE)(EFI_PCI_IO *, UINT16, UINT16, UINTN);
+#define _CONCAT(prefix, func) prefix  ## func
+#define CONCAT(prefix, func) _CONCAT(prefix, func)
+#define WATCHDOG_REGISTER(_func)                                               \
+	__attribute__((used, section(".wdfuncs"))) static WATCHDOG_PROBE       \
+		CONCAT(wdfuncs##_, _func) = (WATCHDOG_PROBE)_func;
+
 VOID PrintC(const UINT8 color, const CHAR16 *fmt, ...);
 #define ERROR(fmt, ...)                                                        \
 	do {                                                                   \

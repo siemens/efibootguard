@@ -153,11 +153,10 @@ send_ipmi_cmd(UINT16 io_base, UINT8 cmd, UINT8 *data, UINTN datalen)
 	return status;
 }
 
-static EFI_STATUS __attribute__((constructor))
-init(__attribute__((unused)) EFI_PCI_IO *pci_io,
-     __attribute__((unused)) UINT16 pci_vendor_id,
-     __attribute__((unused)) UINT16 pci_device_id,
-     UINTN timeout)
+static EFI_STATUS init(__attribute__((unused)) EFI_PCI_IO *pci_io,
+		       __attribute__((unused)) UINT16 pci_vendor_id,
+		       __attribute__((unused)) UINT16 pci_device_id,
+		       UINTN timeout)
 {
 	SMBIOS_STRUCTURE_TABLE *smbios_table;
 	SMBIOS_STRUCTURE_POINTER smbios_struct;
@@ -212,3 +211,5 @@ init(__attribute__((unused)) EFI_PCI_IO *pci_io,
 	BS->CloseEvent(cmdtimer);
 	return status;
 }
+
+WATCHDOG_REGISTER(init);
