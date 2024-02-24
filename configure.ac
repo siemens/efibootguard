@@ -156,6 +156,22 @@ AC_ARG_WITH([env-backend],
 
 AC_SUBST([env_api_file], [${ENV_API_FILE}])
 
+AC_ARG_WITH([boot-delay],
+	    AS_HELP_STRING([--with-boot-delay=INT],
+			   [specify the additional boot delay in seconds, defaults to 3]),
+	    [
+		# Limit the boot delay to 1 hour to avoid overflowing
+		# BS->Stall() on 32 bit hosts.
+		ENV_BOOT_DELAY=${withval:-3}
+		AS_IF([test "${ENV_BOOT_DELAY}" -lt "0" -o "${ENV_BOOT_DELAY}" -gt "3600"],
+		      [
+			AC_MSG_ERROR([Invalid boot delay.])
+		      ])
+	    ],
+	    [ ENV_BOOT_DELAY=0 ])
+
+AC_DEFINE_UNQUOTED([ENV_BOOT_DELAY], [${ENV_BOOT_DELAY}], [Additional boot delay])
+
 AC_ARG_WITH([num-config-parts],
 	    AS_HELP_STRING([--with-num-config-parts=INT],
 			   [specify the number of used config partitions, defaults to 2]),
@@ -265,4 +281,5 @@ AC_MSG_RESULT([
 	number of config parts:  ${ENV_NUM_CONFIG_PARTS}
 	reserved for uservars:   ${ENV_MEM_USERVARS} bytes
 	silent boot:             ${silent_boot}
+	boot delay:              ${ENV_BOOT_DELAY} seconds
 ])
