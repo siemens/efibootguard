@@ -80,7 +80,7 @@ static EFIAPI EFI_STATUS initrd_load_file(EFI_LOAD_FILE_PROTOCOL *this,
 		return EFI_BUFFER_TOO_SMALL;
 	}
 
-	CopyMem(buffer, loader->addr, loader->size);
+	CopyMem(buffer, (VOID*)loader->addr, loader->size);
 	*buffer_size = loader->size;
 
 	return EFI_SUCCESS;

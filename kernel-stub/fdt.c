@@ -166,7 +166,7 @@ static EFI_STATUS clone_fdt(const VOID *fdt, UINTN size,
 		error(L"Error allocating device tree buffer", status);
 		return status;
 	}
-	CopyMem((VOID *)(uintptr_t)*fdt_buffer, fdt,
+	CopyMem((VOID *)(uintptr_t)*fdt_buffer, (VOID*)fdt,
 		BE32_TO_HOST(header->TotalSize));
 	return EFI_SUCCESS;
 }

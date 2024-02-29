@@ -206,7 +206,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	kernel_image.ImageBase = (VOID *) (uintptr_t) aligned_kernel_buffer;
 	kernel_image.ImageSize = kernel_section->VirtualSize;
 
-	CopyMem(kernel_image.ImageBase, kernel_source, kernel_image.ImageSize);
+	CopyMem(kernel_image.ImageBase, (VOID*)kernel_source, kernel_image.ImageSize);
 	/* Clear the rest so that .bss is definitely zero. */
 	SetMem((UINT8 *) kernel_image.ImageBase + kernel_image.ImageSize,
 	       pe_header->Opt.SizeOfImage - kernel_image.ImageSize, 0);
