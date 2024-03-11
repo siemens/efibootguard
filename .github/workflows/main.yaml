@@ -123,7 +123,7 @@ jobs:
         run: |
           pushd build >/dev/null
           ../configure
-          make check -j $(nproc)
+          make check -j $(nproc) V=1
           make check-valgrind -j $(nproc)
           sudo make install
           time bats --tap ../tests
@@ -137,28 +137,28 @@ jobs:
           export PKG_CONFIG_LIBDIR=/usr/lib/i386-linux-gnu
           ../configure --with-gnuefi-lib-dir=/usr/lib32 CFLAGS=-m32 \
               host_alias=i586-linux
-          make check -j $(nproc)
+          make check -j $(nproc) V=1
       - name: Build arm64
         if: ${{ matrix.target == 'arm64' }}
         run: |
           cd build
           ../configure --host=aarch64-linux-gnu \
               PKG_CONFIG=/usr/bin/aarch64-linux-gnu-pkg-config
-          make check -j $(nproc)
+          make check -j $(nproc) V=1
       - name: Build arm
         if: ${{ matrix.target == 'arm' }}
         run: |
           cd build
           ../configure --host=arm-linux-gnueabihf \
               PKG_CONFIG=/usr/bin/arm-linux-gnueabihf-pkg-config
-          make check -j $(nproc)
+          make check -j $(nproc) V=1
       - name: Build riscv64
         if: ${{ matrix.target == 'riscv64' }}
         run: |
           cd build
           ../configure --host=riscv64-linux-gnu \
               PKG_CONFIG=/usr/bin/riscv64-linux-gnu-pkg-config
-          make check -j $(nproc)
+          make check -j $(nproc) V=1
       - name: Run cppcheck
         if: ${{ matrix.target == 'cppcheck' }}
         run: |
