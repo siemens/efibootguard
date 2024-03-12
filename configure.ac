@@ -39,6 +39,8 @@ AC_SYS_LARGEFILE
 AC_PROG_CC
 AC_CHECK_TOOL(LD, ld)
 AC_CHECK_TOOL(OBJCOPY, objcopy)
+AC_CHECK_TOOL(GREP, grep)
+AC_CHECK_TOOL(TR, tr)
 
 dnl Dont try to use things like -std=c99 for efi compilation
 GNUEFI_CC=$CC
@@ -220,6 +222,18 @@ PKG_PROG_PKG_CONFIG()
 if test "x$PKG_CONFIG" = "xno"; then
 	AC_MSG_ERROR([You need to install pkg-config])
 fi
+
+# Note: gnu-efi introduced pkg-config with version 3.0.16
+# GNU_EFI_VERSION resolves to gnu-efi's version without dots, e.g., GNU_EFI_VERSION=3016
+# gnu-efi versions < 3.0.16 resolve to GNU_EFI_VERSION=0
+AC_SUBST([GNU_EFI_VERSION], [$(($PKG_CONFIG --modversion "gnu-efi" 2>/dev/null || echo 0) | $TR -d '.' )])
+
+AC_SUBST([OBJCOPY_HAS_EFI_APP_TARGET], [$($OBJCOPY --info | $GREP -q pei- 2>/dev/null && echo "true")])
+if test -z $OBJCOPY_HAS_EFI_APP_TARGET && test $GNU_EFI_VERSION -gt 0; then
+	AC_MSG_ERROR([objcopy doesn't support --target=efi-app but gnu-efi >= 3.0.16])
+fi
+AM_CONDITIONAL([OBJCOPY_USE_EFI_APP_TARGET],
+	       [test -n $OBJCOPY_HAS_EFI_APP_TARGET && test $GNU_EFI_VERSION -gt 0])
 
 AS_IF([test "x$enable_bootloader" != "xno"],
     [

@@ -242,15 +242,20 @@ efi_ldflags = \
 	-L $(GNUEFI_LIB_DIR) \
 	$(GNUEFI_LIB_DIR)/crt0-efi-$(ARCH).o
 
+if !ARCH_IS_X86
+# Suppress RWX segment warnings.
+efi_ldflags += $(LDFLAGS_NO_WARN_RWX_SEGMENTS)
+endif
+
 if ARCH_IS_X86
 objcopy_format = --target=efi-app-$(ARCH)
 else
-# aarch64's and arm's objcopy don't understand --target efi-[app|bsdrv|rtdrv],
-# hence set subsystem 0xa (EFI application) and binary format.
+if OBJCOPY_USE_EFI_APP_TARGET
+objcopy_format = --target=efi-app-$(ARCH)
+else
 objcopy_format = -O binary
 efi_ldflags += --defsym=EFI_SUBSYSTEM=0xa
-# Also suppress RWX segment warnings until we have a better solution
-efi_ldflags += $(LDFLAGS_NO_WARN_RWX_SEGMENTS)
+endif
 endif
 
 efi_objects_pre1 = $(efi_sources:.c=.o)
@@ -300,7 +305,7 @@ $(efi_solib): $(efi_objects)
 
 $(efi_loadername): $(efi_solib)
 	$(AM_V_GEN) $(OBJCOPY) -j .text -j .wdfuncs -j .sdata -j .data -j .dynamic \
-	  -j .dynsym -j .rel*  $(objcopy_format) $< $@
+	  -j .dynsym -j .rodata -j .rel*  $(objcopy_format) $< $@
 
 $(kernel_stub_solib): $(kernel_stub_objects)
 	$(AM_V_CCLD)$(LD) $(efi_ldflags) $(kernel_stub_objects) \
