@@ -239,13 +239,9 @@ efi_ldflags = \
 	--warn-common \
 	--no-undefined \
 	--fatal-warnings \
+	$(LDFLAGS_NO_WARN_RWX_SEGMENTS) \
 	-L $(GNUEFI_LIB_DIR) \
 	$(GNUEFI_LIB_DIR)/crt0-efi-$(ARCH).o
-
-if !ARCH_IS_X86
-# Suppress RWX segment warnings.
-efi_ldflags += $(LDFLAGS_NO_WARN_RWX_SEGMENTS)
-endif
 
 if ARCH_IS_X86
 objcopy_format = --target=efi-app-$(ARCH)

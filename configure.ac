@@ -119,11 +119,6 @@ AX_CHECK_COMPILE_FLAG([-mgeneral-regs-only],
 	[CFLAGS_MGENERAL_REGS_ONLY=])
 AC_SUBST([CFLAGS_MGENERAL_REGS_ONLY])
 
-AX_CHECK_LINK_FLAG([-Wl,--no-warn-rwx-segments],
-	[LDFLAGS_NO_WARN_RWX_SEGMENTS=--no-warn-rwx-segments],
-	[LDFLAGS_NO_WARN_RWX_SEGMENTS=])
-AC_SUBST([LDFLAGS_NO_WARN_RWX_SEGMENTS])
-
 # Checks from autoscan:
 AC_CHECK_FUNCS([getmntent])
 AC_CHECK_FUNCS([memset])
@@ -234,6 +229,14 @@ if test -z $OBJCOPY_HAS_EFI_APP_TARGET && test $GNU_EFI_VERSION -gt 0; then
 fi
 AM_CONDITIONAL([OBJCOPY_USE_EFI_APP_TARGET],
 	       [test -n $OBJCOPY_HAS_EFI_APP_TARGET && test $GNU_EFI_VERSION -gt 0])
+
+# Use --no-warn-rwx-segments for gnu-efi version 3.0.15
+# on non-x86 architectures.
+AS_IF([test -z "$ARCH_IS_X86_FALSE" -a $GNU_EFI_VERSION -eq 0],
+	[AX_CHECK_LINK_FLAG([-Wl,--no-warn-rwx-segments],
+		[LDFLAGS_NO_WARN_RWX_SEGMENTS=--no-warn-rwx-segments],
+		[LDFLAGS_NO_WARN_RWX_SEGMENTS=])
+	 AC_SUBST([LDFLAGS_NO_WARN_RWX_SEGMENTS])])
 
 AS_IF([test "x$enable_bootloader" != "xno"],
     [
