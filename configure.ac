@@ -153,6 +153,19 @@ AC_ARG_WITH([env-backend],
 
 AC_SUBST([env_api_file], [${ENV_API_FILE}])
 
+AC_ARG_WITH([env-file-name],
+	    AS_HELP_STRING([--with-env-file-name=STRING],
+                           [override the boot environment file name]),
+	    [
+		ENV_FILE_NAME="$withval"
+	    ],
+	    [ ENV_FILE_NAME="BGENV.DAT" ])
+
+AC_DEFINE_UNQUOTED(
+	[ENV_FILE_NAME], [L"${ENV_FILE_NAME}"], [Boot environment file name])
+AC_DEFINE_UNQUOTED(
+	[FAT_ENV_FILENAME], ["${ENV_FILE_NAME}"], [Boot environment FAT file name])
+
 AC_ARG_WITH([boot-delay],
 	    AS_HELP_STRING([--with-boot-delay=INT],
 			   [specify the additional boot delay in seconds, defaults to 3]),
@@ -295,6 +308,7 @@ AC_MSG_RESULT([
 	efi libs:                ${GNUEFI_LIB_DIR}
 
 	environment backend:     ${ENV_API_FILE}.c
+	environment file name:   ${ENV_FILE_NAME}
 	number of config parts:  ${ENV_NUM_CONFIG_PARTS}
 	reserved for uservars:   ${ENV_MEM_USERVARS} bytes
 	silent boot:             ${silent_boot}
