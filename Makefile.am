@@ -246,11 +246,11 @@ efi_ldflags = \
 if ARCH_IS_X86
 objcopy_format = --target=efi-app-$(ARCH)
 else
-if OBJCOPY_USE_EFI_APP_TARGET
-objcopy_format = --target=efi-app-$(ARCH)
-else
+if OBJCOPY_USE_BINARY_COPY
 objcopy_format = -O binary
 efi_ldflags += --defsym=EFI_SUBSYSTEM=0xa
+else
+objcopy_format = --target=efi-app-$(ARCH)
 endif
 endif
 

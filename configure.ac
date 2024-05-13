@@ -237,11 +237,15 @@ fi
 AC_SUBST([GNU_EFI_VERSION], [$(($PKG_CONFIG --modversion "gnu-efi" 2>/dev/null || echo 0) | $TR -d '.' )])
 
 AC_SUBST([OBJCOPY_HAS_EFI_APP_TARGET], [$($OBJCOPY --info | $GREP -q pei- 2>/dev/null && echo "true")])
-if test -z $OBJCOPY_HAS_EFI_APP_TARGET && test $GNU_EFI_VERSION -gt 0; then
-	AC_MSG_ERROR([objcopy doesn't support --target=efi-app but gnu-efi >= 3.0.16])
+
+# Use objcopy -O binary on riscv64, arm, and aarch64 with gnu-efi 3.0.15
+AM_CONDITIONAL([OBJCOPY_USE_BINARY_COPY],
+	       [test "$ARCH" = "arm" || test "$ARCH" = "riscv64" || test "$ARCH" = "aarch64" -a $GNU_EFI_VERSION -eq 0])
+
+# Ensure objcopy supports target=efi-app for x86 across the board(s) and aarch64 with gnu-efi > 3.0.15
+if test -z "$ARCH_IS_X86_TRUE" -a -z "$OBJCOPY_HAS_EFI_APP_TARGET" || test "$ARCH" = "aarch64" -a -z "$OBJCOPY_HAS_EFI_APP_TARGET" -a $GNU_EFI_VERSION -gt 0; then
+	AC_MSG_ERROR([objcopy doesn't support --target=efi-app but that is needed by gnu-efi])
 fi
-AM_CONDITIONAL([OBJCOPY_USE_EFI_APP_TARGET],
-	       [test -n $OBJCOPY_HAS_EFI_APP_TARGET && test $GNU_EFI_VERSION -gt 0])
 
 # Use --no-warn-rwx-segments for gnu-efi version 3.0.15
 # on non-x86 architectures.
