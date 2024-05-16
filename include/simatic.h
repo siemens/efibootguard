@@ -25,6 +25,7 @@
 
 #define SIMATIC_IPC427E				0x0a01
 #define SIMATIC_IPC477E				0x0a02
+#define SIMATIC_IPCBX_56A			0x1201
 #define SIMATIC_IPCBX_59A			0x1202
 
 typedef struct {

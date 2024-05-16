@@ -208,11 +208,12 @@ static EFI_STATUS init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id,
 	}
 
 	switch (simatic_station_id()) {
+	case SIMATIC_IPCBX_56A:
 	case SIMATIC_IPCBX_59A:
 		chip = wdt_find(0x2e);
 		if (chip < 0)
 			return EFI_UNSUPPORTED;
-		INFO(L"Detected SIMATIC BX59A watchdog\n");
+		INFO(L"Detected SIMATIC BX5xA watchdog\n");
 		ret = w83627hf_init(chip);
 		if (ret < 0)
 			return EFI_UNSUPPORTED;
