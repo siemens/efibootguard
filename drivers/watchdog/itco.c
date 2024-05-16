@@ -40,6 +40,16 @@ enum iTCO_chipsets {
 	ITCO_INTEL_WBG,
 	ITCO_INTEL_EHL,
 	ITCO_INTEL_TLH,
+	ITCO_INTEL_TL_LP,
+	ITCO_INTEL_JL,
+	ITCO_INTEL_AL_S,
+	ITCO_INTEL_AL_P,
+	ITCO_INTEL_AL_M,
+	ITCO_INTEL_RL_S,
+	ITCO_INTEL_ML_P,
+	ITCO_INTEL_ML_SOC_S,
+	ITCO_INTEL_ML_PCH_S,
+	ITCO_INTEL_BS,
 };
 
 enum iTCO_versions {
@@ -62,7 +72,7 @@ typedef struct {
 } iTCO_regs;
 
 typedef struct {
-	CHAR16 name[16];
+	CHAR16 name[32];
 	UINT32 pci_id;
 	UINT32 itco_version;
 } iTCO_info;
@@ -161,6 +171,66 @@ static const iTCO_info iTCO_chipset_info[] = {
 	{
 	    .name = L"Tiger Lake-H",
 	    .pci_id = 0x43a3,
+	    .itco_version = ITCO_V6,
+	},
+    [ITCO_INTEL_TL_LP] =
+	{
+	    .name = L"Tiger Lake-LP",
+	    .pci_id = 0xa0a3,
+	    .itco_version = ITCO_V6,
+	},
+    [ITCO_INTEL_JL] =
+	{
+	    .name = L"Jasper Lake",
+	    .pci_id = 0x4da3,
+	    .itco_version = ITCO_V6,
+	},
+    [ITCO_INTEL_AL_S] =
+	{
+	    .name = L"Alder Lake-S",
+	    .pci_id = 0x7aa3,
+	    .itco_version = ITCO_V6,
+	},
+    [ITCO_INTEL_AL_P] =
+	{
+	    .name = L"Alder Lake-P",
+	    .pci_id = 0x51a3,
+	    .itco_version = ITCO_V6,
+	},
+    [ITCO_INTEL_AL_M] =
+	{
+	    .name = L"Alder Lake-M",
+	    .pci_id = 0x54a3,
+	    .itco_version = ITCO_V6,
+	},
+    [ITCO_INTEL_RL_S] =
+	{
+	    .name = L"Raptor Lake-S",
+	    .pci_id = 0x7a23,
+	    .itco_version = ITCO_V6,
+	},
+    [ITCO_INTEL_ML_P] =
+	{
+	    .name = L"Meteor Lake-P",
+	    .pci_id = 0x7e22,
+	    .itco_version = ITCO_V6,
+	},
+    [ITCO_INTEL_ML_SOC_S] =
+	{
+	    .name = L"Meteor Lake SoC-S",
+	    .pci_id = 0xae22,
+	    .itco_version = ITCO_V6,
+	},
+    [ITCO_INTEL_ML_PCH_S] =
+	{
+	    .name = L"Meteor Lake PCH-S",
+	    .pci_id = 0x7f23,
+	    .itco_version = ITCO_V6,
+	},
+    [ITCO_INTEL_BS] =
+	{
+	    .name = L"Birch Stream",
+	    .pci_id = 0x5796,
 	    .itco_version = ITCO_V6,
 	},
 };
