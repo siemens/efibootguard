@@ -20,6 +20,9 @@
 #include "smbios.h"
 #include "utils.h"
 
+static UINT32 station_id;
+static BOOLEAN station_id_cached;
+
 static UINT32 get_station_id(SMBIOS_STRUCTURE_POINTER oem_strct)
 {
 	SIMATIC_OEM_ENTRY *entry;
@@ -45,6 +48,9 @@ static UINT32 get_station_id(SMBIOS_STRUCTURE_POINTER oem_strct)
 
 UINT32 simatic_station_id(VOID)
 {
+	if (station_id_cached)
+		return station_id;
+
 	SMBIOS_STRUCTURE_TABLE *smbios_table;
 	SMBIOS_STRUCTURE_POINTER smbios_struct;
 	EFI_STATUS status;
@@ -60,5 +66,8 @@ UINT32 simatic_station_id(VOID)
 		return 0;
 	}
 
-	return get_station_id(smbios_struct);
+	station_id = get_station_id(smbios_struct);
+	station_id_cached = TRUE;
+
+	return station_id;
 }
