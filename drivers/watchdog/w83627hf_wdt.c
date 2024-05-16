@@ -44,11 +44,6 @@
 #include "simatic.h"
 #include "utils.h"
 
-/* Use the host bridge device found on the BX-59A to limit probing to Intel
- * based machines that may be a BX59A; technically we do not use/need PCI
- * for this driver but only port I/Os */
-#define PCI_DEVICE_ID_INTEL_HOST_BRIDGE	0xa700
-
 #define WDT_EFER (wdt_io+0)   /* Extended Function Enable Registers */
 #define WDT_EFIR (wdt_io+0)   /* Extended Function Index Register
 							(same as EFER) */
@@ -198,12 +193,12 @@ static int wdt_set_time(unsigned int timeout)
 }
 
 static EFI_STATUS init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id,
-		       UINT16 pci_device_id, UINTN timeout)
+		       UINT16 __attribute__((unused)) pci_device_id,
+		       UINTN timeout)
 {
 	int chip, ret;
 
-	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL ||
-	    pci_device_id != PCI_DEVICE_ID_INTEL_HOST_BRIDGE) {
+	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL) {
 		return EFI_UNSUPPORTED;
 	}
 
