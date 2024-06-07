@@ -33,6 +33,7 @@
 enum iTCO_chipsets {
 	ITCO_INTEL_APL = 0,
 	ITCO_INTEL_BAYTRAIL,
+	ITCO_INTEL_BRASWELL,
 	ITCO_INTEL_WPT_LP,
 	ITCO_INTEL_ICH9,
 	ITCO_INTEL_LPC_NM10,
@@ -129,6 +130,12 @@ static const iTCO_info iTCO_chipset_info[] = {
 	{
 	    .name = L"Bay Trail SoC",
 	    .pci_id = 0x0f1c,
+	    .itco_version = ITCO_V3,
+	},
+    [ITCO_INTEL_BRASWELL] =
+	{
+	    .name = L"Braswell SoC",
+	    .pci_id = 0x229c,
 	    .itco_version = ITCO_V3,
 	},
     [ITCO_INTEL_WPT_LP] =
