@@ -310,7 +310,7 @@ $(kernel_stub_solib): $(kernel_stub_objects)
 
 $(kernel_stub_name): $(kernel_stub_solib)
 	$(AM_V_GEN) $(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic \
-	  -j .dynsym -j .rel* $(objcopy_format) $< $@
+	  -j .dynsym -j .rodata -j .rel* $(objcopy_format) $< $@
 
 endif # BOOTLOADER
 
