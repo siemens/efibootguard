@@ -33,6 +33,8 @@
 #define ACPI_SIG_XSDT (CHAR8 *)"XSDT"
 #define ACPI_SIG_WDAT (CHAR8 *)"WDAT"
 
+#define ACPI_WDAT_ENABLED	1
+
 #pragma pack(1)
 
 /* --------------------------------------------------------------------------
@@ -436,6 +438,9 @@ static EFI_STATUS init(EFI_PCI_IO __attribute__((unused)) * pci_io,
 	status = locate_and_parse_rsdp(&wdat_table);
 	if (EFI_ERROR(status)) {
 		return status;
+	}
+	if (!(wdat_table->flags & ACPI_WDAT_ENABLED)) {
+		return EFI_UNSUPPORTED;
 	}
 	INFO(L"Detected WDAT watchdog\n");
 
