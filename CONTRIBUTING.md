@@ -9,7 +9,7 @@ also sketches the typical integration process of patches.
 Contribution Checklist
 ----------------------
 
-- use git to manage your changes [*recomended*]
+- use git to manage your changes [*recommended*]
 
 - follow the existing coding style (Linux kernel, see also .clang-format)
   [**required**]
