@@ -439,10 +439,13 @@ static EFI_STATUS init(EFI_PCI_IO __attribute__((unused)) * pci_io,
 	if (EFI_ERROR(status)) {
 		return status;
 	}
+
+	INFO(L"Detected WDAT watchdog\n");
+
 	if (!(wdat_table->flags & ACPI_WDAT_ENABLED)) {
+		INFO(L"WDAT disabled by firmware\n");
 		return EFI_UNSUPPORTED;
 	}
-	INFO(L"Detected WDAT watchdog\n");
 
 	/* Check if the boot was caused by the watchdog */
 	status = run_action(wdat_table, ACPI_WDAT_GET_STATUS, 0, &boot_status);
