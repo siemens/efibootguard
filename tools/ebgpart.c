@@ -175,7 +175,7 @@ static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
 		}
 		VERBOSE(stdout, "%u: %s\n", i, GUID_to_str(e.type_GUID));
 
-		tmpp = calloc(sizeof(PedPartition), 1);
+		tmpp = calloc(1, sizeof(PedPartition));
 		if (!tmpp) {
 			VERBOSE(stderr, "Out of memory\n");
 			return;
@@ -234,7 +234,7 @@ static void scanLogicalVolumes(int fd, off64_t extended_start_LBA,
 					   partition, lognum + 1);
 			continue;
 		}
-		partition->next = calloc(sizeof(PedPartition), 1);
+		partition->next = calloc(1, sizeof(PedPartition));
 		if (!partition->next) {
 			goto scl_out_of_mem;
 		}
@@ -313,7 +313,7 @@ static bool check_partition_table(PedDevice *dev)
 					 efihdr.partitions, dev);
 			break;
 		}
-		tmp = calloc(sizeof(PedPartition), 1);
+		tmp = calloc(1, sizeof(PedPartition));
 		if (!tmp) {
 			goto cpt_out_of_mem;
 		}
@@ -449,7 +449,7 @@ void ped_device_probe_all(char *rootdev)
 			}
 		}
 		/* This is a block device, so add it to the list*/
-		PedDevice *dev = calloc(sizeof(PedDevice), 1);
+		PedDevice *dev = calloc(1 ,sizeof(PedDevice));
 		if (!dev) {
 			continue;
 		}
