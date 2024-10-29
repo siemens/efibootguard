@@ -221,6 +221,7 @@ efi_cflags = \
 	-fno-stack-protector \
 	-Wsign-compare \
 	-DGNU_EFI_USE_MS_ABI \
+	-DGNU_EFI_3_0_COMPAT \
 	-Werror \
 	$(CFLAGS_MGENERAL_REGS_ONLY) \
 	$(CFLAGS)
