@@ -48,13 +48,13 @@ class Section:
 
 
 class PEHeaders:
-    OPT_OFFS_SIZE_OF_INIT_DATA = 0x8
-    OPT_OFFS_ADDRESS_OF_ENTRY_POINT = 0x10
-    OPT_OFFS_BASE_OF_CODE = 0x14
-    OPT_OFFS_SECTION_ALIGNMENT = 0x20
-    OPT_OFFS_FILE_ALIGNMENT = 0x24
-    OPT_OFFS_SIZE_OF_IMAGE = 0x38
-    OPT_OFFS_SIZE_OF_HEADERS = 0x3C
+    OPT_OFFS_SIZE_OF_INIT_DATA = [0x8, 0x8]
+    OPT_OFFS_ADDRESS_OF_ENTRY_POINT = [0x10, 0x10]
+    OPT_OFFS_BASE_OF_CODE = [0x14, 0x14]
+    OPT_OFFS_SECTION_ALIGNMENT = [0x20, 0x20]
+    OPT_OFFS_FILE_ALIGNMENT = [0x24, 0x24]
+    OPT_OFFS_SIZE_OF_IMAGE = [0x38, 0x38]
+    OPT_OFFS_SIZE_OF_HEADERS = [0x3C, 0x3C]
 
     def __init__(self, name, blob):
         # Parse headers: DOS, COFF, optional header
@@ -93,6 +93,16 @@ class PEHeaders:
 
         self.opt_header = blob[coff_offs:self.header_size]
 
+        magic = struct.unpack_from('<H', self.opt_header)[0]
+        if magic == 0x10b:
+            self.is_pe_plus = False
+        elif magic == 0x20b:
+            self.is_pe_plus = True
+        else:
+            print("Invalid %s, unknown optional header magic" % name,
+                  file=sys.stderr)
+            exit(1)
+
         section_offs = self.header_size
 
         self.header_size += num_sections * 0x28
@@ -124,14 +134,16 @@ class PEHeaders:
 
             section_offs += 0x28
 
-    def get_opt_header_field(self, offset):
-        format = '<%dxI' % offset
+    def get_opt_header_field(self, offsets):
+        offs = offsets[1 if self.is_pe_plus else 0]
+        format = '<%dxI' % offs
         return struct.unpack_from(format, self.opt_header)[0]
 
-    def set_opt_header_field(self, offset, val):
-        format = '<%dsI%ds' % (offset, len(self.opt_header) - offset - 4)
-        self.opt_header = struct.pack(format, self.opt_header[:offset], val,
-                                      self.opt_header[offset+4:])
+    def set_opt_header_field(self, offsets, val):
+        offs = offsets[1 if self.is_pe_plus else 0]
+        format = '<%dsI%ds' % (offs, len(self.opt_header) - offs - 4)
+        self.opt_header = struct.pack(format, self.opt_header[:offs], val,
+                                      self.opt_header[offs+4:])
 
     def get_size_of_init_data(self):
         return self.get_opt_header_field(PEHeaders.OPT_OFFS_SIZE_OF_INIT_DATA)
