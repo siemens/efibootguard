@@ -60,20 +60,20 @@ class PEHeaders:
     def __init__(self, name, blob):
         # Parse headers: DOS, COFF, optional header
         if len(blob) < 0x40:
-            print("Invalid %s, image too small" % name, file=sys.stderr)
+            print(f'Invalid {name}, image too small', file=sys.stderr)
             exit(1)
 
         (magic, pe_offs) = struct.unpack_from('<H58xI', blob)
 
         if magic != 0x5a4d:
-            print("Invalid %s, bad DOS header magic" % name, file=sys.stderr)
+            print(f'Invalid {name}, bad DOS header magic', file=sys.stderr)
             exit(1)
 
         self.dos_header = blob[:pe_offs]
 
         self.header_size = pe_offs + 0x18
         if self.header_size > len(blob):
-            print("Invalid %s, incomplete COFF header" % name, file=sys.stderr)
+            print(f'Invalid {name}, incomplete COFF header', file=sys.stderr)
             exit(1)
 
         self.coff_header = blob[pe_offs:self.header_size]
@@ -81,14 +81,14 @@ class PEHeaders:
         (magic, self.machine, num_sections, opt_header_size) = \
             struct.unpack_from('<IHH12xH2x', self.coff_header)
         if magic != 0x4550:
-            print("Invalid %s, bad PE header magic" % name, file=sys.stderr)
+            print(f'Invalid {name}, bad PE header magic', file=sys.stderr)
             exit(1)
 
         coff_offs = self.header_size
 
         self.header_size += opt_header_size
         if self.header_size > len(blob):
-            print("Invalid %s, incomplete optional header" % name,
+            print(f'Invalid {name}, incomplete optional header',
                   file=sys.stderr)
             exit(1)
 
@@ -100,7 +100,7 @@ class PEHeaders:
         elif magic == 0x20b:
             self.is_pe_plus = True
         else:
-            print("Invalid %s, unknown optional header magic" % name,
+            print(f'Invalid {name}, unknown optional header magic',
                   file=sys.stderr)
             exit(1)
 
@@ -108,7 +108,7 @@ class PEHeaders:
 
         self.header_size += num_sections * 0x28
         if self.header_size > len(blob):
-            print("Invalid %s, incomplete section headers" % name,
+            print(f'Invalid {name}, incomplete section headers',
                   file=sys.stderr)
             exit(1)
 
@@ -120,7 +120,7 @@ class PEHeaders:
             section = Section.from_struct(
                 blob[section_offs:section_offs+0x28])
             if section.data_offs + section.data_size > len(blob):
-                print("Invalid %s, section data missing" % name,
+                print(f'Invalid {name}, section data missing',
                       file=sys.stderr)
                 exit(1)
 
@@ -137,12 +137,12 @@ class PEHeaders:
 
     def get_opt_header_field(self, offsets):
         offs = offsets[1 if self.is_pe_plus else 0]
-        format = '<%dxI' % offs
+        format = f'<{offs}xI'
         return struct.unpack_from(format, self.opt_header)[0]
 
     def set_opt_header_field(self, offsets, val):
         offs = offsets[1 if self.is_pe_plus else 0]
-        format = '<%dsI%ds' % (offs, len(self.opt_header) - offs - 4)
+        format = f'<{offs}sI{len(self.opt_header) - offs - 4}s'
         self.opt_header = struct.pack(format, self.opt_header[:offs], val,
                                       self.opt_header[offs+4:])
 
