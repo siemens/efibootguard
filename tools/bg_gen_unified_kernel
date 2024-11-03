@@ -55,6 +55,7 @@ class PEHeaders:
     OPT_OFFS_FILE_ALIGNMENT = [0x24, 0x24]
     OPT_OFFS_SIZE_OF_IMAGE = [0x38, 0x38]
     OPT_OFFS_SIZE_OF_HEADERS = [0x3C, 0x3C]
+    OPT_OFFS_CERT_TABLE_SIZE = [0x84, 0x94]
 
     def __init__(self, name, blob):
         # Parse headers: DOS, COFF, optional header
@@ -255,6 +256,12 @@ def main():
     stub = args.stub.read()
 
     pe_headers = PEHeaders('stub image', stub)
+
+    if pe_headers.get_opt_header_field(PEHeaders.OPT_OFFS_CERT_TABLE_SIZE) > 0:
+        print("Signed stub image detected which is neither supported nor "
+              "makes any sense", file=sys.stderr)
+        exit(1)
+
     stub_first_data = pe_headers.first_data
     stub_end_of_sections = pe_headers.end_of_sections
     file_align = pe_headers.get_file_alignment()
