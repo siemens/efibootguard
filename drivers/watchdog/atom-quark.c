@@ -23,17 +23,17 @@
 #define PCI_DEVICE_ID_INTEL_QUARK_X1000	0x095e
 
 #define WDTBA_REG			0x84
-# define WDTBA_ENABLED			(1U << 31)
+# define WDTBA_ENABLED			BIT(31)
 # define WDTBA_ADDRMASK			0xffc0
 
 #define TIMER1_REG			0x00
 #define TIMER2_REG			0x04
 #define RELOAD0_REG			0x0c
 #define CONFIG_REG			0x10
-# define CONFIG_RESET_ENABLE		(1 << 4)
+# define CONFIG_RESET_ENABLE		BIT(4)
 #define LOCK_REG			0x18
-# define LOCK_WDT_LOCK			(1 << 0)
-# define LOCK_WDT_ENABLE		(1 << 1)
+# define LOCK_WDT_LOCK			BIT(0)
+# define LOCK_WDT_ENABLE		BIT(1)
 
 static void unlock_timer_regs(UINT32 wdt_base)
 {

@@ -36,17 +36,17 @@
 #define AMDFCH_WDT_MEM_MAP_SIZE         0x100
 
 #define AMDFCH_WDT_CONTROL(base)        ((base) + 0x00) /* Watchdog Control */
- #define AMDFCH_WDT_START_STOP_BIT      (1 << 0)
- #define AMDFCH_WDT_FIRED_BIT           (1 << 1)
- #define AMDFCH_WDT_ACTION_RESET_BIT    (1 << 2)
- #define AMDFCH_WDT_DISABLE_BIT         (1 << 3)
+ #define AMDFCH_WDT_START_STOP_BIT      BIT(0)
+ #define AMDFCH_WDT_FIRED_BIT           BIT(1)
+ #define AMDFCH_WDT_ACTION_RESET_BIT    BIT(2)
+ #define AMDFCH_WDT_DISABLE_BIT         BIT(3)
  /* 6:4 bits Reserved */
- #define AMDFCH_WDT_TRIGGER_BIT         (1 << 7)
+ #define AMDFCH_WDT_TRIGGER_BIT         BIT(7)
 #define AMDFCH_WDT_COUNT(base)          ((base) + 0x04) /* Watchdog Count */
  #define AMDFCH_WDT_COUNT_MASK          0xFFFF
 
 #define AMD_PM_WATCHDOG_EN_REG          0x00
- #define AMD_PM_WATCHDOG_TIMER_EN       (0x01 << 7)
+ #define AMD_PM_WATCHDOG_TIMER_EN       BIT(7)
 
 #define AMD_PM_WATCHDOG_CONFIG_REG      0x03
  #define AMD_PM_WATCHDOG_32USEC_RES     0x0

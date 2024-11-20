@@ -24,10 +24,10 @@
 #define PCI_DEVICE_ID_INTEL_SUNRISEPOINT_H_LPC	0xa150
 
 #define SIMATIC_WD_ENABLE_REG			0x62
-#define  SIMATIC_WD_ENABLE			(1 << 0)
-#define  SIMATIC_WD_MACRO_MOD			(1 << 1)
+#define  SIMATIC_WD_ENABLE			BIT(0)
+#define  SIMATIC_WD_MACRO_MOD			BIT(1)
 #define  SIMATIC_WD_SCALER_SHIFT		3
-#define  SIMATIC_WD_TRIGGERED			(1 << 7)
+#define  SIMATIC_WD_TRIGGERED			BIT(7)
 #define SIMATIC_WD_TRIGGER_REG			0x66
 
 #define SUNRISEPOINT_H_MMCFG_BASE		0xf0000000
@@ -36,13 +36,13 @@
 #define P2SB_SBREG_BAR				0x10
 #define P2SB_SBREG_BARH				0x14
 #define P2SB_CTRL				0xe0
-#define  P2SB_CFG_HIDE				(1 << 8)
+#define  P2SB_CFG_HIDE				BIT(8)
 
 #define GPIO_COMMUNITY0_PORT_ID			0xaf
 
 /* drives SAFE_EN_N */
 #define PAD_CFG_DW0_GPP_A_23			0x4b8
-#define  PAD_CFG_GPIOTXSTATE			(1 << 0)
+#define  PAD_CFG_GPIOTXSTATE			BIT(0)
 
 static UINTN mmcfg_address(UINTN bus, UINTN device, UINTN function,
 			   UINTN offset)

@@ -20,8 +20,8 @@
 #define PCI_DEVICE_ID_INTEL_ESB_9	0x25ab
 
 #define ESB_LOCK_REG			0x68
-# define ESB_LOCK_WDT_LOCK		(1 << 0)
-# define ESB_LOCK_WDT_ENABLE		(1 << 1)
+# define ESB_LOCK_WDT_LOCK		BIT(0)
+# define ESB_LOCK_WDT_ENABLE		BIT(1)
 
 #define ESB_TIMER1_REG			0x00
 #define ESB_TIMER2_REG			0x04

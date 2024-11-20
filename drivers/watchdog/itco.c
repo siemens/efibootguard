@@ -21,11 +21,11 @@
 #include "utils.h"
 
 #define SMI_EN_REG		0x30
-#define TCO_EN			(1 << 13)
-#define GBL_SMI_EN		(1 << 0)
+#define TCO_EN			BIT(13)
+#define GBL_SMI_EN		BIT(0)
 
 #define TCO_RLD_REG		0x00
-#define TCO1_CNT_NO_REBOOT	(1 << 0)
+#define TCO1_CNT_NO_REBOOT	BIT(0)
 #define TCO1_CNT_REG		0x08
 #define TCO_TMR_HLT_MASK	(1 << 11)
 #define TCO_TMR_REG		0x12
