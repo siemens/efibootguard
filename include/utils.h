@@ -67,3 +67,5 @@ VOID PrintC(const UINT8 color, const CHAR16 *fmt, ...);
 #else
 #define INFO(fmt, ...) do { } while (0)
 #endif
+
+#define BIT(x) (1UL << (x))
