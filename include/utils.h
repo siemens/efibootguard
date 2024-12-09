@@ -22,6 +22,7 @@
 
 typedef struct _VOLUME_DESC {
 	EFI_DEVICE_PATH *devpath;
+	BOOLEAN onbootmedium;
 	CHAR16 *fslabel;
 	CHAR16 *fscustomlabel;
 	EFI_FILE_HANDLE root;
@@ -39,7 +40,6 @@ EFI_STATUS close_volumes(VOLUME_DESC *volumes, UINTN count);
 EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 					  CHAR16 *payloadpath);
 CHAR16 *GetBootMediumPath(CHAR16 *input);
-BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp);
 
 typedef EFI_STATUS (*WATCHDOG_PROBE)(EFI_PCI_IO *, UINT16, UINT16, UINTN);
 #define _CONCAT(prefix, func) prefix  ## func

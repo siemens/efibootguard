@@ -67,7 +67,7 @@ UINTN filter_cfg_parts(UINTN *config_volumes, UINTN numHandles)
 	for (UINTN index = 0; index < numHandles; index++) {
 		VOLUME_DESC *v = &volumes[config_volumes[index]];
 
-		if (IsOnBootMedium(v->devpath)) {
+		if (v->onbootmedium) {
 			use_envs_on_bootmedium_only = TRUE;
 		};
 	}
@@ -83,7 +83,7 @@ UINTN filter_cfg_parts(UINTN *config_volumes, UINTN numHandles)
 		UINTN cvi = config_volumes[j];
 		VOLUME_DESC *v = &volumes[cvi];
 
-		if (IsOnBootMedium(v->devpath)) {
+		if (v->onbootmedium) {
 			swap_uintn(&config_volumes[j],
 				   &config_volumes[num_sorted++]);
 		} else {

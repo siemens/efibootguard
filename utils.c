@@ -31,7 +31,7 @@ VOID PrintC(const UINT8 color, const CHAR16 *fmt, ...)
 	(VOID) ST->ConOut->SetAttribute(ST->ConOut, attr);
 }
 
-BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
+static BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 {
 	extern CHAR16 *boot_medium_path;
 	CHAR16 *device_path, *tmp;
@@ -157,14 +157,17 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 		}
 		devpathstr = DevicePathToStr(devpath);
 
+		BOOLEAN onbootmedium = IsOnBootMedium(devpath);
+
 		(*volumes)[rootCount].root = tmp;
 		(*volumes)[rootCount].devpath = devpath;
+		(*volumes)[rootCount].onbootmedium = onbootmedium;
 		(*volumes)[rootCount].fslabel =
 		    get_volume_label((*volumes)[rootCount].root);
 		(*volumes)[rootCount].fscustomlabel =
 		    get_volume_custom_label((*volumes)[rootCount].root);
 		INFO(L"Volume %d: ", rootCount);
-		if (IsOnBootMedium(devpath)) {
+		if (onbootmedium) {
 			INFO(L"(On boot medium) ");
 		}
 		INFO(L"%s, LABEL=%s, CLABEL=%s\n",
