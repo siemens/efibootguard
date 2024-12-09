@@ -87,9 +87,6 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 		ERROR(L"Could not enumerate config partitions.\n");
 		goto lc_cleanup;
 	}
-
-	numHandles = filter_cfg_parts(config_volumes, numHandles);
-
 	if (numHandles > ENV_NUM_CONFIG_PARTS) {
 		ERROR(L"Too many config partitions found. Aborting.\n");
 		goto lc_cleanup;

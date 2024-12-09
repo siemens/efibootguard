@@ -32,4 +32,3 @@
 	(file)->Read((file), (len), (buffer))
 
 EFI_STATUS enumerate_cfg_parts(UINTN *config_volumes, UINTN *maxHandles);
-UINTN filter_cfg_parts(UINTN *config_volumes, UINTN maxHandles);
