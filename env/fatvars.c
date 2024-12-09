@@ -23,16 +23,16 @@
 static int current_partition = 0;
 static BG_ENVDATA *env;
 
-static BG_STATUS save_current_config(const UINTN *config_volumes, UINTN numHandles)
+static VOID save_current_config(const UINTN *config_volumes, UINTN numHandles)
 {
 	EFI_STATUS efistatus;
 
 	if (numHandles != ENV_NUM_CONFIG_PARTS) {
-		ERROR(L"Unexpected number of config partitions: found %d, but expected %d.\n",
-		      numHandles, ENV_NUM_CONFIG_PARTS);
 		/* In case of saving, this must be treated as error, to not
 		 * overwrite another partition's config file. */
-		return BG_CONFIG_ERROR;
+		ERROR(L"Unexpected number of config partitions: found %d, but expected %d.\n",
+		      numHandles, ENV_NUM_CONFIG_PARTS);
+		return;
 	}
 
 	VOLUME_DESC *v = &volumes[config_volumes[current_partition]];
@@ -42,7 +42,7 @@ static BG_STATUS save_current_config(const UINTN *config_volumes, UINTN numHandl
 	if (EFI_ERROR(efistatus)) {
 		ERROR(L"Could not open environment file on system partition %d: %r\n",
 		      current_partition, efistatus);
-		return BG_CONFIG_ERROR;
+		return;
 	}
 
 	UINTN writelen = sizeof(BG_ENVDATA);
@@ -55,16 +55,11 @@ static BG_STATUS save_current_config(const UINTN *config_volumes, UINTN numHandl
 	efistatus = fh->Write(fh, &writelen, (VOID *)&env[current_partition]);
 	if (EFI_ERROR(efistatus)) {
 		ERROR(L"Cannot write environment to file: %r\n", efistatus);
-		(VOID) close_cfg_file(v->root, fh);
-		return BG_CONFIG_ERROR;
 	}
 
 	if (EFI_ERROR(close_cfg_file(v->root, fh))) {
 		ERROR(L"Could not close environment config file.\n");
-		return BG_CONFIG_ERROR;
 	}
-
-	return BG_SUCCESS;
 }
 
 BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
