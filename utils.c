@@ -108,7 +108,7 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 	EFI_HANDLE *handles = NULL;
 	EFI_GUID sfspGuid = SIMPLE_FILE_SYSTEM_PROTOCOL;
 	UINTN handleCount = 0;
-	UINTN index, rootCount = 0;
+	UINTN index, rootCount = 0, bootCount = 0;
 
 	EFI_FILE_HANDLE tmp;
 
@@ -133,7 +133,6 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 
 	for (index = 0; index < handleCount; index++) {
 		EFI_FILE_IO_INTERFACE *fs = NULL;
-		CHAR16 *devpathstr;
 
 		status = BS->HandleProtocol(
 		    handles[index], &sfspGuid, (VOID **)&fs);
@@ -155,29 +154,38 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count)
 			ERROR(L"Could not get device path for config partition, skipping.\n");
 			continue;
 		}
-		devpathstr = DevicePathToStr(devpath);
 
+		UINTN target = rootCount;
 		BOOLEAN onbootmedium = IsOnBootMedium(devpath);
-
-		(*volumes)[rootCount].root = tmp;
-		(*volumes)[rootCount].devpath = devpath;
-		(*volumes)[rootCount].onbootmedium = onbootmedium;
-		(*volumes)[rootCount].fslabel =
-		    get_volume_label((*volumes)[rootCount].root);
-		(*volumes)[rootCount].fscustomlabel =
-		    get_volume_custom_label((*volumes)[rootCount].root);
-		INFO(L"Volume %d: ", rootCount);
 		if (onbootmedium) {
-			INFO(L"(On boot medium) ");
+			CopyMem(&(*volumes)[bootCount + 1], &(*volumes)[bootCount],
+				(rootCount - bootCount) * sizeof(VOLUME_DESC));
+			target = bootCount++;
 		}
-		INFO(L"%s, LABEL=%s, CLABEL=%s\n",
-		      devpathstr, (*volumes)[rootCount].fslabel,
-		      (*volumes)[rootCount].fscustomlabel);
 
-		FreePool(devpathstr);
+		(*volumes)[target].root = tmp;
+		(*volumes)[target].devpath = devpath;
+		(*volumes)[target].onbootmedium = onbootmedium;
+		(*volumes)[target].fslabel =
+		    get_volume_label((*volumes)[target].root);
+		(*volumes)[target].fscustomlabel =
+		    get_volume_custom_label((*volumes)[target].root);
 
 		rootCount++;
 	}
+
+	for (index = 0; index < rootCount; index++) {
+		INFO(L"Volume %d: ", index);
+		if ((*volumes)[index].onbootmedium) {
+			INFO(L"(On boot medium) ");
+		}
+		CHAR16 *devpathstr = DevicePathToStr((*volumes)[index].devpath);
+		INFO(L"%s, LABEL=%s, CLABEL=%s\n",
+		      devpathstr, (*volumes)[index].fslabel,
+		      (*volumes)[index].fscustomlabel);
+		FreePool(devpathstr);
+	}
+
 	*count = rootCount;
 	return EFI_SUCCESS;
 }
