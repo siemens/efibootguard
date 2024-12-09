@@ -23,32 +23,16 @@
 static int current_partition = 0;
 static BG_ENVDATA *env;
 
-static BG_STATUS save_current_config(VOID)
+static BG_STATUS save_current_config(const UINTN *config_volumes, UINTN numHandles)
 {
-	BG_STATUS result = BG_CONFIG_ERROR;
 	EFI_STATUS efistatus;
-	UINTN numHandles = volume_count;
-	UINTN *config_volumes;
-
-	config_volumes = (UINTN *)AllocatePool(sizeof(UINTN) *  volume_count);
-	if (!config_volumes) {
-		ERROR(L"Could not allocate memory for config partition mapping.\n");
-		return result;
-	}
-
-	if (EFI_ERROR(enumerate_cfg_parts(config_volumes, &numHandles))) {
-		ERROR(L"Could not enumerate config partitions.\n");
-		goto scc_cleanup;
-	}
-
-	numHandles = filter_cfg_parts(config_volumes, numHandles);
 
 	if (numHandles != ENV_NUM_CONFIG_PARTS) {
 		ERROR(L"Unexpected number of config partitions: found %d, but expected %d.\n",
 		      numHandles, ENV_NUM_CONFIG_PARTS);
 		/* In case of saving, this must be treated as error, to not
 		 * overwrite another partition's config file. */
-		goto scc_cleanup;
+		return BG_CONFIG_ERROR;
 	}
 
 	VOLUME_DESC *v = &volumes[config_volumes[current_partition]];
@@ -58,7 +42,7 @@ static BG_STATUS save_current_config(VOID)
 	if (EFI_ERROR(efistatus)) {
 		ERROR(L"Could not open environment file on system partition %d: %r\n",
 		      current_partition, efistatus);
-		goto scc_cleanup;
+		return BG_CONFIG_ERROR;
 	}
 
 	UINTN writelen = sizeof(BG_ENVDATA);
@@ -72,18 +56,15 @@ static BG_STATUS save_current_config(VOID)
 	if (EFI_ERROR(efistatus)) {
 		ERROR(L"Cannot write environment to file: %r\n", efistatus);
 		(VOID) close_cfg_file(v->root, fh);
-		goto scc_cleanup;
+		return BG_CONFIG_ERROR;
 	}
 
 	if (EFI_ERROR(close_cfg_file(v->root, fh))) {
 		ERROR(L"Could not close environment config file.\n");
-		goto scc_cleanup;
+		return BG_CONFIG_ERROR;
 	}
 
-	result = BG_SUCCESS;
-scc_cleanup:
-	FreePool(config_volumes);
-	return result;
+	return BG_SUCCESS;
 }
 
 BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
@@ -214,7 +195,7 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 		 * zero-revision */
 		env[latest_idx].ustate = USTATE_FAILED;
 		env[latest_idx].revision = REVISION_FAILED;
-		save_current_config();
+		save_current_config(config_volumes, numHandles);
 		/* We must boot with the configuration that was active before
 		 */
 		current_partition = pre_latest_idx;
@@ -222,7 +203,7 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 		/* If this configuration has never been booted with, set ustate
 		 * to indicate that this configuration is now being tested */
 		env[latest_idx].ustate = USTATE_TESTING;
-		save_current_config();
+		save_current_config(config_volumes, numHandles);
 	}
 
 	bglp->payload_path = StrDuplicate(env[current_partition].kernelfile);
