@@ -278,7 +278,7 @@ define gnuefi_compile
 	$(GNUEFI_CC) $(efi_cppflags) $(efi_cflags) -c $< -o $@
 endef
 
-$(top_builddir)/%.o: $(top_srcdir)/%.c
+$(top_builddir)/%.o: $(top_srcdir)/%.c $(top_builddir)/config.h
 	$(call gnuefi_compile)
 
 $(top_builddir)/env/%.o: $(top_srcdir)/env/%.c
