@@ -129,7 +129,8 @@ bool probe_config_partitions(CONFIG_PART *cfgpart, bool search_all_devices)
 			}
 			if (strncmp("/dev/mmcblk", dev->path, 11) == 0 ||
 			    strncmp("/dev/loop", dev->path, 9) == 0 ||
-			    strncmp("/dev/nvme", dev->path, 9) == 0) {
+			    strncmp("/dev/nvme", dev->path, 9) == 0 ||
+			    strncmp("/dev/md", dev->path, 7) == 0) {
 				(void)snprintf(devpath, 4096, "%sp%u",
 					       dev->path, part->num);
 			} else {
