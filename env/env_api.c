@@ -176,10 +176,15 @@ uint32_t ebg_env_user_free(ebgenv_t *e)
 	return bgenv_user_free(((BGENV *)e->bgenv)->data->userdata);
 }
 
-uint16_t ebg_env_getglobalstate(ebgenv_t __attribute__((unused)) *e)
+uint16_t ebg_env_getglobalstate(void __attribute__((unused)) *reserved)
 {
 	BGENV *env;
 	int res = USTATE_UNKNOWN;
+
+	if (!bgenv_init()) {
+		errno = EIO;
+		return res;
+	}
 
 	/* Test for rolled-back condition. */
 	for (int i = 0; i < ENV_NUM_CONFIG_PARTS; i++) {

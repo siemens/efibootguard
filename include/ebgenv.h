@@ -136,10 +136,10 @@ int ebg_env_get_ex(ebgenv_t *e, char *key, uint64_t *datatype, uint8_t *buffer,
 uint32_t ebg_env_user_free(ebgenv_t *e);
 
 /** @brief Get global ustate value, accounting for all environments
- *  @param e A pointer to an ebgenv_t context.
+ *  @param reserved Historic parameter, must be NULL.
  *  @return ustate value
  */
-uint16_t ebg_env_getglobalstate(ebgenv_t *e);
+uint16_t ebg_env_getglobalstate(void *reserved);
 
 /** @brief Set global ustate value, accounting for all environments
  *         if state is set to zero and updating only current environment if
