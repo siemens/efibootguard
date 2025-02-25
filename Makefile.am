@@ -39,7 +39,26 @@ AM_LDFLAGS = -L$(top_builddir)/
 
 ARFLAGS = cr
 
-EXTRA_DIST = autogen.sh README LICENSE
+EXTRA_DIST = \
+	.clang-format \
+	.editorconfig \
+	.github \
+	.gitignore \
+	.gitmodules \
+	CONTRIBUTING.md \
+	COPYING \
+	README.md \
+	SECURITY.md \
+	VERSION \
+	completion/bg_printenv \
+	completion/bg_setenv \
+	completion/common.py \
+	completion/.gitignore \
+	docs \
+	gen_version_h \
+	scripts \
+	tests/bg_setenv.bats \
+	tools/bg_gen_unified_kernel
 CLEANFILES =
 
 define shtab
@@ -109,6 +128,24 @@ libebgenv_a_CFLAGS = \
 pkginclude_HEADERS = \
 	include/ebgenv.h
 
+noinst_HEADERS = \
+	include/bootguard.h \
+	include/configuration.h \
+	include/ebgpart.h \
+	include/env_api.h \
+	include/env_config_file.h \
+	include/env_config_partitions.h \
+	include/envdata.h \
+	include/env_disk_utils.h \
+	include/loader_interface.h \
+	include/mmio.h \
+	include/simatic.h \
+	include/smbios.h \
+	include/syspart.h \
+	include/test-interface.h \
+	include/uservars.h \
+	include/utils.h
+
 #
 # Shared libraries
 #
@@ -133,6 +170,14 @@ bg_setenv_SOURCES = \
 
 bg_setenv_CFLAGS = \
 	$(AM_CFLAGS) -static
+
+noinst_HEADERS += \
+	tools/bg_envtools.h \
+	tools/bg_printenv.h \
+	tools/bg_setenv.h \
+	tools/fat.h \
+	tools/linux_util.h \
+	tools/tests/fake_devices.h
 
 if ARCH_ARM
 bg_setenv_LDFLAGS = -Wl,--no-wchar-size-warning
@@ -202,6 +247,9 @@ kernel_stub_sources = \
 	kernel-stub/fdt.c \
 	kernel-stub/initrd.c \
 	kernel-stub/main.c
+
+noinst_HEADERS += \
+	kernel-stub/kernel-stub.h
 
 efi_cppflags = \
 	-I$(top_builddir) -include config.h \
