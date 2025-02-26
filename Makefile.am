@@ -417,8 +417,12 @@ clean-local-completion-pycache:
 
 check-valgrind-local: $(GEN_VERSION_H)
 
-# Tests depend on libraries being built - start with "."
-SUBDIRS = . tools/tests
+SUBDIRS = .
+
+# Only include tools/tests if tests are enabled
+if BUILD_TESTS
+SUBDIRS += tools/tests
+endif
 
 FORCE:
 

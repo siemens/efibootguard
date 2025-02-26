@@ -261,7 +261,16 @@ AS_IF([test "x$enable_bootloader" != "xno"],
     ])
 AM_CONDITIONAL([BOOTLOADER], [test "x$enable_bootloader" != "xno"])
 
-PKG_CHECK_MODULES(LIBCHECK, check)
+AC_ARG_ENABLE([tests],
+    [AS_HELP_STRING([--disable-tests], [Disable building tests])],
+    [], [enable_tests=yes])
+
+AM_CONDITIONAL([BUILD_TESTS], [test "x$enable_tests" != "xno"])
+
+# Only include libcheck if tests are enabled
+if test "x$enable_tests" != "xno"; then
+	PKG_CHECK_MODULES(LIBCHECK, check)
+fi
 
 PKG_INSTALLDIR
 AC_SUBST(LIBEBGENV_VERSION, $(echo $VERSION | cut -dv -f2))
@@ -290,9 +299,13 @@ AX_VALGRIND_CHECK
 # ------------------------------------------------------------------------------
 AC_CONFIG_FILES([
 	Makefile
-	tools/tests/Makefile
 	libebgenv.pc
 ])
+
+# Only configure tools/tests/Makefile if tests are enabled
+if test "x$enable_tests" != "xno"; then
+    AC_CONFIG_FILES([tools/tests/Makefile])
+fi
 
 AC_OUTPUT
 AC_MSG_RESULT([

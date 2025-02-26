@@ -11,6 +11,7 @@
 #
 # SPDX-License-Identifier:	GPL-2.0-only
 #
+if BUILD_TESTS
 
 OBJCOPY ?= objcopy
 
@@ -110,3 +111,5 @@ test_fat_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
 TESTS = $(check_PROGRAMS)
 
 @VALGRIND_CHECK_RULES@
+
+endif
