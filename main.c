@@ -184,6 +184,20 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	status = BS->LoadImage(TRUE, this_image, payload_dev_path, NULL, 0,
 			       &payload_handle);
 	if (EFI_ERROR(status)) {
+		if (bg_loader_params.ustate == USTATE_TESTING) {
+			/*
+			 * `ustate` was just switched from `1` (INSTALLED)
+			 * to `2` (TESTING), but the kernel image to be
+			 * tested is not present. Reboot to trigger a
+			 * fallback into the original boot path.
+			 */
+			ERROR(L"Failed to load kernel image %s (%r).\n",
+			      bg_loader_params.payload_path, status);
+			ERROR(L"Triggering Rollback as ustate==2 (TESTING).\n");
+			(VOID) BS->Stall(3 * 1000 * 1000);
+			ST->RuntimeServices->ResetSystem(EfiResetCold,
+							 EFI_SUCCESS, 0, NULL);
+		}
 		error_exit(L"Cannot load specified kernel image", status);
 	}
 

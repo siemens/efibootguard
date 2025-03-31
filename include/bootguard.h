@@ -37,4 +37,5 @@ typedef struct _BG_LOADER_PARAMS {
 	CHAR16 *payload_path;
 	CHAR16 *payload_options;
 	UINTN timeout;
+	UINT8 ustate;
 } BG_LOADER_PARAMS;

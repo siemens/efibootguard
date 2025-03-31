@@ -198,6 +198,7 @@ BG_STATUS load_config(BG_LOADER_PARAMS *bglp)
 		save_current_config(config_volumes, numHandles);
 	}
 
+	bglp->ustate = env[latest_idx].ustate;
 	bglp->payload_path = StrDuplicate(env[current_partition].kernelfile);
 	bglp->payload_options =
 	    StrDuplicate(env[current_partition].kernelparams);
