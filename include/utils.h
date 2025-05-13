@@ -39,7 +39,7 @@ EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count);
 EFI_STATUS close_volumes(VOLUME_DESC *volumes, UINTN count);
 EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 					  CHAR16 *payloadpath);
-CHAR16 *GetBootMediumPath(CHAR16 *input);
+CHAR16 *GetBootMediumPath(const CHAR16 *input);
 
 typedef EFI_STATUS (*WATCHDOG_PROBE)(EFI_PCI_IO *, UINT16, UINT16, UINTN);
 #define _CONCAT(prefix, func) prefix  ## func

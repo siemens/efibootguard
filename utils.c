@@ -244,7 +244,7 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 
 	if (prefixlen > 0) {
 		for (UINTN v = 0; v < volume_count; v++) {
-			CHAR16 *src;
+			const CHAR16 *src;
 			switch (lm) {
 			case DOSFSLABEL:
 				src = volumes[v].fslabel;
@@ -282,7 +282,7 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 	return appendeddevpath;
 }
 
-CHAR16 *GetBootMediumPath(CHAR16 *input)
+CHAR16 *GetBootMediumPath(const CHAR16 *input)
 {
 	CHAR16 *dst;
 	UINTN len;
