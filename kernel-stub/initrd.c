@@ -67,7 +67,7 @@ static EFIAPI EFI_STATUS initrd_load_file(EFI_LOAD_FILE_PROTOCOL *this,
 					  UINTN *buffer_size,
 					  VOID *buffer)
 {
-	INITRD_LOADER *loader = (INITRD_LOADER *) this;
+	const INITRD_LOADER *loader = (INITRD_LOADER *) this;
 
 	if (!loader || !file_path || !buffer_size) {
 		return EFI_INVALID_PARAMETER;

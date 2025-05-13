@@ -107,7 +107,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	EFI_PHYSICAL_ADDRESS kernel_buffer;
 	EFI_PHYSICAL_ADDRESS aligned_kernel_buffer;
 	const CHAR8 *fdt_compatible;
-	VOID *fdt, *alt_fdt = NULL;
+	const VOID *fdt, *alt_fdt = NULL;
 	EFI_IMAGE_ENTRY_POINT kernel_entry;
 	EFI_LOADED_IMAGE *stub_image;
 	const PE_HEADER *pe_header;
