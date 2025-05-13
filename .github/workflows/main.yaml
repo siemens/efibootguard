@@ -1,7 +1,7 @@
 #
 # EFI Boot Guard
 #
-# Copyright (c) Siemens AG, 2021-2023
+# Copyright (c) Siemens AG, 2021-2025
 #
 # Authors:
 #  Claudius Heine <ch@denx.de>
@@ -22,7 +22,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         target:
@@ -57,55 +57,55 @@ jobs:
         if: ${{ matrix.target == 'arm64' }}
         run: |
           sudo dpkg --add-architecture arm64
-          sudo sed -i 's/^deb /deb [arch=amd64] /g' /etc/apt/sources.list
-          sudo sh -c "cat <<EOF > /etc/apt/sources.list.d/ports.list
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy main restricted
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates main restricted
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy universe
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates universe
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy multiverse
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates multiverse
+          sudo sed -i 's/\(^Signed-By:.*\)/\1\nArchitectures: amd64/g' /etc/apt/sources.list.d/ubuntu.sources
+          sudo sh -c "cat <<EOF > /etc/apt/sources.list.d/ports.sources
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports/
+          Suites: noble noble-updates noble-security
+          Components: main restricted universe multiverse
+          Architectures: arm64
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
           EOF"
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
               autoconf-archive gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
-              gnu-efi:arm64 libpci-dev:arm64 check:arm64 \
+              gnu-efi:arm64 libpci-dev:arm64 pkg-config:arm64 check:arm64 \
               qemu-user-static
       - name: Install arm dependencies
         if: ${{ matrix.target == 'arm' }}
         run: |
           sudo dpkg --add-architecture armhf
-          sudo sed -i 's/^deb /deb [arch=amd64] /g' /etc/apt/sources.list
-          sudo sh -c "cat <<EOF > /etc/apt/sources.list.d/ports.list
-          deb [arch=armhf] http://ports.ubuntu.com/ jammy main restricted
-          deb [arch=armhf] http://ports.ubuntu.com/ jammy-updates main restricted
-          deb [arch=armhf] http://ports.ubuntu.com/ jammy universe
-          deb [arch=armhf] http://ports.ubuntu.com/ jammy-updates universe
-          deb [arch=armhf] http://ports.ubuntu.com/ jammy multiverse
-          deb [arch=armhf] http://ports.ubuntu.com/ jammy-updates multiverse
+          sudo sed -i 's/\(^Signed-By:.*\)/\1\nArchitectures: amd64/g' /etc/apt/sources.list.d/ubuntu.sources
+          sudo sh -c "cat <<EOF > /etc/apt/sources.list.d/ports.sources
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports/
+          Suites: noble noble-updates noble-security
+          Components: main restricted universe multiverse
+          Architectures: armhf
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
           EOF"
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
               autoconf-archive gcc-arm-linux-gnueabihf libc6-dev-armhf-cross \
-              gnu-efi:armhf libpci-dev:armhf check:armhf \
+              gnu-efi:armhf libpci-dev:armhf pkg-config:armhf check:armhf \
               qemu-user-static
       - name: Install riscv64 dependencies
         if: ${{ matrix.target == 'riscv64' }}
         run: |
           sudo dpkg --add-architecture riscv64
-          sudo sed -i 's/^deb /deb [arch=amd64] /g' /etc/apt/sources.list
-          sudo sh -c "cat <<EOF > /etc/apt/sources.list.d/ports.list
-          deb [arch=riscv64] http://ports.ubuntu.com/ jammy main restricted
-          deb [arch=riscv64] http://ports.ubuntu.com/ jammy-updates main restricted
-          deb [arch=riscv64] http://ports.ubuntu.com/ jammy universe
-          deb [arch=riscv64] http://ports.ubuntu.com/ jammy-updates universe
-          deb [arch=riscv64] http://ports.ubuntu.com/ jammy multiverse
-          deb [arch=riscv64] http://ports.ubuntu.com/ jammy-updates multiverse
+          sudo sed -i 's/\(^Signed-By:.*\)/\1\nArchitectures: amd64/g' /etc/apt/sources.list.d/ubuntu.sources
+          sudo sh -c "cat <<EOF > /etc/apt/sources.list.d/ports.sources
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports/
+          Suites: noble noble-updates noble-security
+          Components: main restricted universe multiverse
+          Architectures: riscv64
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
           EOF"
           sudo apt-get update
           sudo apt-get install --no-install-recommends \
               autoconf-archive gcc-riscv64-linux-gnu libc6-dev-riscv64-cross \
-              gnu-efi:riscv64 libpci-dev:riscv64 check:riscv64 \
+              gnu-efi:riscv64 libpci-dev:riscv64 pkg-config:riscv64 check:riscv64 \
               qemu-user-static
       - name: Install cppcheck
         if: ${{ matrix.target == 'cppcheck' }}
