@@ -21,12 +21,12 @@ void bgenv_map_uservar(uint8_t *udata, char **key, uint64_t *type,
 		       uint8_t **val, uint32_t *record_size,
 		       uint32_t *data_size);
 
-int bgenv_get_uservar(uint8_t *udata, char *key, uint64_t *type, void *data,
-		      uint32_t maxlen);
-int bgenv_set_uservar(uint8_t *udata, char *key, uint64_t type, void *data,
-	              uint32_t datalen);
+int bgenv_get_uservar(uint8_t *udata, const char *key, uint64_t *type,
+		      void *data, uint32_t maxlen);
+int bgenv_set_uservar(uint8_t *udata, const char *key, uint64_t type,
+		      const void *data, uint32_t datalen);
 
-uint8_t *bgenv_find_uservar(uint8_t *udata, char *key);
+uint8_t *bgenv_find_uservar(uint8_t *udata, const char *key);
 uint8_t *bgenv_next_uservar(uint8_t *udata);
 
 void bgenv_del_uservar(uint8_t *udata, uint8_t *var);

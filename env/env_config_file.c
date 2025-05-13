@@ -18,13 +18,13 @@
 #include "env_disk_utils.h"
 #include "env_config_file.h"
 
-FILE *open_config_file(char *configfilepath, char *mode)
+FILE *open_config_file(const char *configfilepath, const char *mode)
 {
 	VERBOSE(stdout, "Probing config file at %s.\n", configfilepath);
 	return fopen(configfilepath, mode);
 }
 
-FILE *open_config_file_from_part(CONFIG_PART *cfgpart, char *mode)
+FILE *open_config_file_from_part(const CONFIG_PART *cfgpart, const char *mode)
 {
 	char *configfilepath;
 

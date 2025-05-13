@@ -22,7 +22,7 @@
 
 extern ebgenv_opts_t ebgenv_opts;
 
-EBGENVKEY bgenv_str2enum(char *key)
+EBGENVKEY bgenv_str2enum(const char *key)
 {
 	if (strcmp(key, "kernelfile") == 0) {
 		return EBGENV_KERNELFILE;
@@ -124,7 +124,7 @@ bool read_env(CONFIG_PART *part, BG_ENVDATA *env)
 	return validate_envdata(env);
 }
 
-bool write_env(CONFIG_PART *part, BG_ENVDATA *env)
+bool write_env(CONFIG_PART *part, const BG_ENVDATA *env)
 {
 	if (!part) {
 		return false;
@@ -265,7 +265,7 @@ bool bgenv_write(BGENV *env)
 	return true;
 }
 
-BG_ENVDATA *bgenv_read(BGENV *env)
+BG_ENVDATA *bgenv_read(const BGENV *env)
 {
 	if (!env) {
 		return NULL;
@@ -314,7 +314,7 @@ static int bgenv_get_string(char *buffer, uint64_t *type, void *data,
 	return 0;
 }
 
-int bgenv_get(BGENV *env, char *key, uint64_t *type, void *data,
+int bgenv_get(BGENV *env, const char *key, uint64_t *type, void *data,
 	      uint32_t maxlen)
 {
 	EBGENVKEY e;
@@ -372,7 +372,7 @@ int bgenv_get(BGENV *env, char *key, uint64_t *type, void *data,
 	}
 }
 
-static long bgenv_convert_to_long(char *value)
+static long bgenv_convert_to_long(const char *value)
 {
 	long val;
 	char *p;
@@ -389,12 +389,12 @@ static long bgenv_convert_to_long(char *value)
 	return val;
 }
 
-int bgenv_set(BGENV *env, char *key, uint64_t type, void *data,
+int bgenv_set(BGENV *env, const char *key, uint64_t type, const void *data,
 	      uint32_t datalen)
 {
 	EBGENVKEY e;
 	int val;
-	char *value = (char *)data;
+	const char *value = (const char *)data;
 
 	if (!key || !data || datalen == 0) {
 		return -EINVAL;

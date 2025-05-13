@@ -74,7 +74,7 @@ static char *get_rootdev_from_efi(void)
 	}
 	VERBOSE(stdout, "resolved ESP to %s\n", devpath);
 	// get disk name from path
-	char *partition = strrchr(devpath, '/') + 1;
+	const char *partition = strrchr(devpath, '/') + 1;
 
 	// resolve parent device. As the ESP must be a primary partition, the
 	// parent is the block device.
@@ -84,7 +84,7 @@ static char *get_rootdev_from_efi(void)
 
 	// resolve to e.g. /sys/devices/pci0000:00/0000:00:1f.2/<...>/block/sda
 	char *blockpath = realpath(buffer.aschar, NULL);
-	char *_blockdev = strrchr(blockpath, '/') + 1;
+	const char *_blockdev = strrchr(blockpath, '/') + 1;
 	char *blockdev = strdup(_blockdev);
 	free(blockpath);
 	return blockdev;
@@ -92,7 +92,7 @@ static char *get_rootdev_from_efi(void)
 
 bool probe_config_partitions(CONFIG_PART *cfgpart, bool search_all_devices)
 {
-	PedDevice *dev = NULL;
+	const PedDevice *dev = NULL;
 	char devpath[4096];
 	char *rootdev = NULL;
 	int count = 0;
@@ -115,11 +115,11 @@ bool probe_config_partitions(CONFIG_PART *cfgpart, bool search_all_devices)
 
 	while ((dev = ped_device_get_next(dev))) {
 		printf_debug("Device: %s\n", dev->model);
-		PedDisk *pd = ped_disk_new(dev);
+		const PedDisk *pd = ped_disk_new(dev);
 		if (!pd) {
 			continue;
 		}
-		PedPartition *part = pd->part_list;
+		const PedPartition *part = pd->part_list;
 		while (part) {
 			if (part->fs_type != FS_TYPE_FAT12 &&
 			    part->fs_type != FS_TYPE_FAT16 &&

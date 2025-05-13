@@ -17,6 +17,6 @@
 #include <stdbool.h>
 #include "env_api.h"
 
-char *get_mountpoint(char *devpath);
+char *get_mountpoint(const char *devpath);
 bool mount_partition(CONFIG_PART *cfgpart);
 void unmount_partition(CONFIG_PART *cfgpart);

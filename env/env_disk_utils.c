@@ -20,10 +20,10 @@
 
 const char *tmp_mnt_dir = "/tmp/mnt-XXXXXX";
 
-char *get_mountpoint(char *devpath)
+char *get_mountpoint(const char *devpath)
 {
+	const struct mntent *part;
 	char *mntpoint = NULL;
-	struct mntent *part;
 	FILE *mtab;
 
 	mtab = setmntent("/proc/mounts", "r");
@@ -46,7 +46,7 @@ char *get_mountpoint(char *devpath)
 bool mount_partition(CONFIG_PART *cfgpart)
 {
 	char tmpdir_template[256];
-	char *mountpoint;
+	const char *mountpoint;
 	(void)snprintf(tmpdir_template, 256, "%s", tmp_mnt_dir);
 	if (!cfgpart) {
 		return false;

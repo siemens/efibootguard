@@ -29,7 +29,7 @@ DEFINE_FFF_GLOBALS;
 
 Suite *ebg_test_suite(void);
 
-char *get_mountpoint_custom_fake(char *devpath);
+char *get_mountpoint_custom_fake(const char *devpath);
 void delete_temp_files(void);
 
 bool __wrap_probe_config_file(CONFIG_PART *);
@@ -45,7 +45,7 @@ struct fake_env_file_path {
 };
 STAILQ_HEAD(stailhead, fake_env_file_path) head = STAILQ_HEAD_INITIALIZER(head);
 
-char *get_mountpoint_custom_fake(char *devpath)
+char *get_mountpoint_custom_fake(const char *devpath)
 {
 	char *buff = NULL;
 	char *tempdir = NULL;
@@ -134,7 +134,7 @@ void delete_temp_files(void)
 
 FAKE_VOID_FUNC(ped_device_probe_all, char *);
 FAKE_VALUE_FUNC(PedDevice *, ped_device_get_next, const PedDevice *);
-FAKE_VALUE_FUNC(char *, get_mountpoint, char *);
+FAKE_VALUE_FUNC(char *, get_mountpoint, const char *);
 
 START_TEST(env_api_fat_test_probe_config_file)
 {

@@ -153,8 +153,8 @@ static uint8_t *bgenv_uservar_realloc(uint8_t *udata, uint32_t new_rsize,
 	return udata + ENV_MEM_USERVARS - spaceleft;
 }
 
-static void bgenv_serialize_uservar(uint8_t *p, char *key, uint64_t type,
-				    void *data, uint32_t record_size)
+static void bgenv_serialize_uservar(uint8_t *p, const char *key, uint64_t type,
+				    const void *data, uint32_t record_size)
 {
 	uint32_t payload_size, data_size;
 
@@ -176,8 +176,8 @@ static void bgenv_serialize_uservar(uint8_t *p, char *key, uint64_t type,
 	memcpy(p, data, data_size);
 }
 
-int bgenv_get_uservar(uint8_t *udata, char *key, uint64_t *type, void *data,
-		      uint32_t maxlen)
+int bgenv_get_uservar(uint8_t *udata, const char *key, uint64_t *type,
+		      void *data, uint32_t maxlen)
 {
 	uint8_t *uservar, *value;
 	char *lkey;
@@ -205,8 +205,8 @@ int bgenv_get_uservar(uint8_t *udata, char *key, uint64_t *type, void *data,
 	return 0;
 }
 
-int bgenv_set_uservar(uint8_t *udata, char *key, uint64_t type, void *data,
-	              uint32_t datalen)
+int bgenv_set_uservar(uint8_t *udata, const char *key, uint64_t type,
+		      const void *data, uint32_t datalen)
 {
 	uint32_t total_size;
 	uint8_t *p;
@@ -238,7 +238,7 @@ int bgenv_set_uservar(uint8_t *udata, char *key, uint64_t type, void *data,
 	return 0;
 }
 
-uint8_t *bgenv_find_uservar(uint8_t *udata, char *key)
+uint8_t *bgenv_find_uservar(uint8_t *udata, const char *key)
 {
 	char *varkey;
 

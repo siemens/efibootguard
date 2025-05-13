@@ -107,7 +107,7 @@ int ebg_env_create_new(ebgenv_t *e)
 		return EIO;
 	}
 
-	BG_ENVDATA *latest_data = ((BGENV *)latest_env)->data;
+	const BG_ENVDATA *latest_data = ((BGENV *)latest_env)->data;
 
 	if (latest_data->in_progress != 1) {
 		e->bgenv = (void *)bgenv_create_new();
@@ -140,27 +140,27 @@ int ebg_env_open_current(ebgenv_t *e)
 	return e->bgenv == NULL ? EIO : 0;
 }
 
-int ebg_env_get(ebgenv_t *e, char *key, char *buffer)
+int ebg_env_get(ebgenv_t *e, const char *key, char *buffer)
 {
 	return bgenv_get((BGENV *)e->bgenv, key, NULL, buffer,
 			 ENV_STRING_LENGTH);
 }
 
-int ebg_env_get_ex(ebgenv_t *e, char *key, uint64_t *usertype, uint8_t *buffer,
-		   uint32_t maxlen)
+int ebg_env_get_ex(ebgenv_t *e, const char *key, uint64_t *usertype,
+		   uint8_t *buffer, uint32_t maxlen)
 {
 	return bgenv_get((BGENV *)e->bgenv, key, usertype, buffer, maxlen);
 }
 
-int ebg_env_set(ebgenv_t *e, char *key, char *value)
+int ebg_env_set(ebgenv_t *e, const char *key, const char *value)
 {
 	return bgenv_set((BGENV *)e->bgenv, key, USERVAR_TYPE_DEFAULT |
 			 USERVAR_TYPE_STRING_ASCII, value,
 			 strlen(value) + 1);
 }
 
-int ebg_env_set_ex(ebgenv_t *e, char *key, uint64_t usertype, uint8_t *value,
-		   uint32_t datalen)
+int ebg_env_set_ex(ebgenv_t *e, const char *key, uint64_t usertype,
+		   const uint8_t *value, uint32_t datalen)
 {
 	return bgenv_set((BGENV *)e->bgenv, key, usertype, value, datalen);
 }

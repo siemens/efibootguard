@@ -86,14 +86,14 @@ extern BGENV *bgenv_open_by_index(uint32_t index);
 extern BGENV *bgenv_open_oldest(void);
 extern BGENV *bgenv_open_latest(void);
 extern bool bgenv_write(BGENV *env);
-extern BG_ENVDATA *bgenv_read(BGENV *env);
+extern BG_ENVDATA *bgenv_read(const BGENV *env);
 extern void bgenv_close(BGENV *env);
 
 extern BGENV *bgenv_create_new(void);
-extern int bgenv_get(BGENV *env, char *key, uint64_t *type, void *data,
+extern int bgenv_get(BGENV *env, const char *key, uint64_t *type, void *data,
 		     uint32_t maxlen);
-extern int bgenv_set(BGENV *env, char *key, uint64_t type, void *data,
-		     uint32_t datalen);
-extern uint8_t *bgenv_find_uservar(uint8_t *userdata, char *key);
+extern int bgenv_set(BGENV *env, const char *key, uint64_t type,
+		     const void *data, uint32_t datalen);
+extern uint8_t *bgenv_find_uservar(uint8_t *userdata, const char *key);
 
 extern bool validate_envdata(BG_ENVDATA *data);

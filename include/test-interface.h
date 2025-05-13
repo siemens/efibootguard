@@ -17,6 +17,6 @@
 #include "env_api.h"
 
 bool read_env(CONFIG_PART *part, BG_ENVDATA *env);
-bool write_env(CONFIG_PART *part, BG_ENVDATA *env);
+bool write_env(CONFIG_PART *part, const BG_ENVDATA *env);
 
-EBGENVKEY bgenv_str2enum(char *key);
+EBGENVKEY bgenv_str2enum(const char *key);

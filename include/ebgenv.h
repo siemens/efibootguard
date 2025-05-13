@@ -96,7 +96,7 @@ int ebg_env_open_current(ebgenv_t *e);
  *          If buffer == NULL: needed buffer size, 0 if variable
  *                             is not found.
  */
-int ebg_env_get(ebgenv_t *e, char *key, char* buffer);
+int ebg_env_get(ebgenv_t *e, const char *key, char* buffer);
 
 /** @brief Store new content into variable
  *  @param e A pointer to an ebgenv_t context.
@@ -105,7 +105,7 @@ int ebg_env_get(ebgenv_t *e, char *key, char* buffer);
  *  @return 0 on success, -errno on failure. If buffer is NULL,
  *	    the required buffer size is returned.
  */
-int ebg_env_set(ebgenv_t *e, char *key, char *value);
+int ebg_env_set(ebgenv_t *e, const char *key, const char *value);
 
 /** @brief Store new content into variable
  *  @param e A pointer to an ebgenv_t context.
@@ -115,8 +115,8 @@ int ebg_env_set(ebgenv_t *e, char *key, char *value);
  *  @param datalen length of the data to be stored into the variable
  *  @return 0 on success, -errno on failure
  */
-int ebg_env_set_ex(ebgenv_t *e, char *key, uint64_t datatype, uint8_t *value,
-		   uint32_t datalen);
+int ebg_env_set_ex(ebgenv_t *e, const char *key, uint64_t datatype,
+		   const uint8_t *value, uint32_t datalen);
 
 /** @brief Get content of user variable
  *  @param e A pointer to an ebgenv_t context.
@@ -126,8 +126,8 @@ int ebg_env_set_ex(ebgenv_t *e, char *key, uint64_t datatype, uint8_t *value,
  *  @param maxlen size of provided buffer
  *  @return 0 on success, -errno on failure
  */
-int ebg_env_get_ex(ebgenv_t *e, char *key, uint64_t *datatype, uint8_t *buffer,
-		   uint32_t maxlen);
+int ebg_env_get_ex(ebgenv_t *e, const char *key, uint64_t *datatype,
+		   uint8_t *buffer, uint32_t maxlen);
 
 /** @brief Get available space for user variables
  *  @param e A pointer to an ebgenv_t context.

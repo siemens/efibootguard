@@ -16,6 +16,6 @@
 #include <stdio.h>
 #include "env_api.h"
 
-FILE *open_config_file_from_part(CONFIG_PART *cfgpart, char *mode);
-FILE *open_config_file(char *configfilepath, char *mode);
+FILE *open_config_file_from_part(const CONFIG_PART *cfgpart, const char *mode);
+FILE *open_config_file(const char *configfilepath, const char *mode);
 bool probe_config_file(CONFIG_PART *cfgpart);
