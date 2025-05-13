@@ -88,7 +88,7 @@ kcs_outb(UINT8 value, UINT16 io_base, UINT16 port)
 }
 
 static EFI_STATUS
-_send_ipmi_cmd(UINT16 io_base, UINT8 cmd, UINT8 *data, UINTN datalen)
+_send_ipmi_cmd(UINT16 io_base, UINT8 cmd, const UINT8 *data, UINTN datalen)
 {
 	UINT8 lastbyte = cmd;
 	UINTN err = 0;
@@ -131,7 +131,7 @@ handle_ipmi_error(UINT16 io_base)
 }
 
 static EFI_STATUS
-send_ipmi_cmd(UINT16 io_base, UINT8 cmd, UINT8 *data, UINTN datalen)
+send_ipmi_cmd(UINT16 io_base, UINT8 cmd, const UINT8 *data, UINTN datalen)
 {
 	EFI_STATUS timerstatus;
 	EFI_STATUS status;

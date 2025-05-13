@@ -377,7 +377,7 @@ static EFI_STATUS init(EFI_PCI_IO __attribute__((unused)) * pci_io,
 {
 	SMBIOS_STRUCTURE_TABLE *smbios_table;
 	SMBIOS_STRUCTURE_POINTER smbios_struct;
-	CHAR8 *smbios_string;
+	const CHAR8 *smbios_string;
 	const struct eiois200_dev_port *eport;
 	struct pmc_port pmc;
 	UINT8 status;
