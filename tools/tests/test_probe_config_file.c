@@ -132,7 +132,7 @@ void delete_temp_files(void)
 	}
 }
 
-FAKE_VOID_FUNC(ped_device_probe_all, char *);
+FAKE_VOID_FUNC(ped_device_probe_all, const char *);
 FAKE_VALUE_FUNC(PedDevice *, ped_device_get_next, const PedDevice *);
 FAKE_VALUE_FUNC(char *, get_mountpoint, const char *);
 

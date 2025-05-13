@@ -43,12 +43,12 @@ BG_ENVDATA envdata[ENV_NUM_CONFIG_PARTS];
 
 START_TEST(ebgenv_api_internal_strXtoY)
 {
-	char16_t *exp_res = L"This is a test";
+	const char16_t *exp_res = L"This is a test";
 	char16_t bufferw[16];
 	char buffer[16];
-	char *input = "This is a test";
-	char16_t *resw;
-	char *res;
+	const char *input = "This is a test";
+	const char16_t *resw;
+	const char *res;
 
 	/* Test conversion from ASCII bits to 16 bit encoding
 	 */
@@ -231,7 +231,7 @@ START_TEST(ebgenv_api_internal_bgenv_read)
 
 	/* Test if bgenv_read returns a pointer to the environment data
 	 */
-	BG_ENVDATA *res = bgenv_read(&env);
+	const BG_ENVDATA *res = bgenv_read(&env);
 	ck_assert(res == env.data);
 }
 END_TEST
@@ -350,7 +350,7 @@ START_TEST(ebgenv_api_internal_bgenv_set)
 	ck_assert_int_eq(res, 0);
 
 	char buffer[8];
-	char *kfile = str16to8(buffer, handle->data->kernelfile);
+	const char *kfile = str16to8(buffer, handle->data->kernelfile);
 
 	ck_assert(strcmp(kfile, "vmlinuz") == 0);
 
@@ -365,7 +365,7 @@ START_TEST(ebgenv_api_internal_bgenv_set)
 	res = bgenv_set(handle, "kernelparams", 0, "root=", 6);
 	ck_assert_int_eq(res, 0);
 
-	char *kparm = str16to8(buffer, handle->data->kernelparams);
+	const char *kparm = str16to8(buffer, handle->data->kernelparams);
 
 	ck_assert(strcmp(kparm, "root=") == 0);
 
@@ -398,7 +398,7 @@ START_TEST(ebgenv_api_internal_uservars)
 	ck_assert(handle->data != NULL);
 
 	uint64_t type;
-	uint8_t *data;
+	const uint8_t *data;
 	/* Test a user variable using a user-defined data type
 	 */
 	type = 1ULL << 36;

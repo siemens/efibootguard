@@ -116,8 +116,8 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 	ebgenv_t e = { };
 	int ret;
 	char buffer[10];
-	char *kernelfile = "kernel123";
-	char *kernelparams = "param456";
+	const char *kernelfile = "kernel123";
+	const char *kernelparams = "param456";
 	int watchdogtimeout = 44;
 
 	init_test();
@@ -292,7 +292,7 @@ END_TEST
 START_TEST(ebgenv_api_ebg_env_set)
 {
 	ebgenv_t e = { };
-	char *value = "dummy";
+	const char *value = "dummy";
 
 	init_test();
 
@@ -323,8 +323,8 @@ START_TEST(ebgenv_api_ebg_env_set_ex)
 {
 
 	ebgenv_t e = { };
-	char *key = "mykey";
-	char *value = "dummy";
+	const char *key = "mykey";
+	const char *value = "dummy";
 	uint64_t usertype = 1ULL << 36;
 	int32_t datalen = 5;
 
@@ -359,7 +359,7 @@ END_TEST
 START_TEST(ebgenv_api_ebg_env_get_ex)
 {
 	ebgenv_t e = { };
-	char *key = "mykey";
+	const char *key = "mykey";
 	char buffer[5];
 	uint64_t type;
 	int32_t datalen = 5;

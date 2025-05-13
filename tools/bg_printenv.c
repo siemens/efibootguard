@@ -48,7 +48,8 @@ const struct fields ALL_FIELDS = {1, 1, 1, 1, 1, 1, 1};
 
 static error_t parse_output_fields(char *fields, struct fields *output_fields)
 {
-	char *token;
+	const char *token;
+
 	memset(output_fields, 0, sizeof(struct fields));
 	while ((token = strsep(&fields, ","))) {
 		if (*token == '\0') continue;
@@ -167,7 +168,7 @@ void dump_env(BG_ENVDATA *env, const struct fields *output_fields, bool raw)
 		}
 	}
 	if (output_fields->kernel) {
-		char *kernelfile = str16to8(buffer, env->kernelfile);
+		const char *kernelfile = str16to8(buffer, env->kernelfile);
 		if (raw) {
 			fprintf(stdout, "KERNEL=%s\n", kernelfile);
 		} else {
@@ -175,7 +176,7 @@ void dump_env(BG_ENVDATA *env, const struct fields *output_fields, bool raw)
 		}
 	}
 	if (output_fields->kernelargs) {
-		char *kernelargs = str16to8(buffer, env->kernelparams);
+		const char *kernelargs = str16to8(buffer, env->kernelparams);
 		if (raw) {
 			fprintf(stdout, "KERNELARGS=%s\n", kernelargs);
 		} else {
@@ -253,8 +254,8 @@ static void dump_env_by_index(uint32_t index, struct fields output_fields,
 	bgenv_close(env);
 }
 
-static int printenv_from_file(char *envfilepath, const struct fields *output_fields,
-			      bool raw)
+static int printenv_from_file(const char *envfilepath,
+			      const struct fields *output_fields, bool raw)
 {
 	int success = 0;
 	BG_ENVDATA data;

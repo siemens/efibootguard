@@ -85,7 +85,7 @@ static EbgFileSystemType type_to_fstype(char t)
  **/
 static int check_GPT_FAT_entry(int fd, const struct EFIpartitionentry *e)
 {
-	char *guid_str = GUID_to_str(e->type_GUID);
+	const char *guid_str = GUID_to_str(e->type_GUID);
 	if (strcmp(GPT_PARTITION_GUID_FAT_NTFS, guid_str) != 0 &&
 	    strcmp(GPT_PARTITION_GUID_ESP, guid_str) != 0) {
 		VERBOSE(stderr, "GPT entry has unsupported GUID: %s\n",
@@ -359,7 +359,7 @@ static int scan_devdir(unsigned int fmajor, unsigned int fminor, char *fullname,
 		return result;
 	}
 	while (true) {
-		struct dirent *devfile = readdir(devdir);
+		const struct dirent *devfile = readdir(devdir);
 		if (!devfile) {
 			break;
 		}
@@ -382,7 +382,8 @@ static int scan_devdir(unsigned int fmajor, unsigned int fminor, char *fullname,
 	return result;
 }
 
-static int get_major_minor(char *filename, unsigned int *major, unsigned int *minor)
+static int get_major_minor(const char *filename, unsigned int *major,
+			   unsigned int *minor)
 {
 	FILE *fh = fopen(filename, "r");
 	if (fh == 0) {
@@ -400,9 +401,9 @@ static int get_major_minor(char *filename, unsigned int *major, unsigned int *mi
 	return 0;
 }
 
-void ped_device_probe_all(char *rootdev)
+void ped_device_probe_all(const char *rootdev)
 {
-	struct dirent *sysblockfile = NULL;
+	const struct dirent *sysblockfile = NULL;
 	char fullname[DEV_FILENAME_LEN+16];
 
 	DIR *sysblockdir = opendir(SYSBLOCKDIR);
@@ -413,7 +414,7 @@ void ped_device_probe_all(char *rootdev)
 
 	/* get all files from sysblockdir */
 	do {
-		char *devname = rootdev;
+		const char *devname = rootdev;
 		if (!rootdev) {
 			sysblockfile = readdir(sysblockdir);
 			if (!sysblockfile) {

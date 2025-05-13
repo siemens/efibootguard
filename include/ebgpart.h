@@ -133,7 +133,7 @@ typedef struct _PedDisk {
 	PedPartition *part_list;
 } PedDisk;
 
-void ped_device_probe_all(char *rootdev);
+void ped_device_probe_all(const char *rootdev);
 PedDevice *ped_device_get_next(const PedDevice *dev);
 PedDisk *ped_disk_new(const PedDevice *dev);
 PedPartition *ped_disk_next_partition(const PedDisk *pd,

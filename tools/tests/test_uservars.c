@@ -31,14 +31,14 @@ BG_ENVDATA envdata[ENV_NUM_CONFIG_PARTS];
 
 START_TEST(bgenv_get_from_manipulated)
 {
-	char *key = "mykey";
-	char *value = "dummy";
-	size_t value_len = strlen(value);
+	const char *key = "mykey";
 	uint64_t usertype = 1ULL << 36;
 
 	BG_ENVDATA data = {.ustate = USTATE_OK};
 	/* create a manipulated BGENV (in-memory) */
 	{
+		const char *value = "dummy";
+		size_t value_len = strlen(value);
 		bgenv_set_uservar(data.userdata, key, usertype, value,
 				  value_len);
 		/* get position of payload size */

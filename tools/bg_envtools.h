@@ -52,14 +52,14 @@ struct arguments_common {
 	bool search_all_devices;
 };
 
-int parse_int(char *arg);
+int parse_int(const char *arg);
 
-char *ustate2str(uint8_t ustate);
-uint8_t str2ustate(char *str);
+const char *ustate2str(uint8_t ustate);
+uint8_t str2ustate(const char *str);
 
-error_t parse_common_opt(int key, char *arg, bool compat_mode,
+error_t parse_common_opt(int key, const char *arg, bool compat_mode,
 			 struct arguments_common *arguments);
 
-bool get_env(char *configfilepath, BG_ENVDATA *data);
+bool get_env(const char *configfilepath, BG_ENVDATA *data);
 
 #endif

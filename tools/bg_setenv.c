@@ -79,8 +79,9 @@ static void journal_free_action(struct env_action *action)
 	free(action);
 }
 
-static error_t journal_add_action(BGENV_TASK task, char *key, uint64_t type,
-				  uint8_t *data, size_t datalen)
+static error_t journal_add_action(BGENV_TASK task, const char *key,
+				  uint64_t type, const uint8_t *data,
+				  size_t datalen)
 {
 	struct env_action *new_action;
 
@@ -123,8 +124,8 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 			action->key, (long long unsigned int)action->type,
 			(char *)action->data);
 		if (strcmp(action->key, "ustate") == 0) {
+			const char *arg;
 			int ustate;
-			char *arg;
 			int ret;
 			e.bgenv = env;
 			arg = (char *)action->data;
@@ -152,7 +153,7 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 
 static error_t set_uservars(char *arg)
 {
-	char *key, *value;
+	const char *key, *value;
 
 	key = strtok(arg, "=");
 	if (key == NULL) {
@@ -329,7 +330,8 @@ static void update_environment(BGENV *env, bool verbosity)
 
 }
 
-static int dumpenv_to_file(char *envfilepath, bool verbosity, bool preserve_env)
+static int dumpenv_to_file(const char *envfilepath, bool verbosity,
+			   bool preserve_env)
 {
 	/* execute journal and write to file */
 	int result = 0;

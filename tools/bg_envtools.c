@@ -19,9 +19,9 @@
 
 #include "bg_envtools.h"
 
-static char *ustatemap[] = {"OK", "INSTALLED", "TESTING", "FAILED", "UNKNOWN"};
+static const char *ustatemap[] = {"OK", "INSTALLED", "TESTING", "FAILED", "UNKNOWN"};
 
-char *ustate2str(uint8_t ustate)
+const char *ustate2str(uint8_t ustate)
 {
 	if (ustate > USTATE_MAX) {
 		ustate = USTATE_MAX;
@@ -29,7 +29,7 @@ char *ustate2str(uint8_t ustate)
 	return ustatemap[ustate];
 }
 
-uint8_t str2ustate(char *str)
+uint8_t str2ustate(const char *str)
 {
 	uint8_t i;
 
@@ -44,7 +44,7 @@ uint8_t str2ustate(char *str)
 	return USTATE_UNKNOWN;
 }
 
-int parse_int(char *arg)
+int parse_int(const char *arg)
 {
 	char *tmp;
 	long i;
@@ -61,7 +61,7 @@ int parse_int(char *arg)
 	return (int)i;
 }
 
-error_t parse_common_opt(int key, char *arg, bool compat_mode,
+error_t parse_common_opt(int key, const char *arg, bool compat_mode,
 			 struct arguments_common *arguments)
 {
 	bool found = false;
@@ -136,7 +136,7 @@ error_t parse_common_opt(int key, char *arg, bool compat_mode,
 	return 0;
 }
 
-bool get_env(char *configfilepath, BG_ENVDATA *data)
+bool get_env(const char *configfilepath, BG_ENVDATA *data)
 {
 	FILE *config;
 	bool result = true;
