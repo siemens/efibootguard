@@ -29,6 +29,7 @@ suppress+=" --suppress=unusedFunction:kernel-stub/main.c"
 suppress+=" --suppress=unusedFunction:utils.c"
 suppress+=" --suppress=unusedFunction:env/env_api.c"
 suppress+=" --suppress=unusedFunction:env/fatvars.c"
+suppress+=" --suppress=unusedFunction:tools/tests/fake_devices.c"
 suppress+=" --suppress=unusedFunction:tools/tests/test_environment.c"
 suppress+=" --suppress=unusedFunction:env/env_api_fat.c"
 # Some functions are used by linker wrapping
@@ -44,9 +45,9 @@ suppress+=" --suppress=nullPointerRedundantCheck:kernel-stub/main.c"
 suppress+=" --suppress=unusedStructMember:kernel-stub/main.c"
 suppress+=" --suppress=unusedStructMember:kernel-stub/fdt.c"
 # Not applicable because of API requirements
-suppress+=" --suppress=constParameter:drivers/watchdog/ipc4x7e_wdt.c"
-suppress+=" --suppress=constParameter:drivers/watchdog/w83627hf_wdt.c"
-suppress+=" --suppress=constParameter:kernel-stub/initrd.c"
+suppress+=" --suppress=constParameterCallback:drivers/watchdog/ipc4x7e_wdt.c"
+suppress+=" --suppress=constParameterCallback:drivers/watchdog/w83627hf_wdt.c"
+suppress+=" --suppress=constParameterCallback:kernel-stub/initrd.c"
 
 enable="--enable=warning \
         --enable=style \
