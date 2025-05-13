@@ -82,11 +82,10 @@ static inline int superio_inb(int reg)
 	return inb(WDT_EFDR);
 }
 
-static int superio_enter(void)
+static void superio_enter(void)
 {
 	outb_p(wdt_cfg_enter, WDT_EFER); /* Enter extended function mode */
 	outb_p(wdt_cfg_enter, WDT_EFER); /* Again according to manual */
-	return 0;
 }
 
 static void superio_select(int ld)
@@ -105,9 +104,7 @@ static int wdt_find(int addr)
 	int ret;
 
 	wdt_io = addr;
-	ret = superio_enter();
-	if (ret)
-		return ret;
+	superio_enter();
 	superio_select(W83627HF_LD_WDT);
 	val = superio_inb(0x20);
 	switch(val) {
@@ -125,14 +122,11 @@ static int wdt_find(int addr)
 	return ret;
 }
 
-static int w83627hf_init(enum chips chip)
+static void w83627hf_init(enum chips chip)
 {
-	int ret;
 	unsigned char t;
 
-	ret = superio_enter();
-	if (ret)
-		return ret;
+	superio_enter();
 
 	superio_select(W83627HF_LD_WDT);
 
@@ -173,30 +167,21 @@ static int w83627hf_init(enum chips chip)
 	superio_outb(cr_wdt_csr, t);
 
 	superio_exit();
-
-	return 0;
 }
 
-static int wdt_set_time(unsigned int timeout)
+static void wdt_set_time(unsigned int timeout)
 {
-	int ret;
-
-	ret = superio_enter();
-	if (ret)
-		return ret;
-
+	superio_enter();
 	superio_select(W83627HF_LD_WDT);
 	superio_outb(cr_wdt_timeout, timeout);
 	superio_exit();
-
-	return 0;
 }
 
 static EFI_STATUS init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id,
 		       UINT16 __attribute__((unused)) pci_device_id,
 		       UINTN timeout)
 {
-	int chip, ret;
+	int chip;
 
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL) {
 		return EFI_UNSUPPORTED;
@@ -209,12 +194,8 @@ static EFI_STATUS init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id,
 		if (chip < 0)
 			return EFI_UNSUPPORTED;
 		INFO(L"Detected SIMATIC BX5xA watchdog\n");
-		ret = w83627hf_init(chip);
-		if (ret < 0)
-			return EFI_UNSUPPORTED;
-		ret = wdt_set_time(timeout);
-		if (ret < 0)
-			return EFI_UNSUPPORTED;
+		w83627hf_init(chip);
+		wdt_set_time(timeout);
 		return EFI_SUCCESS;
 	}
 	return EFI_UNSUPPORTED;
