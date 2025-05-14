@@ -206,8 +206,8 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	bg_interface_params.loader_device_part_uuid = boot_medium_uuidstr;
 	status = set_bg_interface_vars(&bg_interface_params);
 	if (EFI_ERROR(status)) {
-		error_exit(L"Cannot set bootloader interface variables",
-			   status);
+		WARNING(L"Cannot set bootloader interface variables (%r)\n",
+			status);
 	}
 	INFO(L"LoaderDevicePartUUID=%s\n", boot_medium_uuidstr);
 	FreePool(boot_medium_uuidstr);
