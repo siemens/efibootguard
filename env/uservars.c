@@ -51,13 +51,14 @@ void bgenv_map_uservar(uint8_t *udata, char **key, uint64_t *type, uint8_t **val
 
 	/* Calculate the record size (size of the whole thing) */
 	if (record_size) {
-		*record_size = *payload_size + strlen(var_key) + 1;
+		memcpy(record_size, payload_size, sizeof(*record_size));
+		*record_size += strlen(var_key) + 1;
 	}
 
 	/* Get position of the type field */
 	var_type = (uint64_t *)((uint8_t *)payload_size + sizeof(uint32_t));
 	if (type) {
-		*type = *var_type;
+		memcpy(type, var_type, sizeof(*type));
 	}
 
 	/* Calculate the data size */
@@ -88,7 +89,8 @@ bool bgenv_validate_uservars(uint8_t *udata)
 		spaceleft -= key_len + 1;
 		udata += key_len + 1;
 
-		uint32_t payload_size = *(uint32_t *)udata;
+		uint32_t payload_size;
+		memcpy(&payload_size, udata, sizeof(payload_size));
 
 		/* the payload must leave at least one byte free */
 		if (payload_size >= spaceleft) {
@@ -166,7 +168,7 @@ static void bgenv_serialize_uservar(uint8_t *p, char *key, uint64_t type,
 	p += sizeof(uint32_t);
 
 	/* store datatype */
-	*((uint64_t *)p) = type;
+	memcpy(p, &type, sizeof(uint64_t));
 	p += sizeof(uint64_t);
 
 	/* store data */
