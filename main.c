@@ -203,14 +203,18 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 
 	UINT16 *boot_medium_uuidstr =
 		disk_get_part_uuid(loaded_image->DeviceHandle);
-	bg_interface_params.loader_device_part_uuid = boot_medium_uuidstr;
-	status = set_bg_interface_vars(&bg_interface_params);
-	if (EFI_ERROR(status)) {
-		WARNING(L"Cannot set bootloader interface variables (%r)\n",
-			status);
+	if (!boot_medium_uuidstr) {
+		WARNING(L"Cannot get boot partition UUID\n");
+	} else {
+		bg_interface_params.loader_device_part_uuid = boot_medium_uuidstr;
+		status = set_bg_interface_vars(&bg_interface_params);
+		if (EFI_ERROR(status)) {
+			WARNING(L"Cannot set bootloader interface variables (%r)\n",
+				status);
+		}
+		INFO(L"LoaderDevicePartUUID=%s\n", boot_medium_uuidstr);
+		FreePool(boot_medium_uuidstr);
 	}
-	INFO(L"LoaderDevicePartUUID=%s\n", boot_medium_uuidstr);
-	FreePool(boot_medium_uuidstr);
 	FreePool(payload_dev_path);
 	FreePool(boot_medium_path);
 
