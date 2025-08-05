@@ -85,7 +85,7 @@ bool probe_config_file(CONFIG_PART *cfgpart)
 		}
 		if (do_unmount) {
 			unmount_partition(cfgpart);
-		} else {
+		} else if (!result) {
 			free(cfgpart->mountpoint);
 			cfgpart->mountpoint = NULL;
 		}

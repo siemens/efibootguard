@@ -149,6 +149,7 @@ bool probe_config_partitions(CONFIG_PART *cfgpart, bool search_all_devices)
 					cfgpart[count] = tmp;
 				} else {
 					free(tmp.devpath);
+					free(tmp.mountpoint);
 					VERBOSE(stderr,
 						"Error, there are "
 						"more than %d config "
