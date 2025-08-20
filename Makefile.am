@@ -360,7 +360,7 @@ $(efi_solib): $(efi_objects)
 	nm -D -u $@ | grep ' U ' && exit 1 || :
 
 $(efi_loadername): $(efi_solib)
-	$(AM_V_GEN) $(OBJCOPY) $(efi_sections) -j .wdfuncs \
+	$(AM_V_GEN) $(OBJCOPY) $(efi_sections) -j .init_array \
 		$(objcopy_format) $< $@
 
 $(kernel_stub_solib): $(kernel_stub_objects)
