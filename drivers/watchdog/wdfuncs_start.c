@@ -1,7 +1,7 @@
 /*
  * EFI Boot Guard
  *
- * Copyright (c) Siemens AG, 2024
+ * Copyright (c) Siemens AG, 2024-2025
  *
  * Authors:
  *  Christian Storm <christian.storm@siemens.com>
@@ -12,10 +12,14 @@
  * SPDX-License-Identifier:	GPL-2.0-only
  */
 
+#if GNU_EFI_VERSION < 3016
+
 #include <efi.h>
 #include "utils.h"
 
-/* Section .wdfunc's sentinel value and start address for watchdog probing
+/* Section .init_array's sentinel value and start address for watchdog probing
  * function pointers following this marker, if any. */
-WATCHDOG_PROBE wdfuncs_start __attribute__((used, section(".wdfuncs"))) =
+WATCHDOG_PROBE wdfuncs_start __attribute__((used, section(".init_array"))) =
 	(WATCHDOG_PROBE)0x5343;
+
+#endif

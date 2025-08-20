@@ -1,7 +1,7 @@
 /*
  * EFI Boot Guard
  *
- * Copyright (c) Siemens AG, 2017
+ * Copyright (c) Siemens AG, 2017-2025
  *
  * Authors:
  *  Jan Kiszka <jan.kiszka@siemens.com>
@@ -31,10 +31,27 @@ extern CHAR16 *boot_medium_path;
 #define PCI_GET_VENDOR_ID(id)	(UINT16)(id)
 #define PCI_GET_PRODUCT_ID(id)	(UINT16)((id) >> 16)
 
+static WATCHDOG_DRIVER *watchdog_drivers;
+static WATCHDOG_DRIVER *last_watchdog_driver;
+
+VOID register_watchdog(WATCHDOG_DRIVER *driver)
+{
+	if (last_watchdog_driver != NULL)
+		last_watchdog_driver->next = driver;
+	else
+		watchdog_drivers = driver;
+	last_watchdog_driver = driver;
+}
 
 static EFI_STATUS probe_watchdogs(UINTN timeout)
 {
-	if (wdfuncs_end - wdfuncs_start - 1 == 0) {
+#if GNU_EFI_VERSION < 3016
+	const unsigned long *entry = wdfuncs_start;
+	for (entry++; entry < wdfuncs_end; entry++) {
+		((void (*)(void))*entry)();
+	}
+#endif
+	if (watchdog_drivers == NULL) {
 		if (timeout > 0) {
 			ERROR(L"No watchdog drivers registered, but timeout is non-zero.\n");
 			return EFI_UNSUPPORTED;
@@ -83,14 +100,16 @@ static EFI_STATUS probe_watchdogs(UINTN timeout)
 			continue;
 		}
 
-		const unsigned long *entry = wdfuncs_start;
-		for (entry++; entry < wdfuncs_end; entry++) {
-			WATCHDOG_PROBE probe = (WATCHDOG_PROBE) *entry;
-			if ((status = probe(pci_io, PCI_GET_VENDOR_ID(value),
-					    PCI_GET_PRODUCT_ID(value),
-					    timeout)) == EFI_SUCCESS) {
+		WATCHDOG_DRIVER *driver = watchdog_drivers;
+		while (driver) {
+			status = driver->probe(pci_io,
+					       PCI_GET_VENDOR_ID(value),
+					       PCI_GET_PRODUCT_ID(value),
+						timeout);
+			if (status == EFI_SUCCESS) {
 				break;
 			}
+			driver = driver->next;
 		}
 
 		(VOID) BS->CloseProtocol(handle_buffer[index], &PciIoProtocol,
