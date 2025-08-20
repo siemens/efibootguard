@@ -1,7 +1,7 @@
 #
 # EFI Boot Guard
 #
-# Copyright (c) Siemens AG, 2017
+# Copyright (c) Siemens AG, 2017-2025
 #
 # Authors:
 #  Claudius Heine <ch@denx.de>
@@ -286,8 +286,11 @@ efi_ldflags = \
 	-shared \
 	-Bsymbolic \
 	-nostdlib \
-	-znoexecstack \
-	-znocombreloc \
+	-z noexecstack \
+	-z nocombreloc \
+	-z norelro \
+	-z common-page-size=4096 \
+	-z max-page-size=4096 \
 	--warn-common \
 	--no-undefined \
 	--fatal-warnings \
@@ -305,6 +308,11 @@ else
 objcopy_format = --target=efi-app-$(ARCH)
 endif
 endif
+
+efi_sections = \
+	-j .text -j .sdata -j .data -j .dynamic -j .rodata \
+	-j .rel -j .rela -j .rel.* -j .rela.* -j .rel* -j .rela* -j .areloc \
+	-j .reloc $(EXTRA_EFI_SECTIONS)
 
 efi_objects_pre1 = $(efi_sources:.c=.o)
 efi_objects_pre2 = $(efi_objects_pre1:.S=.o)
@@ -352,8 +360,8 @@ $(efi_solib): $(efi_objects)
 	nm -D -u $@ | grep ' U ' && exit 1 || :
 
 $(efi_loadername): $(efi_solib)
-	$(AM_V_GEN) $(OBJCOPY) -j .text -j .wdfuncs -j .sdata -j .data -j .dynamic \
-	  -j .dynsym -j .rodata -j .rel*  $(objcopy_format) $< $@
+	$(AM_V_GEN) $(OBJCOPY) $(efi_sections) -j .wdfuncs \
+		$(objcopy_format) $< $@
 
 $(kernel_stub_solib): $(kernel_stub_objects)
 	$(AM_V_CCLD)$(LD) $(efi_ldflags) $(kernel_stub_objects) \
@@ -361,8 +369,7 @@ $(kernel_stub_solib): $(kernel_stub_objects)
 	nm -D -u $@ | grep ' U ' && exit 1 || :
 
 $(kernel_stub_name): $(kernel_stub_solib)
-	$(AM_V_GEN) $(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic \
-	  -j .dynsym -j .rodata -j .rel* $(objcopy_format) $< $@
+	$(AM_V_GEN) $(OBJCOPY) $(efi_sections) $(objcopy_format) $< $@
 
 endif # BOOTLOADER
 

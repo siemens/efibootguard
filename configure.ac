@@ -1,7 +1,7 @@
 #
 # EFI Boot Guard
 #
-# Copyright (c) Siemens AG, 2017
+# Copyright (c) Siemens AG, 2017-2025
 #
 # Authors:
 #  Claudius Heine <ch@denx.de>
@@ -254,6 +254,11 @@ AS_IF([test -z "$ARCH_IS_X86_FALSE" -a $GNU_EFI_VERSION -eq 0],
 		[LDFLAGS_NO_WARN_RWX_SEGMENTS=--no-warn-rwx-segments],
 		[LDFLAGS_NO_WARN_RWX_SEGMENTS=])
 	 AC_SUBST([LDFLAGS_NO_WARN_RWX_SEGMENTS])])
+
+# Keep .dynsym section for gnu-efi 3.0.15 or older
+AS_IF([test $GNU_EFI_VERSION -eq 0],
+	EXTRA_EFI_SECTIONS="-j .dynsym"
+	AC_SUBST([EXTRA_EFI_SECTIONS]))
 
 AS_IF([test "x$enable_bootloader" != "xno"],
     [
