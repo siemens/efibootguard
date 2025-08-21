@@ -343,9 +343,6 @@ $(top_builddir)/env/%.o: $(top_srcdir)/env/%.c
 $(top_builddir)/drivers/watchdog/%.o: $(top_srcdir)/drivers/watchdog/%.c
 	$(call gnuefi_compile)
 
-$(top_builddir)/drivers/watchdog/%.o: $(top_srcdir)/drivers/watchdog/%.S
-	$(call gnuefi_compile)
-
 $(top_builddir)/drivers/utils/%.o: $(top_srcdir)/drivers/utils/%.c
 	$(call gnuefi_compile)
 
