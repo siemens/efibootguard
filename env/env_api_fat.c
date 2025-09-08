@@ -284,9 +284,10 @@ void bgenv_close(BGENV *env)
 	free(env);
 }
 
-static int bgenv_get_uint(char *buffer, uint64_t *type, void *data,
-			  unsigned int src, uint64_t t)
+static int bgenv_get_uint(uint64_t *type, void *data, unsigned int src,
+			  uint64_t t)
 {
+	char buffer[ENV_STRING_LENGTH];
 	int res;
 
 	res = sprintf(buffer, "%u", src);
@@ -300,9 +301,10 @@ static int bgenv_get_uint(char *buffer, uint64_t *type, void *data,
 	return 0;
 }
 
-static int bgenv_get_string(char *buffer, uint64_t *type, void *data,
-			    const char16_t *srcstr)
+static int bgenv_get_string(uint64_t *type, void *data, const char16_t *srcstr)
 {
+	char buffer[ENV_STRING_LENGTH];
+
 	str16to8(buffer, srcstr);
 	if (!data) {
 		return strlen(buffer)+1;
@@ -318,7 +320,6 @@ int bgenv_get(BGENV *env, const char *key, uint64_t *type, void *data,
 	      uint32_t maxlen)
 {
 	EBGENVKEY e;
-	char buffer[ENV_STRING_LENGTH];
 
 	if (!key || maxlen == 0) {
 		return -EINVAL;
@@ -343,26 +344,21 @@ int bgenv_get(BGENV *env, const char *key, uint64_t *type, void *data,
 	}
 	switch (e) {
 	case EBGENV_KERNELFILE:
-		return bgenv_get_string(buffer, type, data,
-					env->data->kernelfile);
+		return bgenv_get_string(type, data, env->data->kernelfile);
 	case EBGENV_KERNELPARAMS:
-		return bgenv_get_string(buffer, type, data,
-					env->data->kernelparams);
+		return bgenv_get_string(type, data, env->data->kernelparams);
 	case EBGENV_WATCHDOG_TIMEOUT_SEC:
-		return bgenv_get_uint(buffer, type, data,
+		return bgenv_get_uint(type, data,
 				      env->data->watchdog_timeout_sec,
 				      USERVAR_TYPE_UINT16);
 	case EBGENV_REVISION:
-		return bgenv_get_uint(buffer, type, data,
-				      env->data->revision,
+		return bgenv_get_uint(type, data, env->data->revision,
 				      USERVAR_TYPE_UINT16);
 	case EBGENV_USTATE:
-		return bgenv_get_uint(buffer, type, data,
-				      env->data->ustate,
+		return bgenv_get_uint(type, data, env->data->ustate,
 				      USERVAR_TYPE_UINT8);
 	case EBGENV_IN_PROGRESS:
-		return bgenv_get_uint(buffer, type, data,
-				      env->data->in_progress,
+		return bgenv_get_uint(type, data, env->data->in_progress,
 				      USERVAR_TYPE_UINT8);
 	default:
 		if (!data) {
