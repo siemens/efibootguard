@@ -293,7 +293,7 @@ static int bgenv_get_uint(char *buffer, uint64_t *type, void *data,
 	if (!data) {
 		return res+1;
 	}
-	strncpy(data, buffer, res+1);
+	memcpy(data, buffer, res+1);
 	if (type) {
 		*type = t;
 	}
