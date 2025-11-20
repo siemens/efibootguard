@@ -12,7 +12,7 @@
  * SPDX-License-Identifier:	GPL-2.0-only
  */
 
-#if GNU_EFI_VERSION < 3016
+#if GNU_EFI_VERSION < 3000016
 
 #include <efi.h>
 #include "utils.h"

@@ -40,7 +40,7 @@ AC_PROG_CC
 AC_CHECK_TOOL(LD, ld)
 AC_CHECK_TOOL(OBJCOPY, objcopy)
 AC_CHECK_TOOL(GREP, grep)
-AC_CHECK_TOOL(TR, tr)
+AC_CHECK_TOOL(AWK, awk)
 
 dnl Dont try to use things like -std=c99 for efi compilation
 GNUEFI_CC=$CC
@@ -232,9 +232,9 @@ if test "x$PKG_CONFIG" = "xno"; then
 fi
 
 # Note: gnu-efi introduced pkg-config with version 3.0.16
-# GNU_EFI_VERSION resolves to gnu-efi's version without dots, e.g., GNU_EFI_VERSION=3016
+# GNU_EFI_VERSION resolves to gnu-efi's version without dots, e.g., GNU_EFI_VERSION=3000016
 # gnu-efi versions < 3.0.16 resolve to GNU_EFI_VERSION=0
-AC_SUBST([GNU_EFI_VERSION], [$( ($PKG_CONFIG --modversion "gnu-efi" 2>/dev/null || echo 0) | $TR -d '.' )])
+AC_SUBST([GNU_EFI_VERSION], [$( ($PKG_CONFIG --modversion "gnu-efi" 2>/dev/null || echo 0) | $AWK -F. '{print $1*1000000 + $2*1000 + $3}' )])
 AC_DEFINE_UNQUOTED([GNU_EFI_VERSION], [${GNU_EFI_VERSION}], [gnu-efi version])
 
 AC_SUBST([OBJCOPY_HAS_EFI_APP_TARGET], [$($OBJCOPY --info | $GREP -q pei- 2>/dev/null && echo "true")])

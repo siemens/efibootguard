@@ -45,7 +45,7 @@ VOID register_watchdog(WATCHDOG_DRIVER *driver)
 
 static EFI_STATUS probe_watchdogs(UINTN timeout)
 {
-#if GNU_EFI_VERSION < 3016
+#if GNU_EFI_VERSION < 3000016
 	const unsigned long *entry = wdfuncs_start;
 	for (entry++; entry < wdfuncs_end; entry++) {
 		((void (*)(void))*entry)();
