@@ -299,13 +299,13 @@ efi_ldflags = \
 	$(GNUEFI_LIB_DIR)/crt0-efi-$(ARCH).o
 
 if ARCH_IS_X86
-objcopy_format = --target=efi-app-$(ARCH)
+objcopy_format = --output-target=efi-app-$(ARCH)
 else
 if OBJCOPY_USE_BINARY_COPY
 objcopy_format = -O binary
 efi_ldflags += --defsym=EFI_SUBSYSTEM=0xa
 else
-objcopy_format = --target=efi-app-$(ARCH)
+objcopy_format = --output-target=efi-app-$(ARCH)
 endif
 endif
 
