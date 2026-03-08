@@ -181,6 +181,7 @@ static EFI_STATUS init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id,
 		       UINT16 __attribute__((unused)) pci_device_id,
 		       UINTN timeout)
 {
+	const char *device;
 	int chip;
 
 	if (!pci_io || pci_vendor_id != PCI_VENDOR_ID_INTEL) {
@@ -188,17 +189,35 @@ static EFI_STATUS init(EFI_PCI_IO *pci_io, UINT16 pci_vendor_id,
 	}
 
 	switch (simatic_station_id()) {
+	case SIMATIC_IPC227G:
+		device = "IPC227G";
+		break;
+	case SIMATIC_IPC277G:
+		device = "IPC277G";
+		break;
+	case SIMATIC_IPCBX_39A:
+		device = "IPC BX-39A";
+		break;
+	case SIMATIC_IPCPX_39A:
+		device = "IPC PX-39A";
+		break;
 	case SIMATIC_IPCBX_56A:
+		device = "IPC BX-56A";
+		break;
 	case SIMATIC_IPCBX_59A:
-		chip = wdt_find(0x2e);
-		if (chip < 0)
-			return EFI_UNSUPPORTED;
-		INFO(L"Detected SIMATIC BX5xA watchdog\n");
-		w83627hf_init(chip);
-		wdt_set_time(timeout);
-		return EFI_SUCCESS;
+		device = "IPC BX-59A";
+		break;
+	default:
+		return EFI_UNSUPPORTED;
 	}
-	return EFI_UNSUPPORTED;
+
+	chip = wdt_find(0x2e);
+	if (chip < 0)
+		return EFI_UNSUPPORTED;
+	INFO(L"Detected SIMATIC %s watchdog\n", device);
+	w83627hf_init(chip);
+	wdt_set_time(timeout);
+	return EFI_SUCCESS;
 }
 
 WATCHDOG_REGISTER(init);
