@@ -200,7 +200,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	}
 
 	/* Load and start image */
-	status = BS->LoadImage(TRUE, this_image, payload_dev_path, NULL, 0,
+	status = BS->LoadImage(FALSE, this_image, payload_dev_path, NULL, 0,
 			       &payload_handle);
 	if (EFI_ERROR(status)) {
 		if (bg_loader_params.ustate == USTATE_TESTING) {
