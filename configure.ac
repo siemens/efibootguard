@@ -46,7 +46,6 @@ dnl Dont try to use things like -std=c99 for efi compilation
 GNUEFI_CC=$CC
 AC_SUBST([GNUEFI_CC])
 
-AC_PROG_CC_C99
 AM_PROG_CC_C_O
 
 AC_PROG_MKDIR_P
