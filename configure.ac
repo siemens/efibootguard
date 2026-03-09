@@ -1,7 +1,7 @@
 #
 # EFI Boot Guard
 #
-# Copyright (c) Siemens AG, 2017-2025
+# Copyright (c) Siemens AG, 2017-2026
 #
 # Authors:
 #  Claudius Heine <ch@denx.de>
@@ -15,6 +15,8 @@
 # Based on configure.ac of gummiboot,
 # Copyright (C) 2013 Karel Zak <kzak@redhat.com>
 #
+
+AC_PREREQ([2.69])
 
 AC_INIT([efibootguard],
 	[m4_esyscmd_s([cat VERSION])],
