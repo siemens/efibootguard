@@ -1,7 +1,7 @@
 #
 # EFI Boot Guard
 #
-# Copyright (c) Siemens AG, 2017-2025
+# Copyright (c) Siemens AG, 2017-2026
 #
 # Authors:
 #  Claudius Heine <ch@denx.de>
@@ -206,12 +206,11 @@ efi_loadername = efibootguard$(MACHINE_TYPE_NAME).efi
 
 if BOOTLOADER
 
-if ARCH_IS_X86
 # NOTE: wdat.c is placed first so it is tried before any other drivers
 # NOTE: ipcbx21a.c must be *before* itco.c
 # NOTE: ipc4x7e_wdt.c must be *before* itco.c
 # NOTE: ipmi_wdt.c must be *before* itco.c
-efi_sources_watchdogs = \
+watchdog_sources_x86 = \
 	drivers/watchdog/wdat.c \
 	drivers/watchdog/amdfch_wdt.c \
 	drivers/watchdog/i6300esb.c \
@@ -225,6 +224,8 @@ efi_sources_watchdogs = \
 	drivers/watchdog/eiois200_wdt.c \
 	drivers/utils/simatic.c \
 	drivers/utils/smbios.c
+if ARCH_IS_X86
+efi_sources_watchdogs = $(watchdog_sources_x86)
 else
 efi_sources_watchdogs =
 endif
@@ -327,7 +328,7 @@ kernel_stub_solib = $(top_builddir)/kernel-stub/kernel-stub$(MACHINE_TYPE_NAME).
 efibootguard_DATA = $(efi_loadername) $(kernel_stub_name)
 CLEANFILES += $(efi_objects) $(efi_solib) $(efi_loadername)
 CLEANFILES += $(kernel_stub_objects) $(kernel_stub_solib) $(kernel_stub_name)
-EXTRA_DIST += $(efi_sources) $(kernel_stub_sources)
+EXTRA_DIST += $(efi_sources) $(watchdog_sources_x86) $(kernel_stub_sources)
 
 define gnuefi_compile
 	$(AM_V_CC) $(MKDIR_P) $(shell dirname $@)/; \
