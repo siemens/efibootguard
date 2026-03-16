@@ -1,7 +1,7 @@
 #
 # EFI Boot Guard
 #
-# Copyright (c) Siemens AG, 2021-2025
+# Copyright (c) Siemens AG, 2021-2026
 #
 # Authors:
 #  Claudius Heine <ch@denx.de>
@@ -34,7 +34,7 @@ jobs:
           - cppcheck
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
