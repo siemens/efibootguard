@@ -207,6 +207,20 @@ efi_loadername = efibootguard$(MACHINE_TYPE_NAME).efi
 
 if BOOTLOADER
 
+efi_sources = \
+	env/syspart.c \
+	env/fatvars.c \
+	print.c \
+	utils.c \
+	loader_interface.c \
+	main.c
+
+watchdog_sources = \
+	drivers/watchdog/wdfuncs_start.c \
+	$(efi_sources_watchdogs) \
+	drivers/watchdog/wdfuncs_end.c \
+	watchdog.c
+
 # NOTE: wdat.c is placed first so it is tried before any other drivers
 # NOTE: ipcbx21a.c must be *before* itco.c
 # NOTE: ipc4x7e_wdt.c must be *before* itco.c
@@ -226,22 +240,12 @@ watchdog_sources_x86 = \
 	drivers/utils/simatic.c \
 	drivers/utils/smbios.c
 if ARCH_IS_X86
-efi_sources_watchdogs = $(watchdog_sources_x86)
-else
-efi_sources_watchdogs =
+watchdog_sources += $(watchdog_sources_x86)
 endif
 
-efi_sources = \
-	drivers/watchdog/wdfuncs_start.c \
-	$(efi_sources_watchdogs) \
-	drivers/watchdog/wdfuncs_end.c \
-	watchdog.c \
-	env/syspart.c \
-	env/fatvars.c \
-	print.c \
-	utils.c \
-	loader_interface.c \
-	main.c
+if HAVE_WATCHDOGS
+efi_sources += $(watchdog_sources)
+endif
 
 kernel_stub_name = kernel-stub$(MACHINE_TYPE_NAME).efi
 
@@ -331,7 +335,7 @@ kernel_stub_solib = $(top_builddir)/kernel-stub/kernel-stub$(MACHINE_TYPE_NAME).
 efibootguard_DATA = $(efi_loadername) $(kernel_stub_name)
 CLEANFILES += $(efi_objects) $(efi_solib) $(efi_loadername)
 CLEANFILES += $(kernel_stub_objects) $(kernel_stub_solib) $(kernel_stub_name)
-EXTRA_DIST += $(efi_sources) $(watchdog_sources_x86) $(kernel_stub_sources)
+EXTRA_DIST += $(efi_sources) $(watchdog_sources) $(watchdog_sources_x86) $(kernel_stub_sources)
 
 define gnuefi_compile
 	$(AM_V_CC) $(MKDIR_P) $(shell dirname $@)/; \

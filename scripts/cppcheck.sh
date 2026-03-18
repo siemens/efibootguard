@@ -71,7 +71,7 @@ includes="-I . \
           -I /usr/include/x86_64-linux-gnu \
           -I /usr/lib/gcc/x86_64-linux-gnu/9/include"
 
-cpp_conf="-U__WINT_TYPE__ -U__GNUC__"
+cpp_conf="-U__WINT_TYPE__ -U__GNUC__ -DHAVE_WATCHDOGS"
 path=${1-.}
 
 build_tmp=$(mktemp -d)

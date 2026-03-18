@@ -97,10 +97,17 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		WARNING(L"Cannot close volumes.\n", status);
 	}
 
+#if defined(HAVE_WATCHDOGS)
 	status = probe_watchdogs(bg_loader_params.timeout);
 	if (EFI_ERROR(status)) {
 		error_exit(L"Cannot probe watchdog", status);
 	}
+#else
+	if (bg_loader_params.timeout > 0) {
+		error_exit(L"No watchdog drivers available, but timeout is non-zero",
+			   EFI_UNSUPPORTED);
+	}
+#endif
 
 	/* Load and start image */
 	status = BS->LoadImage(FALSE, this_image, payload_dev_path, NULL, 0,
@@ -152,8 +159,12 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	loaded_image->LoadOptionsSize =
 	    (StrLen(bg_loader_params.payload_options) + 1) * sizeof(CHAR16);
 
+#if defined(HAVE_WATCHDOGS)
 	INFO(L"Starting %s with watchdog set to %d seconds ...\n",
 	     bg_loader_params.payload_path, bg_loader_params.timeout);
+#else
+	INFO(L"Starting %s ...\n", bg_loader_params.payload_path);
+#endif
 
 	BS->Stall(1000 * 1000 * ENV_BOOT_DELAY);
 

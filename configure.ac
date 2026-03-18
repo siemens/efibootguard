@@ -225,6 +225,12 @@ if test "x$silent_boot" != "xno"; then
     AC_DEFINE([SILENT_BOOT], [] , [Silent Boot])
 fi
 
+# Signal to build whether there are watchdog drivers available
+AM_CONDITIONAL([HAVE_WATCHDOGS], [test -z "$ARCH_IS_X86_TRUE"])
+if test -z "$HAVE_WATCHDOGS_TRUE"; then
+    AC_DEFINE([HAVE_WATCHDOGS], [] , [Target provides watchdog drivers])
+fi
+
 dnl pkg-config
 PKG_PROG_PKG_CONFIG()
 if test "x$PKG_CONFIG" = "xno"; then
