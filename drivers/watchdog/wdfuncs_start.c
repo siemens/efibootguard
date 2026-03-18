@@ -14,9 +14,7 @@
 
 #if GNU_EFI_VERSION < 3000016
 
-#include <efi.h>
-
-#include "utils.h"
+#include "watchdog.h"
 
 /* Section .init_array's sentinel value and start address for watchdog probing
  * function pointers following this marker, if any. */

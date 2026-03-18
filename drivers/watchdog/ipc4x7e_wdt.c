@@ -22,6 +22,7 @@
 #include "print.h"
 #include "simatic.h"
 #include "utils.h"
+#include "watchdog.h"
 
 #define PCI_DEVICE_ID_INTEL_SUNRISEPOINT_H_LPC	0xa150
 

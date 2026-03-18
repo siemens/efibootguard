@@ -19,6 +19,7 @@
 
 #include "print.h"
 #include "utils.h"
+#include "watchdog.h"
 
 #define PCI_DEVICE_ID_INTEL_ITC		0x8186
 #define PCI_DEVICE_ID_INTEL_CENTERTON	0x0c60

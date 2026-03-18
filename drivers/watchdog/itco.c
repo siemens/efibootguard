@@ -21,6 +21,7 @@
 #include "mmio.h"
 #include "print.h"
 #include "utils.h"
+#include "watchdog.h"
 
 #define SMI_EN_REG		0x30
 #define TCO_EN			BIT(13)

@@ -17,6 +17,7 @@
 
 #include "print.h"
 #include "utils.h"
+#include "watchdog.h"
 
 #define PCI_VENDOR_ID_HP		0x103c
 #define PCI_VENDOR_ID_HP_3PAR		0x1590

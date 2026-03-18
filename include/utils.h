@@ -40,20 +40,4 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 					  CHAR16 *payloadpath);
 CHAR16 *GetMediumPath(const CHAR16 *input);
 
-typedef EFI_STATUS (*WATCHDOG_PROBE)(EFI_PCI_IO *, UINT16, UINT16, UINTN);
-
-typedef struct _WATCHDOG_DRIVER {
-	WATCHDOG_PROBE probe;
-	struct _WATCHDOG_DRIVER *next;
-} WATCHDOG_DRIVER;
-
-VOID register_watchdog(WATCHDOG_DRIVER *driver);
-
-#define WATCHDOG_REGISTER(_func)                                               \
-	static WATCHDOG_DRIVER this_driver = {.probe = _func};                 \
-	static void __attribute__((constructor)) register_driver(void)         \
-	{                                                                      \
-		register_watchdog(&this_driver);                               \
-	}
-
 #define BIT(x) (1UL << (x))

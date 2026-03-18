@@ -22,6 +22,7 @@
 #include "print.h"
 #include "smbios.h"
 #include "utils.h"
+#include "watchdog.h"
 
 /* #define EIO200IS_WDT_DEBUG */
 

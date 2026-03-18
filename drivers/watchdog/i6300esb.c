@@ -18,6 +18,7 @@
 
 #include "print.h"
 #include "utils.h"
+#include "watchdog.h"
 
 #define PCI_DEVICE_ID_INTEL_ESB_9	0x25ab
 

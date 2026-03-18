@@ -20,6 +20,7 @@
 #include "mmio.h"
 #include "print.h"
 #include "utils.h"
+#include "watchdog.h"
 
 /* #define AMDFCH_WDT_DEBUG */
 

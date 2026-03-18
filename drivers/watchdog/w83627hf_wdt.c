@@ -45,6 +45,7 @@
 #include "print.h"
 #include "simatic.h"
 #include "utils.h"
+#include "watchdog.h"
 
 #define WDT_EFER (wdt_io+0)   /* Extended Function Enable Registers */
 #define WDT_EFIR (wdt_io+0)   /* Extended Function Index Register

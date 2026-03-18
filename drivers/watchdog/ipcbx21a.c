@@ -20,6 +20,7 @@
 #include "print.h"
 #include "simatic.h"
 #include "utils.h"
+#include "watchdog.h"
 
 #define WDT_CTRL_REG_BX_21A			0x1854
 #define TIMEOUT_MIN_BX_21A			(1)

@@ -19,6 +19,7 @@
 #include "print.h"
 #include "smbios.h"
 #include "utils.h"
+#include "watchdog.h"
 
 #define SMBIOS_TYPE_IPMI_KCS		38
 #define IPMI_KCS_DEFAULT_IOBASE		0xca2

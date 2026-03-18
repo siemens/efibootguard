@@ -235,6 +235,7 @@ efi_sources = \
 	drivers/watchdog/wdfuncs_start.c \
 	$(efi_sources_watchdogs) \
 	drivers/watchdog/wdfuncs_end.c \
+	watchdog.c \
 	env/syspart.c \
 	env/fatvars.c \
 	print.c \
