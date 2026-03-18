@@ -355,7 +355,7 @@ $(top_builddir)/main.o $(top_builddir)/kernel-stub/main.o: $(GEN_VERSION_H)
 $(efi_solib): $(efi_objects)
 	$(AM_V_CCLD)$(LD) $(efi_ldflags) $(efi_objects) \
 		-o $@ -lefi -lgnuefi $(shell $(CC) $(CFLAGS) -print-libgcc-file-name); \
-	nm -D -u $@ | grep ' U ' && exit 1 || :
+	$(NM) -D -u $@ | grep ' U ' && exit 1 || :
 
 $(efi_loadername): $(efi_solib)
 	$(AM_V_GEN) $(OBJCOPY) $(efi_sections) -j .init_array \
@@ -364,7 +364,7 @@ $(efi_loadername): $(efi_solib)
 $(kernel_stub_solib): $(kernel_stub_objects)
 	$(AM_V_CCLD)$(LD) $(efi_ldflags) $(kernel_stub_objects) \
 		-o $@ -lefi -lgnuefi $(shell $(CC) $(CFLAGS) -print-libgcc-file-name); \
-	nm -D -u $@ | grep ' U ' && exit 1 || :
+	$(NM) -D -u $@ | grep ' U ' && exit 1 || :
 
 $(kernel_stub_name): $(kernel_stub_solib)
 	$(AM_V_GEN) $(OBJCOPY) $(efi_sections) $(objcopy_format) $< $@
