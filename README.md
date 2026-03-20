@@ -33,6 +33,8 @@ The following watchdog drivers are implemented (and are probed in this order):
 * Intel i6300esb
 * Intel Quark
 * Siemens SIMATIC IPC4x7E
+* Siemens SIMATIC IPC2x7G
+* Siemens SIMATIC BX-39A and PX-39A
 * Siemens SIMATIC BX-56A and BX-59A
 * Intel TCO
 * HPE ProLiant
