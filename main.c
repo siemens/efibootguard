@@ -1,7 +1,7 @@
 /*
  * EFI Boot Guard
  *
- * Copyright (c) Siemens AG, 2017-2025
+ * Copyright (c) Siemens AG, 2017-2026
  *
  * Authors:
  *  Jan Kiszka <jan.kiszka@siemens.com>
@@ -27,7 +27,6 @@
 
 extern const unsigned long wdfuncs_start[];
 extern const unsigned long wdfuncs_end[];
-extern CHAR16 *boot_medium_path;
 
 #define PCI_GET_VENDOR_ID(id)	(UINT16)(id)
 #define PCI_GET_PRODUCT_ID(id)	(UINT16)((id) >> 16)

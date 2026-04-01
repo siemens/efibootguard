@@ -24,7 +24,7 @@ AC_INIT([efibootguard],
 	[efibootguard],
 	[])
 
-AC_CONFIG_SRCDIR([bootguard.c])
+AC_CONFIG_SRCDIR([main.c])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])

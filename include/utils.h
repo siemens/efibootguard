@@ -30,6 +30,7 @@ typedef struct _VOLUME_DESC {
 
 extern VOLUME_DESC *volumes;
 extern UINTN volume_count;
+extern CHAR16 *boot_medium_path;
 
 typedef enum { DOSFSLABEL, CUSTOMLABEL, NOLABEL } LABELMODE;
 

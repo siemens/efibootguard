@@ -240,7 +240,6 @@ efi_sources = \
 	print.c \
 	utils.c \
 	loader_interface.c \
-	bootguard.c \
 	main.c
 
 kernel_stub_name = kernel-stub$(MACHINE_TYPE_NAME).efi

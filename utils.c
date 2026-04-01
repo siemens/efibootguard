@@ -19,9 +19,12 @@
 #include "print.h"
 #include <utils.h>
 
+VOLUME_DESC *volumes;
+UINTN volume_count;
+CHAR16 *boot_medium_path;
+
 static BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 {
-	extern CHAR16 *boot_medium_path;
 	CHAR16 *device_path, *tmp;
 	BOOLEAN result = FALSE;
 
