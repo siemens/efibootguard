@@ -16,6 +16,7 @@
 #include <efilib.h>
 #include <pci/header.h>
 #include <sys/io.h>
+#include "print.h"
 #include "simatic.h"
 #include "utils.h"
 

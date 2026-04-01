@@ -16,6 +16,7 @@
 #include <efilib.h>
 #include <efiapi.h>
 #include <bootguard.h>
+#include "print.h"
 #include <utils.h>
 #include <syspart.h>
 #include <envdata.h>

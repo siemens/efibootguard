@@ -16,6 +16,7 @@
 #include <efilib.h>
 #include <pci/header.h>
 #include <sys/io.h>
+#include "print.h"
 #include "utils.h"
 
 #define PCI_DEVICE_ID_INTEL_ITC		0x8186

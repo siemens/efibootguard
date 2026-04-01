@@ -19,6 +19,7 @@
 #include <efilib.h>
 #include <mmio.h>
 #include <sys/io.h>
+#include "print.h"
 #include "utils.h"
 
 #define EFI_ACPI_TABLE_GUID \

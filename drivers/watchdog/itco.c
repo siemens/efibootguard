@@ -18,6 +18,7 @@
 #include <pci/header.h>
 #include <sys/io.h>
 #include <mmio.h>
+#include "print.h"
 #include "utils.h"
 
 #define SMI_EN_REG		0x30

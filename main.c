@@ -21,6 +21,7 @@
 #include <bootguard.h>
 #include <configuration.h>
 #include "version.h"
+#include "print.h"
 #include "utils.h"
 #include "loader_interface.h"
 

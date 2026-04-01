@@ -16,20 +16,8 @@
 #include <efi.h>
 #include <efilib.h>
 #include <bootguard.h>
+#include "print.h"
 #include <utils.h>
-
-VOID PrintC(const UINT8 color, const CHAR16 *fmt, ...)
-{
-	INT32 attr = ST->ConOut->Mode->Attribute;
-	(VOID) ST->ConOut->SetAttribute(ST->ConOut, color);
-
-	va_list args;
-	va_start(args, fmt);
-	(VOID)VPrint(fmt, args);
-	va_end(args);
-
-	(VOID) ST->ConOut->SetAttribute(ST->ConOut, attr);
-}
 
 static BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 {
@@ -47,14 +35,6 @@ static BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 	FreePool(device_path);
 
 	return result;
-}
-
-VOID __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status)
-{
-	ERROR(L"%s (%r).\n", message, status);
-	(VOID) BS->Stall(3 * 1000 * 1000);
-	(VOID) BS->Exit(this_image, status, 0, NULL);
-	__builtin_unreachable();
 }
 
 CHAR16 *get_volume_label(EFI_FILE_HANDLE fh)

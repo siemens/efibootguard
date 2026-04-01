@@ -13,6 +13,7 @@
  */
 
 #include <syspart.h>
+#include "print.h"
 #include <utils.h>
 #include <envdata.h>
 

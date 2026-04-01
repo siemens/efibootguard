@@ -18,6 +18,7 @@
 #include <pci/header.h>
 #include <sys/io.h>
 #include <mmio.h>
+#include "print.h"
 #include "simatic.h"
 #include "utils.h"
 

@@ -14,6 +14,7 @@
 
 #include <efi.h>
 #include <pci/header.h>
+#include "print.h"
 #include "utils.h"
 
 #define PCI_VENDOR_ID_HP		0x103c

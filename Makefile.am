@@ -144,6 +144,7 @@ noinst_HEADERS = \
 	include/syspart.h \
 	include/test-interface.h \
 	include/uservars.h \
+	include/print.h \
 	include/utils.h
 
 #
@@ -236,6 +237,7 @@ efi_sources = \
 	drivers/watchdog/wdfuncs_end.c \
 	env/syspart.c \
 	env/fatvars.c \
+	print.c \
 	utils.c \
 	loader_interface.c \
 	bootguard.c \
