@@ -26,7 +26,7 @@ static BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 	BOOLEAN result = FALSE;
 
 	tmp = DevicePathToStr(dp);
-	device_path = GetBootMediumPath(tmp);
+	device_path = GetMediumPath(tmp);
 	FreePool(tmp);
 
 	if (StrCmp(device_path, boot_medium_path) == 0) {
@@ -262,7 +262,7 @@ EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
 	return appendeddevpath;
 }
 
-CHAR16 *GetBootMediumPath(const CHAR16 *input)
+CHAR16 *GetMediumPath(const CHAR16 *input)
 {
 	CHAR16 *dst;
 	UINTN len;

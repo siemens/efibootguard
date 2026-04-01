@@ -155,7 +155,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	}
 
 	tmp = DevicePathToStr(DevicePathFromHandle(loaded_image->DeviceHandle));
-	boot_medium_path = GetBootMediumPath(tmp);
+	boot_medium_path = GetMediumPath(tmp);
 	FreePool(tmp);
 	INFO(L"Boot medium: %s\n", boot_medium_path);
 
