@@ -16,6 +16,7 @@
 #include <efilib.h>
 
 #include "kernel-stub.h"
+#include "print.h"
 
 typedef struct {
 	VENDOR_DEVICE_PATH vendor;

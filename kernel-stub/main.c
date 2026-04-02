@@ -16,8 +16,9 @@
 #include <efilib.h>
 
 #include "kernel-stub.h"
-#include "version.h"
 #include "loader_interface.h"
+#include "print.h"
+#include "version.h"
 
 typedef struct {
 	UINT8 Ignore[60];
@@ -55,31 +56,12 @@ typedef struct {
 	UINT8 Ignore[24];
 } __attribute__((packed)) SECTION;
 
-static EFI_HANDLE this_image;
 static EFI_LOADED_IMAGE kernel_image;
 
 EFI_PHYSICAL_ADDRESS align_addr(EFI_PHYSICAL_ADDRESS ptr,
 				EFI_PHYSICAL_ADDRESS align)
 {
 	return (ptr + align - 1) & ~(align - 1);
-}
-
-VOID info(CHAR16 *message)
-{
-	Print(L"Unified kernel stub: %s\n", message);
-}
-
-VOID error(CHAR16 *message, EFI_STATUS status)
-{
-	Print(L"Unified kernel stub: %s (%r).\n", message, status);
-	(VOID) BS->Stall(3 * 1000 * 1000);
-}
-
-VOID __attribute__((noreturn)) error_exit(CHAR16 *message, EFI_STATUS status)
-{
-	error(message, status);
-	(VOID) BS->Exit(this_image, status, 0, NULL);
-	__builtin_unreachable();
 }
 
 static const PE_HEADER *get_pe_header(const VOID *image)
@@ -119,8 +101,10 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	this_image = image_handle;
 	InitializeLib(image_handle, system_table);
 
-	Print(L"Unified kernel stub (EFI Boot Guard %s)\n",
-	      L"" EFIBOOTGUARD_VERSION);
+#if !defined(SILENT_BOOT)
+	PrintC(EFI_CYAN, L"Unified kernel stub (EFI Boot Guard %s)\n",
+	       L"" EFIBOOTGUARD_VERSION);
+#endif
 
 	fdt_compatible = get_fdt_compatible();
 
@@ -133,7 +117,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 
 	/* consider zero-termination for string length */
 	if (stub_image->LoadOptionsSize > sizeof(CHAR16)) {
-		info(L"WARNING: Passed command line options ignored, only built-in used");
+		WARNING(L"Passed command line options ignored, only built-in used\n");
 	}
 
 	pe_header = get_pe_header(stub_image->ImageBase);
@@ -192,14 +176,14 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	status = BS->AllocatePages(AllocateAnyPages, EfiLoaderData,
 				   kernel_pages, &kernel_buffer);
 	if (EFI_ERROR(status)) {
-		error(L"Error allocating memory for kernel image", status);
+		ERROR(L"Could not allocate memory for kernel image\n");
 		goto cleanup_initrd;
 	}
 
 	aligned_kernel_buffer =
 		align_addr(kernel_buffer, pe_header->Opt.SectionAlignment);
 	if ((uintptr_t) aligned_kernel_buffer != aligned_kernel_buffer) {
-		error(L"Alignment overflow for kernel image", EFI_LOAD_ERROR);
+		ERROR(L"Alignment overflow for kernel image\n");
 		status = EFI_LOAD_ERROR;
 		goto cleanup_buffer;
 	}
@@ -216,7 +200,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 			&kernel_handle, &LoadedImageProtocol, &kernel_image,
 			NULL);
 	if (EFI_ERROR(status)) {
-		error(L"Error registering kernel image", status);
+		ERROR(L"Registering kernel image failed (%r)\n", status);
 		goto cleanup_buffer;
 	}
 
@@ -225,12 +209,12 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		if (EFI_ERROR(status)) {
 			goto cleanup_protocols;
 		}
-		info(L"Using matched embedded device tree");
+		INFO(L"Using matched embedded device tree\n");
 	} else if (fdt_compatible) {
 		if (has_dtbs) {
-			info(L"WARNING: No embedded device tree matched firmware-provided one");
+			WARNING(L"No embedded device tree matched firmware-provided one\n");
 		}
-		info(L"Using firmware-provided device tree");
+		INFO(L"Using firmware-provided device tree\n");
 	}
 
 	UINT16 *boot_medium_uuidstr =
@@ -238,7 +222,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 	bg_interface_params.loader_device_part_uuid = boot_medium_uuidstr;
 	status = set_bg_interface_vars(&bg_interface_params);
 	if (EFI_ERROR(status)) {
-		error(L"could not set interface vars", status);
+		WARNING(L"Could not set interface vars (%r)\n", status);
 	}
 	FreePool(boot_medium_uuidstr);
 
@@ -253,7 +237,7 @@ cleanup_protocols:
 			kernel_handle, &LoadedImageProtocol, &kernel_image,
 			NULL);
 	if (EFI_ERROR(cleanup_status)) {
-		error(L"Error unregistering kernel image", status);
+		ERROR(L"Unregistering kernel image failed (%r)\n", status);
 		if (!EFI_ERROR(status)) {
 			status = cleanup_status;
 		}
@@ -263,5 +247,8 @@ cleanup_buffer:
 cleanup_initrd:
 	uninstall_initrd_loader();
 
+	if (EFI_ERROR(status)) {
+		(VOID) BS->Stall(3 * 1000 * 1000);
+	}
 	return status;
 }

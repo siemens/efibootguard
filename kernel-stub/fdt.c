@@ -1,7 +1,7 @@
 /*
  * EFI Boot Guard, unified kernel stub
  *
- * Copyright (c) Siemens AG, 2022
+ * Copyright (c) Siemens AG, 2022-2026
  *
  * Authors:
  *  Jan Kiszka <jan.kiszka@siemens.com>
@@ -18,6 +18,7 @@
 #include <endian.h>
 
 #include "kernel-stub.h"
+#include "print.h"
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 #define BE32_TO_HOST(val)	bswap_32(val)
@@ -163,7 +164,7 @@ static EFI_STATUS clone_fdt(const VOID *fdt, UINTN size,
 	status = BS->AllocatePages(AllocateAnyPages, EfiACPIReclaimMemory,
 				   SIZE_IN_PAGES(size), fdt_buffer);
 	if (EFI_ERROR(status)) {
-		error(L"Error allocating device tree buffer", status);
+		ERROR(L"Failed to allocate device tree buffer\n");
 		return status;
 	}
 	CopyMem((VOID *)(uintptr_t)*fdt_buffer, (VOID*)fdt,
@@ -182,7 +183,7 @@ EFI_STATUS replace_fdt(const VOID *fdt)
 	if (EFI_ERROR(status)) {
 		const FDT_HEADER *header = fdt;
 
-		info(L"Firmware does not provide device tree fixup protocol");
+		WARNING(L"Firmware does not provide device tree fixup protocol\n");
 
 		size = BE32_TO_HOST(header->TotalSize);
 		status = clone_fdt(fdt, size, &fdt_buffer);
@@ -195,7 +196,8 @@ EFI_STATUS replace_fdt(const VOID *fdt)
 		status = protocol->Fixup(protocol, (VOID *) fdt, &size,
 					 EFI_DT_APPLY_FIXUPS);
 		if (status != EFI_BUFFER_TOO_SMALL) {
-			error(L"Device tree fixup: unexpected error", status);
+			ERROR(L"Early device tree fixup failure (%r)\n",
+			      status);
 			return status;
 		}
 
@@ -210,7 +212,7 @@ EFI_STATUS replace_fdt(const VOID *fdt)
 					 EFI_DT_RESERVE_MEMORY);
 		if (EFI_ERROR(status)) {
 			(VOID) BS->FreePages(fdt_buffer, SIZE_IN_PAGES(size));
-			error(L"Device tree fixup failed", status);
+			ERROR(L"Device tree fixup failed (%r)\n", status);
 			return status;
 		}
 	}
@@ -219,7 +221,8 @@ EFI_STATUS replace_fdt(const VOID *fdt)
 					       (VOID *)(uintptr_t)fdt_buffer);
 	if (EFI_ERROR(status)) {
 		(VOID) BS->FreePages(fdt_buffer, SIZE_IN_PAGES(size));
-		error(L"Failed to install alternative device tree", status);
+		ERROR(L"Failed to install alternative device tree (%r)\n",
+		      status);
 	}
 
 	return status;
