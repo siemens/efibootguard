@@ -18,7 +18,8 @@
 #include <efilib.h>
 #include <efiprot.h>
 #include <efipciio.h>
-#include <bootguard.h>
+
+#include "bootguard.h"
 
 BG_STATUS load_config(BG_LOADER_PARAMS *bg_loader_params);
 BG_STATUS save_config(BG_LOADER_PARAMS *bg_loader_params);

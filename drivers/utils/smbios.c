@@ -13,7 +13,7 @@
  * SPDX-License-Identifier:	GPL-2.0-only
  */
 
-#include <smbios.h>
+#include "smbios.h"
 
 SMBIOS_STRUCTURE_POINTER smbios_find_struct(SMBIOS_STRUCTURE_TABLE *table,
 					    UINT16 type)

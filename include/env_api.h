@@ -25,12 +25,13 @@
 #include <argp.h>
 #include <mntent.h>
 #include <fcntl.h>
+#include <uchar.h>
 #include <sys/file.h>
 #include <sys/mount.h>
+
 #include "config.h"
 #include "envdata.h"
 #include "ebgenv.h"
-#include <uchar.h>
 
 #ifdef DEBUG
 #define printf_debug(fmt, ...) printf(fmt, __VA_ARGS__)

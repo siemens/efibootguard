@@ -17,7 +17,8 @@
 #include <efilib.h>
 #include <pci/header.h>
 #include <sys/io.h>
-#include <mmio.h>
+
+#include "mmio.h"
 #include "print.h"
 #include "utils.h"
 

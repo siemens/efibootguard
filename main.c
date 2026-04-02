@@ -18,12 +18,13 @@
 #include <efiprot.h>
 #include <efipciio.h>
 #include <pci/header.h>
-#include <bootguard.h>
-#include <configuration.h>
-#include "version.h"
+
+#include "bootguard.h"
+#include "configuration.h"
+#include "loader_interface.h"
 #include "print.h"
 #include "utils.h"
-#include "loader_interface.h"
+#include "version.h"
 
 extern const unsigned long wdfuncs_start[];
 extern const unsigned long wdfuncs_end[];

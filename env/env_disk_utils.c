@@ -12,9 +12,10 @@
  * SPDX-License-Identifier:	GPL-2.0-only
  */
 
-#include <stdlib.h>
 #include <mntent.h>
+#include <stdlib.h>
 #include <string.h>
+
 #include "env_api.h"
 #include "env_disk_utils.h"
 

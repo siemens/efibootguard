@@ -13,7 +13,9 @@
  */
 
 #pragma once
+
 #include <stdio.h>
+
 #include "env_api.h"
 
 FILE *open_config_file_from_part(const CONFIG_PART *cfgpart, const char *mode);

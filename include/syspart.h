@@ -18,6 +18,7 @@
 #include <efilib.h>
 #include <efiprot.h>
 #include <efipciio.h>
+
 #include "bootguard.h"
 
 #define open_cfg_file(root, file, mode)					\

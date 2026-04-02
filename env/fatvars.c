@@ -15,11 +15,12 @@
 #include <efi.h>
 #include <efilib.h>
 #include <efiapi.h>
-#include <bootguard.h>
+
+#include "bootguard.h"
+#include "envdata.h"
 #include "print.h"
-#include <utils.h>
-#include <syspart.h>
-#include <envdata.h>
+#include "syspart.h"
+#include "utils.h"
 
 static int current_partition = 0;
 static BG_ENVDATA *env;
