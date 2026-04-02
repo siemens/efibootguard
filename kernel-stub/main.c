@@ -200,6 +200,7 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 		align_addr(kernel_buffer, pe_header->Opt.SectionAlignment);
 	if ((uintptr_t) aligned_kernel_buffer != aligned_kernel_buffer) {
 		error(L"Alignment overflow for kernel image", EFI_LOAD_ERROR);
+		status = EFI_LOAD_ERROR;
 		goto cleanup_buffer;
 	}
 
