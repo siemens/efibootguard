@@ -84,6 +84,8 @@ Makefile.in
 .deps/
 m4/libtool.m4
 m4/lt*
+m4/pkg.m4
+m4/ax_*
 version.h
 libtool
 .libs
