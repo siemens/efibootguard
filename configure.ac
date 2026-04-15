@@ -72,7 +72,11 @@ AC_ARG_WITH([gnuefi-include-dir],
 AC_SUBST(GNUEFI_INC_DIR)
 AC_DEFINE_UNQUOTED(GNUEFI_INC_DIR, ["$GNUEFI_INC_DIR"], [The include directory for gnuefi])
 
-efiroot=$(echo $(cd $GNUEFI_SYS_DIR/usr/lib/$($CC -print-multi-os-directory); pwd))
+PKG_PROG_PKG_CONFIG
+efiroot=$($PKG_CONFIG --variable=libdir gnu-efi)
+if test "x$efiroot" = x; then
+	efiroot=$(echo $(cd $GNUEFI_SYS_DIR/usr/lib/$($CC -print-multi-os-directory); pwd))
+fi
 
 AC_ARG_WITH([gnuefi-lib-dir],
 	    AS_HELP_STRING([--with-gnuefi-lib-dir=DIRECTORY],
