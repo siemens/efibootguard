@@ -72,7 +72,7 @@ allocate_fake_part_error:
 	exit(1);
 }
 
-void remove_fake_partitions(int n)
+static void remove_fake_partitions(int n)
 {
 	PedPartition *pp = fake_devices[n].part_list;
 	PedPartition *next;

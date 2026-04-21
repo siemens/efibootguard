@@ -21,7 +21,6 @@ extern int num_fake_devices;
 
 void allocate_fake_devices(int n);
 void add_fake_partition(int devnum);
-void remove_fake_partitions(int n);
 void free_fake_devices(void);
 
 PedDevice *ped_device_get_next_custom_fake(const PedDevice *dev);
