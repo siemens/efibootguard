@@ -15,7 +15,7 @@
 
 #include "smbios.h"
 
-SMBIOS_STRUCTURE_POINTER smbios_find_struct(SMBIOS_STRUCTURE_TABLE *table,
+SMBIOS_STRUCTURE_POINTER smbios_find_struct(SMBIOS_STRUCTURE_TABLE const *table,
 					    UINT16 type)
 {
 	SMBIOS_STRUCTURE_POINTER strct;
