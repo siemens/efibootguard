@@ -58,8 +58,8 @@ typedef struct {
 
 static EFI_LOADED_IMAGE kernel_image;
 
-EFI_PHYSICAL_ADDRESS align_addr(EFI_PHYSICAL_ADDRESS ptr,
-				EFI_PHYSICAL_ADDRESS align)
+static EFI_PHYSICAL_ADDRESS align_addr(EFI_PHYSICAL_ADDRESS ptr,
+				       EFI_PHYSICAL_ADDRESS align)
 {
 	return (ptr + align - 1) & ~(align - 1);
 }
