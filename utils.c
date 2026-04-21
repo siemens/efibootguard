@@ -40,7 +40,7 @@ static BOOLEAN IsOnBootMedium(EFI_DEVICE_PATH *dp)
 	return result;
 }
 
-CHAR16 *get_volume_label(EFI_FILE_HANDLE fh)
+static CHAR16 *get_volume_label(EFI_FILE_HANDLE fh)
 {
 	EFI_FILE_SYSTEM_INFO *fsi;
 	EFI_GUID fsiGuid = EFI_FILE_SYSTEM_INFO_ID;
@@ -60,7 +60,7 @@ CHAR16 *get_volume_label(EFI_FILE_HANDLE fh)
 	return fsi->VolumeLabel;
 }
 
-CHAR16 *get_volume_custom_label(EFI_FILE_HANDLE fh)
+static CHAR16 *get_volume_custom_label(EFI_FILE_HANDLE fh)
 {
 	EFI_STATUS status;
 	EFI_FILE_HANDLE tmp;

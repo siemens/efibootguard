@@ -34,7 +34,6 @@ extern CHAR16 *boot_medium_path;
 
 typedef enum { DOSFSLABEL, CUSTOMLABEL, NOLABEL } LABELMODE;
 
-CHAR16 *get_volume_label(EFI_FILE_HANDLE fh);
 EFI_STATUS get_volumes(VOLUME_DESC **volumes, UINTN *count);
 EFI_STATUS close_volumes(VOLUME_DESC *volumes, UINTN count);
 EFI_DEVICE_PATH *FileDevicePathFromConfig(EFI_HANDLE device,
