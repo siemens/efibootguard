@@ -80,8 +80,12 @@ build_tmp=$(mktemp -d)
 # files are provided. Compare 'cppcheck --help'.
 cppcheck -f -q --error-exitcode=2 \
     -j $(ncpus) --cppcheck-build-dir="$build_tmp" \
-    $enable $suppress $ignore $cpp_conf $includes $path "$@"
+    $enable $suppress $ignore $cpp_conf $includes $path "$@" \
+    2>&1 | tee "$build_tmp/output.log"
 res=$?
+if [ $res -eq 0 ]; then
+    [ $(stat -c %s "$build_tmp/output.log") -eq 0 ] || res=1
+fi
 
 rm -r "$build_tmp"
 exit $res
