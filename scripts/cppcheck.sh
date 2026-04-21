@@ -25,32 +25,38 @@ suppress+=" --suppress=*:/usr/include/bits/*"
 # Function 'efi_main' is called by efi:
 suppress+=" --suppress=unusedFunction:main.c"
 suppress+=" --suppress=unusedFunction:kernel-stub/main.c"
+# Usage of register_driver is not understood:
+suppress+=" --suppress=unusedFunction:drivers/watchdog/wdat.c"
 # Some functions are defined for API only
-suppress+=" --suppress=unusedFunction:utils.c"
 suppress+=" --suppress=unusedFunction:env/env_api.c"
 suppress+=" --suppress=unusedFunction:env/fatvars.c"
+# False positive, ped_device_get_next_custom_fake is used for testing
 suppress+=" --suppress=unusedFunction:tools/tests/fake_devices.c"
-suppress+=" --suppress=unusedFunction:tools/tests/test_environment.c"
-suppress+=" --suppress=unusedFunction:env/env_api_fat.c"
-# Some functions are used by linker wrapping
-suppress+=" --suppress=unusedFunction:tools/tests/test_probe_config_file.c"
-suppress+=" --suppress=unusedFunction:tools/tests/test_ebgenv_api.c"
-# False positive on wdfuncs iteration
-suppress+=" --suppress=comparePointers:main.c"
-# False positive on constructors, first hit
-suppress+=" --suppress=unusedFunction:drivers/watchdog/amdfch_wdt.c"
-# False positive, noreturn is not recognized
-suppress+=" --suppress=nullPointerRedundantCheck:kernel-stub/main.c"
 # Avoid noise regarding Ignore* or otherwise unused fields
 suppress+=" --suppress=unusedStructMember:kernel-stub/main.c"
 suppress+=" --suppress=unusedStructMember:kernel-stub/fdt.c"
 # Not applicable because of API requirements
+suppress+=" --suppress=constParameterPointer:drivers/watchdog/ipcbx21a.c"
 suppress+=" --suppress=constParameterPointer:drivers/watchdog/ipc4x7e_wdt.c"
 suppress+=" --suppress=constParameterPointer:drivers/watchdog/w83627hf_wdt.c"
+suppress+=" --suppress=constParameterPointer:env/env_api.c"
 # Not applicable because of API requirements
 suppress+=" --suppress=constParameterCallback:kernel-stub/initrd.c"
 
-enable="--enable=warning \
+# Suppressions only needed for older cppcheck
+if [ $( (cppcheck --version | cut -d' ' -f2; echo "2.17") | sort -V | head -1 ) != "2.17" ]; then
+    # Some functions are used by linker wrapping
+    suppress+=" --suppress=unusedFunction:tools/tests/test_probe_config_file.c"
+    suppress+=" --suppress=unusedFunction:tools/tests/test_ebgenv_api.c"
+    # Unclear reasons
+    suppress+=" --suppress=unusedFunction:tools/fat.c"
+    suppress+=" --suppress=unusedFunction:tools/tests/test_uservars.c"
+    suppress+=" --suppress=unusedFunction:tools/tests/test_ebgenv_api.c"
+    suppress+=" --suppress=unusedFunction:tools/tests/test_probe_config_file.c"
+fi
+
+enable="--check-level=exhaustive \
+        --enable=warning \
         --enable=style \
         --enable=performance \
         --enable=portability \
@@ -68,7 +74,14 @@ includes="-I . \
 cpp_conf="-U__WINT_TYPE__ -U__GNUC__"
 path=${1-.}
 
+build_tmp=$(mktemp -d)
+
 # Exit code '1' is returned if arguments are not valid or if no input
 # files are provided. Compare 'cppcheck --help'.
-cppcheck -f -q --error-exitcode=2 $enable $suppress $ignore \
-    $cpp_conf $includes $path "$@"
+cppcheck -f -q --error-exitcode=2 \
+    -j $(ncpus) --cppcheck-build-dir="$build_tmp" \
+    $enable $suppress $ignore $cpp_conf $includes $path "$@"
+res=$?
+
+rm -r "$build_tmp"
+exit $res

@@ -111,7 +111,7 @@ jobs:
         if: ${{ matrix.target == 'cppcheck' }}
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends cppcheck
+          sudo apt-get install --no-install-recommends cppcheck mdm
 
       - name: Prepare build
         run: |
