@@ -427,6 +427,10 @@ START_TEST(ebgenv_api_internal_uservars)
 		}
 	}
 
+	res = bgenv_set(handle, "myvar2", USERVAR_TYPE_STRING_ASCII, "",
+			UINT32_MAX);
+	ck_assert_int_eq(res, -EINVAL);
+
 	write_env_fake.call_count = 0;
 
 	bgenv_close(handle);

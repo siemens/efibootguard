@@ -209,11 +209,14 @@ int bgenv_get_uservar(uint8_t *udata, const char *key, uint64_t *type,
 int bgenv_set_uservar(uint8_t *udata, const char *key, uint64_t type,
 		      const void *data, uint32_t datalen)
 {
-	uint32_t total_size;
+	uint64_t total_size;
 	uint8_t *p;
 
-	total_size = datalen + sizeof(uint64_t) + sizeof(uint32_t) +
+	total_size = (uint64_t)datalen + sizeof(uint64_t) + sizeof(uint32_t) +
 		     strlen(key) + 1;
+	if (total_size > UINT32_MAX) {
+		return -EINVAL;
+	}
 
 	p = bgenv_find_uservar(udata, key);
 	if (p) {
