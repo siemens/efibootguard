@@ -93,6 +93,11 @@ bool bgenv_validate_uservars(uint8_t *udata)
 		uint32_t payload_size;
 		memcpy(&payload_size, udata, sizeof(payload_size));
 
+		/* the payload must not be smaller than the minimal fields */
+		if (payload_size < sizeof(uint32_t) + sizeof(uint64_t)) {
+			return false;
+		}
+
 		/* the payload must leave at least one byte free */
 		if (payload_size >= spaceleft) {
 			return false;
