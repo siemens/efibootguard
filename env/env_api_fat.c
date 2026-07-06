@@ -342,6 +342,14 @@ int bgenv_get(BGENV *env, const char *key, uint64_t *type, void *data,
 		return bgenv_get_uservar(env->data->userdata, key, type, data,
 					 maxlen);
 	}
+	/*
+	 * Callers are not supposed to use bgenv_get via ebg_env_get_ex
+	 * on pre-defined variables. If they do nevertheless, demand
+	 * at least enough space as we are not checking it internally.
+	 */
+	if (maxlen < ENV_STRING_LENGTH+1) {
+		return -EINVAL;
+	}
 	switch (e) {
 	case EBGENV_KERNELFILE:
 		return bgenv_get_string(type, data, env->data->kernelfile);

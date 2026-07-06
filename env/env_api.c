@@ -143,7 +143,7 @@ int ebg_env_open_current(ebgenv_t *e)
 int ebg_env_get(ebgenv_t *e, const char *key, char *buffer)
 {
 	return bgenv_get((BGENV *)e->bgenv, key, NULL, buffer,
-			 ENV_STRING_LENGTH);
+			 ENV_STRING_LENGTH+1);
 }
 
 int ebg_env_get_ex(ebgenv_t *e, const char *key, uint64_t *usertype,

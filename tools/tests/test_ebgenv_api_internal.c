@@ -285,7 +285,7 @@ START_TEST(ebgenv_api_internal_bgenv_get)
 	handle->data->ustate = USTATE_INSTALLED;
 
 	char *data = NULL;
-	char buffera[22];
+	char buffera[ENV_STRING_LENGTH+1];
 	int res;
 
 	/* Test if bgenv_get fails if maxlen is set to 0
@@ -311,14 +311,14 @@ START_TEST(ebgenv_api_internal_bgenv_get)
 
 	/* Test if bgenv_get returns the correct value
 	 */
-	res = bgenv_get(handle, "kernelfile", NULL, buffera, res);
+	res = bgenv_get(handle, "kernelfile", NULL, buffera, sizeof(buffera));
 	ck_assert_int_eq(res, 0);
 	ck_assert_int_eq(strcmp(buffera, test_strings[0]), 0);
 
 	res = bgenv_get(handle, "kernelparams", NULL, NULL, 1000);
 	ck_assert_int_eq(res, strlen(test_strings[1]) + 1);
 
-	res = bgenv_get(handle, "kernelparams", NULL, buffera, res);
+	res = bgenv_get(handle, "kernelparams", NULL, buffera, sizeof(buffera));
 	ck_assert_int_eq(res, 0);
 	ck_assert_int_eq(strcmp(buffera, test_strings[1]), 0);
 
