@@ -15,6 +15,15 @@ if BUILD_TESTS
 
 OBJCOPY ?= objcopy
 
+# The test suite mocks internal functions by weakening their symbols with
+# objcopy (see libenvapi_testlib_fat.a rule below) so test-provided fake
+# implementations can override them at link time. LTO resolves symbols from
+# GIMPLE bytecode ignoring this post-hoc weakening, which causes "multiple
+# definition" link errors. Append -fno-lto flag to force LTO off for
+# this test directory so the weak-symbol override technique keeps working
+override CFLAGS += -fno-lto
+override LDFLAGS += -fno-lto
+
 AM_CFLAGS = \
 	$(LIBCHECK_CFLAGS) \
 	-I$(top_srcdir)/include \
