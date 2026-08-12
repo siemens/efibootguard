@@ -115,6 +115,11 @@ jobs:
 
       - name: Prepare build
         run: |
+          for CONF in $(find /usr/lib/binfmt.d -name "qemu-*.conf" 2>/dev/null); do
+              if ! [ -f /proc/sys/fs/binfmt_misc/"$(basename "${CONF%%.conf}")" ]; then
+                  sudo sh -c "cat '$CONF' > /proc/sys/fs/binfmt_misc/register"
+              fi
+          done
           autoreconf -fi
           mkdir -p build
 
