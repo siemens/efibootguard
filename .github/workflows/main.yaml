@@ -169,3 +169,8 @@ jobs:
         run: |
           ./configure
           scripts/cppcheck.sh
+
+      - name: Dump test logs
+        if: failure()
+        run: |
+          [ -f build/tools/tests/test-suite.log ] && cat build/tools/tests/test-suite.log
