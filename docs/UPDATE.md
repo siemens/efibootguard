@@ -5,6 +5,10 @@ The number is defined at compile-time.  Each environment has a revision.
 `efibootguard` always loads the latest environment data, which is indicated by
 the highest revision value.
 
+*NOTE*: A wrap-around of the 32-bit revision counter is not handled. This case
+is considered irrelevant for practical scenarios (more than 4 billion
+update cycles).
+
 The structure of the environment data is as follows:
 
 ```c
