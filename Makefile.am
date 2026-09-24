@@ -306,6 +306,10 @@ efi_ldflags = \
 	-L $(GNUEFI_LIB_DIR) \
 	$(GNUEFI_LIB_DIR)/crt0-efi-$(ARCH).o
 
+if ARCH_ARM
+efi_ldflags += --no-wchar-size-warning
+endif
+
 if ARCH_IS_X86
 objcopy_format = --output-target=efi-app-$(ARCH)
 else
