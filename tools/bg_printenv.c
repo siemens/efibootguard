@@ -102,7 +102,7 @@ static void dump_uservars(uint8_t *udata, bool raw)
 			case USERVAR_TYPE_UINT32:
 				val_unum = *((uint32_t *) value);
 				break;
-			case USERVAR_TYPE_UINT64:
+			default: /* USERVAR_TYPE_UINT64 */
 				val_unum = *((uint64_t *) value);
 				break;
 			}
@@ -120,7 +120,7 @@ static void dump_uservars(uint8_t *udata, bool raw)
 			case USERVAR_TYPE_SINT32:
 				val_snum = *((int32_t *) value);
 				break;
-			case USERVAR_TYPE_SINT64:
+			default: /* USERVAR_TYPE_SINT64: */
 				val_snum = *((int64_t *) value);
 				break;
 			}
