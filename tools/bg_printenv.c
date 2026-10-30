@@ -89,7 +89,8 @@ static void dump_uservars(uint8_t *udata, bool raw)
 		fprintf(stdout, "%s", key);
 		type &= USERVAR_STANDARD_TYPE_MASK;
 		if (type == USERVAR_TYPE_STRING_ASCII) {
-			fprintf(stdout, raw ? "=%s\n" : " = %s\n", value);
+			fprintf(stdout, raw ? "=%.*s\n" : " = %.*s\n",
+				(int)dsize, value);
 		} else if (type >= USERVAR_TYPE_UINT8 &&
 			   type <= USERVAR_TYPE_UINT64) {
 			switch(type) {
