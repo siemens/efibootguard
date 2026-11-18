@@ -82,6 +82,9 @@ static void dump_uservars(uint8_t *udata, bool raw)
 	uint32_t rsize, dsize;
 	uint64_t val_unum;
 	int64_t val_snum;
+	int16_t sval16;
+	int32_t sval32;
+	int64_t sval64;
 
 	while (*udata) {
 		bgenv_map_uservar(udata, &key, &type, (uint8_t **)&value,
@@ -98,13 +101,16 @@ static void dump_uservars(uint8_t *udata, bool raw)
 				val_unum = *((uint8_t *) value);
 				break;
 			case USERVAR_TYPE_UINT16:
-				val_unum = *((uint16_t *) value);
+				val_unum = 0;
+				memcpy(&val_unum, value, sizeof(uint16_t));
 				break;
 			case USERVAR_TYPE_UINT32:
-				val_unum = *((uint32_t *) value);
+				val_unum = 0;
+				memcpy(&val_unum, value, sizeof(uint32_t));
 				break;
 			default: /* USERVAR_TYPE_UINT64 */
-				val_unum = *((uint64_t *) value);
+				val_unum = 0;
+				memcpy(&val_unum, value, sizeof(uint64_t));
 				break;
 			}
 			fprintf(stdout, raw ? "=%llu\n" : " = %llu\n",
@@ -116,13 +122,16 @@ static void dump_uservars(uint8_t *udata, bool raw)
 				val_snum = *((int8_t *) value);
 				break;
 			case USERVAR_TYPE_SINT16:
-				val_snum = *((int16_t *) value);
+				memcpy(&sval16, value, sizeof(sval16));
+				val_snum = sval16;
 				break;
 			case USERVAR_TYPE_SINT32:
-				val_snum = *((int32_t *) value);
+				memcpy(&sval32, value, sizeof(sval32));
+				val_snum = sval32;
 				break;
 			default: /* USERVAR_TYPE_SINT64: */
-				val_snum = *((int64_t *) value);
+				memcpy(&sval64, value, sizeof(sval64));
+				val_snum = sval64;
 				break;
 			}
 			fprintf(stdout, raw ? "=%lld\n" : " = %lld\n",
