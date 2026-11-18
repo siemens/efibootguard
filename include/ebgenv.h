@@ -2,7 +2,7 @@
  *
  * EFI Boot Guard
  *
- * Copyright (c) Siemens AG, 2017
+ * Copyright (c) Siemens AG, 2017-2026
  *
  * Authors:
  *  Andreas Reichel <andreas.reichel.ext@siemens.com>
@@ -95,6 +95,8 @@ int ebg_env_open_current(ebgenv_t *e);
  *  @return If buffer != NULL: 0 on success, -errno on failure
  *          If buffer == NULL: needed buffer size, -ENOENT if variable
  *                             is not found.
+ *  @note Callers must not assume that string-typed values are properly
+ *        null-terminated
  */
 int ebg_env_get(ebgenv_t *e, const char *key, char* buffer);
 
@@ -124,6 +126,8 @@ int ebg_env_set_ex(ebgenv_t *e, const char *key, uint64_t datatype,
  *  @param buffer destination for data to be stored into the variable
  *  @param maxlen size of provided buffer
  *  @return 0 on success, -errno on failure
+ *  @note Callers must not assume that string-typed values are properly
+ *        null-terminated
  */
 int ebg_env_get_ex(ebgenv_t *e, const char *key, uint64_t *datatype,
 		   uint8_t *buffer, uint32_t maxlen);
