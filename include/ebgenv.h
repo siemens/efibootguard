@@ -30,7 +30,7 @@
 #define USERVAR_TYPE_SINT32		8
 #define USERVAR_TYPE_SINT64		9
 #define USERVAR_TYPE_STRING_ASCII      32
-#define USERVAR_TYPE_BOOL	       64
+#define USERVAR_TYPE_BOOL	       64	/* evaluated as single byte */
 #define USERVAR_TYPE_DELETED  (1ULL << 63)
 #define USERVAR_TYPE_DEFAULT		0
 
