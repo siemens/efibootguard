@@ -64,8 +64,10 @@ void bgenv_map_uservar(uint8_t *udata, char **key, uint64_t *type, uint8_t **val
 
 	/* Calculate the data size */
 	if (data_size) {
-		*data_size = *payload_size - sizeof(uint32_t) -
-			     sizeof(uint64_t);
+		uint32_t size;
+
+		memcpy(&size, payload_size, sizeof(size));
+		*data_size = size - sizeof(uint32_t) - sizeof(uint64_t);
 	}
 	/* Get the pointer to the data field */
 	data = (uint8_t *)var_type + sizeof(uint64_t);
