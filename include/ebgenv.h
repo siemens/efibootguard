@@ -93,7 +93,7 @@ int ebg_env_open_current(ebgenv_t *e);
  *  @param buffer pointer to buffer containing requested value.
  *         If buffer is NULL, return needed buffer size.
  *  @return If buffer != NULL: 0 on success, -errno on failure
- *          If buffer == NULL: needed buffer size, 0 if variable
+ *          If buffer == NULL: needed buffer size, -ENOENT if variable
  *                             is not found.
  *  @note: Callers must not assume that string-typed values are properly
  *         null-terminated
