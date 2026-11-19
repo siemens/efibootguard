@@ -74,6 +74,11 @@ bool validate_envdata(BG_ENVDATA *data)
 		clear_envdata(data);
 		return false;
 	}
+
+	/* enforce NULL-termination of strings */
+	data->kernelfile[ENV_STRING_LENGTH - 1] = 0;
+	data->kernelparams[ENV_STRING_LENGTH - 1] = 0;
+
 	return true;
 }
 
@@ -116,10 +121,6 @@ bool read_env(CONFIG_PART *part, BG_ENVDATA *env)
 		clear_envdata(env);
 		return false;
 	}
-
-	/* enforce NULL-termination of strings */
-	env->kernelfile[ENV_STRING_LENGTH - 1] = 0;
-	env->kernelparams[ENV_STRING_LENGTH - 1] = 0;
 
 	return validate_envdata(env);
 }
