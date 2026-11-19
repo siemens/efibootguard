@@ -76,6 +76,29 @@ void bgenv_map_uservar(uint8_t *udata, char **key, uint64_t *type, uint8_t **val
 	}
 }
 
+static uint32_t bgenv_uservar_type_size(uint64_t type)
+{
+	switch (type) {
+	case USERVAR_TYPE_CHAR:
+	case USERVAR_TYPE_UINT8:
+	case USERVAR_TYPE_SINT8:
+	case USERVAR_TYPE_STRING_ASCII: /* only minimal size */
+	case USERVAR_TYPE_BOOL:
+		return 1;
+	case USERVAR_TYPE_UINT16:
+	case USERVAR_TYPE_SINT16:
+		return 2;
+	case USERVAR_TYPE_UINT32:
+	case USERVAR_TYPE_SINT32:
+		return 4;
+	case USERVAR_TYPE_UINT64:
+	case USERVAR_TYPE_SINT64:
+		return 8;
+	default: /* unknown type */
+		return 0;
+	}
+}
+
 bool bgenv_validate_uservars(uint8_t *udata)
 {
 	uint32_t spaceleft = ENV_MEM_USERVARS;
@@ -102,6 +125,14 @@ bool bgenv_validate_uservars(uint8_t *udata)
 
 		/* the payload must leave at least one byte free */
 		if (payload_size >= spaceleft) {
+			return false;
+		}
+
+		uint64_t type;
+		memcpy(&type, udata + sizeof(uint32_t), sizeof(type));
+		/* the payload length must also match the minimal type size */
+		if (payload_size < sizeof(uint32_t) + sizeof(uint64_t) +
+				   bgenv_uservar_type_size(type)) {
 			return false;
 		}
 
@@ -218,6 +249,11 @@ int bgenv_set_uservar(uint8_t *udata, const char *key, uint64_t type,
 {
 	uint64_t total_size;
 	uint8_t *p;
+
+	if ((type & USERVAR_TYPE_DELETED) == 0 &&
+	    bgenv_uservar_type_size(type) > datalen) {
+		return -EINVAL;
+	}
 
 	total_size = (uint64_t)datalen + sizeof(uint64_t) + sizeof(uint32_t) +
 		     strlen(key) + 1;
