@@ -52,7 +52,8 @@ START_TEST(ebgenv_api_internal_strXtoY)
 
 	/* Test conversion from ASCII bits to 16 bit encoding
 	 */
-	resw = str8to16(bufferw, input);
+	resw = str8to16(bufferw, input, sizeof(bufferw));
+	ck_assert(resw);
 
 	/* cannot use glibc for 16-bit wchar_t
 	 * string compare since glibc has 32-bit wchar_t
@@ -63,7 +64,8 @@ START_TEST(ebgenv_api_internal_strXtoY)
 
 	/* Test conversion from 16 bit encoding to ASCII
 	 */
-	res = str16to8(buffer, exp_res);
+	res = str16to8(buffer, exp_res, sizeof(buffer));
+	ck_assert(res);
 
 	ck_assert(strcmp(res, input) == 0);
 }
@@ -277,8 +279,8 @@ START_TEST(ebgenv_api_internal_bgenv_get)
 
 	for (int i = 0; i < sizeof(test_strings)/sizeof(void*); i++)
 	{
-		memcpy(dests[i], str8to16(buffer, test_strings[i]),
-		       strlen(test_strings[i]) * 2 + 2);
+		ck_assert(str8to16(buffer, test_strings[i], sizeof(buffer)));
+		memcpy(dests[i], buffer, strlen(test_strings[i]) * 2 + 2);
 	}
 	handle->data->watchdog_timeout_sec = 44;
 	handle->data->revision = 10000;
@@ -350,7 +352,9 @@ START_TEST(ebgenv_api_internal_bgenv_set)
 	ck_assert_int_eq(res, 0);
 
 	char buffer[8];
-	const char *kfile = str16to8(buffer, handle->data->kernelfile);
+	const char *kfile = str16to8(buffer, handle->data->kernelfile,
+				     sizeof(buffer));
+	ck_assert(kfile);
 
 	ck_assert(strcmp(kfile, "vmlinuz") == 0);
 
@@ -365,7 +369,9 @@ START_TEST(ebgenv_api_internal_bgenv_set)
 	res = bgenv_set(handle, "kernelparams", 0, "root=", 6);
 	ck_assert_int_eq(res, 0);
 
-	const char *kparm = str16to8(buffer, handle->data->kernelparams);
+	const char *kparm = str16to8(buffer, handle->data->kernelparams,
+				     sizeof(buffer));
+	ck_assert(kparm);
 
 	ck_assert(strcmp(kparm, "root=") == 0);
 

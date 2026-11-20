@@ -144,10 +144,10 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 
 		envdata[ENV_NUM_CONFIG_PARTS-1].watchdog_timeout_sec =
 			watchdogtimeout;
-		(void)str8to16(bufferw, kernelfile);
+		ck_assert(str8to16(bufferw, kernelfile, sizeof(bufferw)));
 		memcpy(envdata[ENV_NUM_CONFIG_PARTS-1].kernelfile, bufferw,
 		       strlen(kernelfile) * 2 + 2);
-		(void)str8to16(bufferw, kernelparams);
+		ck_assert(str8to16(bufferw, kernelparams, sizeof(bufferw)));
 		memcpy(envdata[ENV_NUM_CONFIG_PARTS-1].kernelparams, bufferw,
 		       strlen(kernelparams) * 2 + 2);
 	} else {
@@ -172,9 +172,11 @@ START_TEST(ebgenv_api_ebg_env_create_new)
 	ck_assert_int_eq(((BGENV *)e.bgenv)->data->ustate, USTATE_OK);
 	ck_assert_int_eq(((BGENV *)e.bgenv)->data->watchdog_timeout_sec,
 			 watchdogtimeout);
-	(void)str16to8(buffer, ((BGENV *)e.bgenv)->data->kernelfile);
+	ck_assert(str16to8(buffer, ((BGENV *)e.bgenv)->data->kernelfile,
+			   sizeof(buffer)));
 	ck_assert_int_eq(strcmp(buffer, kernelfile), 0);
-	(void)str16to8(buffer, ((BGENV *)e.bgenv)->data->kernelparams);
+	ck_assert(str16to8(buffer, ((BGENV *)e.bgenv)->data->kernelparams,
+			   sizeof(buffer)));
 	ck_assert_int_eq(strcmp(buffer, kernelparams), 0);
 
 	(void)ebg_env_close(&e);
