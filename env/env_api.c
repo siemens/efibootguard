@@ -30,11 +30,21 @@ ebgenv_opts_t ebgenv_opts;
  * Thus, the needed conversion by truncation function is
  * reimplemented here.
  */
-char *str16to8(char *buffer, const char16_t *src)
+char *str16to8(char *buffer, const char16_t *src, size_t buffer_size)
 {
 	if (!src || !buffer) {
 		return NULL;
 	}
+
+	const char16_t *s = src;
+	while (buffer_size > 0 && *s) {
+		s++;
+		buffer_size -= sizeof(*buffer);
+	}
+	if (buffer_size == 0) {
+		return NULL;
+	}
+
 	char *tmp = buffer;
 	while (*src) {
 		*buffer = (char)*src;
@@ -45,11 +55,17 @@ char *str16to8(char *buffer, const char16_t *src)
 	return tmp;
 }
 
-char16_t *str8to16(char16_t *buffer, const char *src)
+char16_t *str8to16(char16_t *buffer, const char *src, size_t buffer_size)
 {
 	if (!src || !buffer) {
 		return NULL;
 	}
+
+	size_t len = buffer_size / sizeof(*buffer);
+	if (strnlen(src, len) == len) {
+		return NULL;
+	}
+
 	char16_t *tmp = buffer;
 	while (*src) {
 		*buffer = (char16_t)*src;
