@@ -78,7 +78,8 @@ check_PROGRAMS = test_bgenv_init_retval \
 		 test_ebgenv_api_internal \
 		 test_ebgenv_api \
 		 test_uservars \
-		 test_fat
+		 test_fat \
+		 test_ebgpart
 
 FAT_TESTLIB=libenvapi_testlib_fat.a
 
@@ -116,6 +117,10 @@ test_uservars_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
 test_fat_CFLAGS = $(AM_CFLAGS)
 test_fat_SOURCES = test_fat.c $(SRC_TEST_COMMON)
 test_fat_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
+
+test_ebgpart_CFLAGS = $(AM_CFLAGS)
+test_ebgpart_SOURCES = test_ebgpart.c $(SRC_TEST_COMMON)
+test_ebgpart_LDADD = $(FAT_TESTLIB) $(LIBCHECK_LIBS)
 
 TESTS = $(check_PROGRAMS)
 
