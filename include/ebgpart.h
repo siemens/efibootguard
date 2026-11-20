@@ -141,3 +141,6 @@ PedPartition *ped_disk_next_partition(const PedDisk *pd,
 				      const PedPartition *part);
 
 void ebgpart_beverbose(bool v);
+
+/* internal, exposed for unit tests */
+bool check_partition_table(PedDevice *dev);

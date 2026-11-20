@@ -250,7 +250,7 @@ static void scanLogicalVolumes(int fd, off64_t extended_start_LBA,
 	VERBOSE(stderr, "Too many extended boot records, ignoring the rest\n");
 }
 
-static bool check_partition_table(PedDevice *dev)
+bool check_partition_table(PedDevice *dev)
 {
 	int fd;
 	struct Masterbootrecord mbr;
