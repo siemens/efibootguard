@@ -336,7 +336,7 @@ static bool check_partition_table(PedDevice *dev)
 			scanLogicalVolumes(fd, 0, &mbr, i, tmp, 5);
 			/* Could be we still have MBR entries after
 			 * logical volumes */
-			while ((*list_end)->next) {
+			while (*list_end) {
 				list_end = &((*list_end)->next);
 			}
 		} else {
