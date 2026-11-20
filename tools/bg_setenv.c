@@ -180,22 +180,22 @@ static error_t parse_setenv_opt(int key, char *arg, struct argp_state *state)
 
 	switch (key) {
 	case 'k':
-		if (strlen(arg) > ENV_STRING_LENGTH) {
+		if (strlen(arg) >= ENV_STRING_LENGTH) {
 			fprintf(stderr, "Error, kernel filename is too long. "
 					"Maximum of %d "
 					"characters permitted.\n",
-				ENV_STRING_LENGTH);
+				ENV_STRING_LENGTH - 1);
 			return 1;
 		}
 		e = journal_add_action(ENV_TASK_SET, "kernelfile", 0,
 				       (uint8_t *)arg, strlen(arg) + 1);
 		break;
 	case 'a':
-		if (strlen(arg) > ENV_STRING_LENGTH) {
+		if (strlen(arg) >= ENV_STRING_LENGTH) {
 			fprintf(stderr,
 				"Error, kernel arguments string is too long. "
 				"Maximum of %d characters permitted.\n",
-				ENV_STRING_LENGTH);
+				ENV_STRING_LENGTH - 1);
 			return 1;
 		}
 		e = journal_add_action(ENV_TASK_SET, "kernelparams", 0,

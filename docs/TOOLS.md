@@ -38,8 +38,8 @@ The `--update` parameter tells `bg_setenv` to automatically overwrite the
 configuration with the lowest revision and sets its revision value to the
 highest. Hence, the oldest revision becomes the latest.
 
-*NOTE*: Environment variables are limited to 255 characters as stated in
-`include/envdata.h`.
+*NOTE*: Environment variables are limited to 254 characters (plus terminating
+null) as stated in `include/envdata.h`.
 
 To overwrite a given configuration, specified by a fixed zero-based `config
 partition` number, i.e. `4`, execute:
