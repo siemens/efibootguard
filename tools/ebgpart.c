@@ -24,6 +24,12 @@ static PedDevice *first_device = NULL;
 static PedDisk g_ped_dummy_disk;
 static char buffer[37];
 
+/*
+ * Linux registers at most DISK_MAX_PARTS - 1 partitions per disk, so higher
+ * partition numbers can never be accessed via a device node.
+ */
+#define MAX_PARTITION_NUM 255
+
 static bool verbosity = false;
 
 void ebgpart_beverbose(bool v)
@@ -139,6 +145,12 @@ static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
 	off64_t offset;
 	struct EFIpartitionentry e;
 	PedPartition *tmpp;
+
+	if (num > MAX_PARTITION_NUM) {
+		VERBOSE(stdout, "Only scanning the first %d of %u entries\n",
+			MAX_PARTITION_NUM, num);
+		num = MAX_PARTITION_NUM;
+	}
 
 	offset = LB_SIZE * table_LBA;
 	if (lseek64(fd, offset, SEEK_SET) != offset) {
