@@ -76,8 +76,9 @@ typedef struct gc_item {
 
 extern void bgenv_be_verbose(bool v);
 
-extern char *str16to8(char *buffer, const char16_t *src);
-extern char16_t *str8to16(char16_t *buffer, const char *src);
+extern char *str16to8(char *buffer, const char16_t *src, size_t buffer_size);
+extern char16_t *str8to16(char16_t *buffer, const char *src,
+			  size_t buffer_size);
 
 extern uint32_t bgenv_crc32(uint32_t, const void *, size_t);
 

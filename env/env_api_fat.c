@@ -306,7 +306,9 @@ static int bgenv_get_string(uint64_t *type, void *data, const char16_t *srcstr)
 {
 	char buffer[ENV_STRING_LENGTH];
 
-	str16to8(buffer, srcstr);
+	if (!str16to8(buffer, srcstr, sizeof(buffer))) {
+		return -EINVAL;
+	}
 	if (!data) {
 		return strlen(buffer)+1;
 	}
@@ -422,10 +424,16 @@ int bgenv_set(BGENV *env, const char *key, uint64_t type, const void *data,
 		env->data->revision = val;
 		break;
 	case EBGENV_KERNELFILE:
-		str8to16(env->data->kernelfile, value);
+		if (!str8to16(env->data->kernelfile, value,
+			      sizeof(env->data->kernelfile))) {
+			return -EINVAL;
+		}
 		break;
 	case EBGENV_KERNELPARAMS:
-		str8to16(env->data->kernelparams, value);
+		if (!str8to16(env->data->kernelparams, value,
+			      sizeof(env->data->kernelparams))) {
+			return -EINVAL;
+		}
 		break;
 	case EBGENV_WATCHDOG_TIMEOUT_SEC:
 		val = bgenv_convert_to_long(value);

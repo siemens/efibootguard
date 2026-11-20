@@ -178,7 +178,12 @@ void dump_env(BG_ENVDATA *env, const struct fields *output_fields, bool raw)
 		}
 	}
 	if (output_fields->kernel) {
-		const char *kernelfile = str16to8(buffer, env->kernelfile);
+		const char *kernelfile = str16to8(buffer, env->kernelfile,
+						  sizeof(buffer));
+		if (!kernelfile) {
+			fprintf(stderr, "invalid env!\n");
+			return;
+		}
 		if (raw) {
 			fprintf(stdout, "KERNEL=%s\n", kernelfile);
 		} else {
@@ -186,7 +191,12 @@ void dump_env(BG_ENVDATA *env, const struct fields *output_fields, bool raw)
 		}
 	}
 	if (output_fields->kernelargs) {
-		const char *kernelargs = str16to8(buffer, env->kernelparams);
+		const char *kernelargs = str16to8(buffer, env->kernelparams,
+						  sizeof(buffer));
+		if (!kernelargs) {
+			fprintf(stderr, "invalid env!\n");
+			return;
+		}
 		if (raw) {
 			fprintf(stdout, "KERNELARGS=%s\n", kernelargs);
 		} else {
