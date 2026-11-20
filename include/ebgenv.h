@@ -112,8 +112,10 @@ int ebg_env_set(ebgenv_t *e, const char *key, const char *value);
  *  @param e A pointer to an ebgenv_t context.
  *  @param key name of the environment variable to set
  *  @param user specific or predefined datatype of the value
- *  @param value arbitrary data to be stored into the variable
- *  @param datalen length of the data to be stored into the variable
+ *  @param value arbitrary data to be stored into the variable, built-in
+ *         variables and USERVAR_TYPE_STRING_ASCII must be passed as strings
+ *  @param datalen length of the data to be stored into the variable, including
+ *         terminating null for values that are interpreted as strings
  *  @return 0 on success, -errno on failure
  */
 int ebg_env_set_ex(ebgenv_t *e, const char *key, uint64_t datatype,
