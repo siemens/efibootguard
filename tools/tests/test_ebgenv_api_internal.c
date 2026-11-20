@@ -400,7 +400,7 @@ START_TEST(ebgenv_api_internal_bgenv_set)
 
 	ck_assert(strcmp(kfile, "vmlinuz") == 0);
 
-	res = bgenv_set(handle, "watchdog_timeout_sec", 0, "-0", 2);
+	res = bgenv_set(handle, "watchdog_timeout_sec", 0, "-0", 3);
 	ck_assert_int_eq(res, 0);
 	ck_assert_int_eq(handle->data->watchdog_timeout_sec, 0);
 
