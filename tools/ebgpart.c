@@ -168,7 +168,7 @@ static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
 		}
 		if (memcmp(e.type_GUID, unused_type_GUID,
 			   sizeof(e.type_GUID)) == 0) {
-			return;
+			continue;
 		}
 		VERBOSE(stdout, "%u: %s\n", i, GUID_to_str(e.type_GUID));
 
