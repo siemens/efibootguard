@@ -379,11 +379,14 @@ int bgenv_get(BGENV *env, const char *key, uint64_t *type, void *data,
 	}
 }
 
-static long bgenv_convert_to_long(const char *value)
+static long bgenv_convert_to_long(const char *value, uint32_t datalen)
 {
 	long val;
 	char *p;
 
+	if (strnlen(value, datalen) == datalen) {
+		return -EINVAL;
+	}
 	errno = 0;
 	val = strtol(value, &p, 10);
 	if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) ||
@@ -417,40 +420,42 @@ int bgenv_set(BGENV *env, const char *key, uint64_t type, const void *data,
 	}
 	switch (e) {
 	case EBGENV_REVISION:
-		val = bgenv_convert_to_long(value);
+		val = bgenv_convert_to_long(value, datalen);
 		if (val < 0) {
 			return -EINVAL;
 		}
 		env->data->revision = val;
 		break;
 	case EBGENV_KERNELFILE:
-		if (!str8to16(env->data->kernelfile, value,
+		if (strnlen(value, datalen) == datalen ||
+		    !str8to16(env->data->kernelfile, value,
 			      sizeof(env->data->kernelfile))) {
 			return -EINVAL;
 		}
 		break;
 	case EBGENV_KERNELPARAMS:
-		if (!str8to16(env->data->kernelparams, value,
+		if (strnlen(value, datalen) == datalen ||
+		    !str8to16(env->data->kernelparams, value,
 			      sizeof(env->data->kernelparams))) {
 			return -EINVAL;
 		}
 		break;
 	case EBGENV_WATCHDOG_TIMEOUT_SEC:
-		val = bgenv_convert_to_long(value);
+		val = bgenv_convert_to_long(value, datalen);
 		if (val < 0) {
 			return -EINVAL;
 		}
 		env->data->watchdog_timeout_sec = val;
 		break;
 	case EBGENV_USTATE:
-		val = bgenv_convert_to_long(value);
+		val = bgenv_convert_to_long(value, datalen);
 		if (val < 0) {
 			return -EINVAL;
 		}
 		env->data->ustate = val;
 		break;
 	case EBGENV_IN_PROGRESS:
-		val = bgenv_convert_to_long(value);
+		val = bgenv_convert_to_long(value, datalen);
 		if (val < 0) {
 			return -EINVAL;
 		}

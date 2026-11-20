@@ -251,7 +251,9 @@ int bgenv_set_uservar(uint8_t *udata, const char *key, uint64_t type,
 	uint8_t *p;
 
 	if ((type & USERVAR_TYPE_DELETED) == 0 &&
-	    bgenv_uservar_type_size(type) > datalen) {
+	    (bgenv_uservar_type_size(type) > datalen ||
+	     (type == USERVAR_TYPE_STRING_ASCII &&
+	      strnlen(data, datalen) == datalen))) {
 		return -EINVAL;
 	}
 
