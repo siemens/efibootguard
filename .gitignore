@@ -38,6 +38,7 @@ tools/tests/test_environment
 tools/tests/test_api
 tools/tests/test_uservars
 tools/tests/test_fat
+tools/tests/test_ebgpart
 tools/tests/*.log
 tools/tests/*.trs
 
