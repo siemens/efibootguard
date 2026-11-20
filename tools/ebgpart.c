@@ -292,6 +292,19 @@ static bool check_partition_table(PedDevice *dev)
 				efihdr.partitions);
 			VERBOSE(stdout, "Partition Table @ LBA %llu\n",
 				(unsigned long long)efihdr.partitiontable_LBA);
+			if (memcmp(efihdr.signature, GPT_HEADER_SIGNATURE,
+				   sizeof(efihdr.signature)) != 0) {
+				VERBOSE(stderr,
+					"Invalid GPT header signature\n");
+				break;
+			}
+			if (efihdr.partitionentrysize !=
+			    sizeof(struct EFIpartitionentry)) {
+				VERBOSE(stderr,
+					"Unsupported GPT entry size: %u\n",
+					efihdr.partitionentrysize);
+				break;
+			}
 			read_GPT_entries(fd, efihdr.partitiontable_LBA,
 					 efihdr.partitions, dev);
 			break;
