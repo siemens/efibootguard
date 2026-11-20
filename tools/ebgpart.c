@@ -151,6 +151,7 @@ static inline EbgFileSystemType fat_size_to_fs_type(int fat_size)
 static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
 			     PedDevice *dev)
 {
+	static const uint8_t unused_type_GUID[16];
 	off64_t offset;
 	struct EFIpartitionentry e;
 	PedPartition *tmpp;
@@ -169,8 +170,8 @@ static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
 			VERBOSE(stderr, "(%s)\n", strerror(errno));
 			return;
 		}
-		if ((*((uint64_t *)&e.type_GUID[0]) == 0) &&
-		    (*((uint64_t *)&e.type_GUID[8]) == 0)) {
+		if (memcmp(e.type_GUID, unused_type_GUID,
+			   sizeof(e.type_GUID)) == 0) {
 			return;
 		}
 		VERBOSE(stdout, "%u: %s\n", i, GUID_to_str(e.type_GUID));
