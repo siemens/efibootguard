@@ -94,33 +94,17 @@ static int check_GPT_FAT_entry(int fd, const struct EFIpartitionentry *e)
 	}
 	VERBOSE(stdout, "GPT Partition has a FAT/NTFS GUID\n");
 
-	/* Save current file offset */
-	off64_t curr = lseek64(fd, 0, SEEK_CUR);
-	if (curr == -1) {
-		VERBOSE(stderr, "Error getting current seek position: %s\n",
-			strerror(errno));
+	if (e->start_LBA > INT64_MAX / LB_SIZE) {
+		VERBOSE(stderr, "Invalid partition start\n");
 		return -1;
 	}
 
-	/* seek to partition start */
-	off64_t offset_start = (off64_t)e->start_LBA * LB_SIZE;
-	if (lseek64(fd, offset_start, SEEK_SET) == -1) {
-		VERBOSE(stderr, "Error seeking to partition start: %s\n",
-			strerror(errno));
-		return -1;
-	}
-
-	/* read FAT header */
+	/* read FAT header from partition start */
 	struct fat_boot_sector header;
-	if (read(fd, &header, sizeof(header)) != sizeof(header)) {
+	off64_t offset_start = (off64_t)e->start_LBA * LB_SIZE;
+	if (pread64(fd, &header, sizeof(header), offset_start) !=
+	    sizeof(header)) {
 		VERBOSE(stderr, "Error reading FAT header: %s\n",
-			strerror(errno));
-		return -1;
-	}
-
-	/* restore pos */
-	if (lseek64(fd, curr, SEEK_SET) == -1) {
-		VERBOSE(stderr, "Error restoring seek position (%s)",
 			strerror(errno));
 		return -1;
 	}
@@ -176,20 +160,18 @@ static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
 		}
 		VERBOSE(stdout, "%u: %s\n", i, GUID_to_str(e.type_GUID));
 
+		int result = check_GPT_FAT_entry(fd, &e);
+		if (result < 0) {
+			VERBOSE(stderr, "%u: I/O error, skipping entry\n", i);
+			continue;
+		}
+
 		tmpp = calloc(1, sizeof(PedPartition));
 		if (!tmpp) {
 			VERBOSE(stderr, "Out of memory\n");
 			return;
 		}
 		tmpp->num = i + 1;
-
-		int result = check_GPT_FAT_entry(fd, &e);
-		if (result < 0) {
-			VERBOSE(stderr, "%u: I/O error, skipping device\n", i);
-			free(tmpp);
-			dev->part_list = NULL;
-			continue;
-		}
 		tmpp->fs_type = fat_size_to_fs_type(result);
 
 		*list_end = tmpp;
