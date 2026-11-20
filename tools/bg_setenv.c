@@ -113,8 +113,9 @@ newaction_nomem:
 	return ENOMEM;
 }
 
-static void journal_process_action(BGENV *env, struct env_action *action)
+static error_t journal_process_action(BGENV *env, struct env_action *action)
 {
+	error_t ret = 0;
 	ebgenv_t e;
 	memset(&e, 0, sizeof(ebgenv_t));
 
@@ -126,29 +127,39 @@ static void journal_process_action(BGENV *env, struct env_action *action)
 		if (strcmp(action->key, "ustate") == 0) {
 			const char *arg;
 			int ustate;
-			int ret;
 			e.bgenv = env;
 			arg = (char *)action->data;
 			ustate = parse_int(arg);
 			if (ustate < 0 || ustate > UINT16_MAX) {
 				fprintf(stderr, "Invalid ustate value: %s", arg);
-				return;
+				return EINVAL;
 			}
-			if ((ret = ebg_env_setglobalstate(&e, ustate)) != 0) {
+			if ((ret = -ebg_env_setglobalstate(&e, ustate)) != 0) {
 				fprintf(stderr,
-					"Error setting global state: %s.",
-					strerror(-ret));
+					"Error setting global state: %s\n",
+					strerror(ret));
 			}
-			return;
+		} else {
+			ret = -bgenv_set(env, action->key, action->type,
+					 action->data,
+					 strlen((char *)action->data) + 1);
+			if (ret != 0) {
+				fprintf(stderr,
+					"Error setting variable %s: %s\n",
+					action->key, strerror(ret));
+			}
 		}
-		bgenv_set(env, action->key, action->type, action->data,
-			  strlen((char *)action->data) + 1);
 		break;
 	case ENV_TASK_DEL:
 		VERBOSE(stdout, "Task = DEL, key = %s\n", action->key);
-		bgenv_set(env, action->key, action->type, "", 1);
+		ret = -bgenv_set(env, action->key, action->type, "", 1);
+		if (ret != 0) {
+			fprintf(stderr, "Error deleting variable %s: %s\n",
+				action->key, strerror(ret));
+		}
 		break;
 	}
+	return ret;
 }
 
 static error_t set_uservars(char *arg)
@@ -310,8 +321,10 @@ static error_t parse_setenv_opt(int key, char *arg, struct argp_state *state)
 	return e;
 }
 
-static void update_environment(BGENV *env, bool verbosity)
+static error_t update_environment(BGENV *env, bool verbosity)
 {
+	int result = 0;
+
 	if (verbosity) {
 		fprintf(stdout, "Processing journal...\n");
 	}
@@ -319,7 +332,9 @@ static void update_environment(BGENV *env, bool verbosity)
 	while (!STAILQ_EMPTY(&head)) {
 		struct env_action *action = STAILQ_FIRST(&head);
 
-		journal_process_action(env, action);
+		if (journal_process_action(env, action) != 0) {
+			result = 1;
+		}
 		STAILQ_REMOVE_HEAD(&head, journal);
 		journal_free_action(action);
 	}
@@ -328,6 +343,7 @@ static void update_environment(BGENV *env, bool verbosity)
 		bgenv_crc32(0, env->data,
 			    sizeof(BG_ENVDATA) - sizeof(env->data->crc32));
 
+	return result;
 }
 
 static int dumpenv_to_file(const char *envfilepath, bool verbosity,
@@ -346,7 +362,9 @@ static int dumpenv_to_file(const char *envfilepath, bool verbosity,
 		return 1;
 	}
 
-	update_environment(&env, verbosity);
+	if (update_environment(&env, verbosity) != 0) {
+		return 1;
+	}
 	if (verbosity) {
 		dump_env(env.data, &ALL_FIELDS, false);
 	}
@@ -492,7 +510,10 @@ error_t bg_setenv(int argc, char **argv)
 		}
 	}
 
-	update_environment(env_new, arguments.common.verbosity);
+	if (update_environment(env_new, arguments.common.verbosity) != 0) {
+		result = 1;
+		goto cleanup;
+	}
 
 	if (arguments.common.verbosity) {
 		fprintf(stdout, "New environment data:\n");
