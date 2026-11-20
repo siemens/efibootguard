@@ -191,56 +191,64 @@ static void read_GPT_entries(int fd, uint64_t table_LBA, uint32_t num,
 	}
 }
 
-static void scanLogicalVolumes(int fd, off64_t extended_start_LBA,
-			       struct Masterbootrecord *ebr, int i,
-			       PedPartition *partition, int lognum)
+static bool is_extended_type(uint8_t type)
 {
-	struct Masterbootrecord next_ebr;
+	return type == MBR_TYPE_EXTENDED || type == MBR_TYPE_EXTENDED_LBA;
+}
 
-	off64_t offset = extended_start_LBA + ebr->parttable[i].start_LBA;
-	if (extended_start_LBA == 0) {
-		extended_start_LBA = offset;
-	}
-	VERBOSE(stdout, "Seeking to LBA %llu\n", (unsigned long long)offset);
-	off64_t res = lseek64(fd, offset * LB_SIZE, SEEK_SET);
-	if (res == -1) {
-		VERBOSE(stderr, "(%s)\n", strerror(errno));
-		return;
-	}
-	VERBOSE(stdout, "Seek returned %lld\n", (signed long long)res);
-	if (read(fd, &next_ebr, sizeof(next_ebr)) != sizeof(next_ebr)) {
-		VERBOSE(stderr, "Error reading next EBR (%s)\n",
-			strerror(errno));
-		return;
-	}
-	if (next_ebr.mbrsignature != 0xaa55) {
-		VERBOSE(stderr, "Wrong signature of extended boot record.\n");
-		return;
-	}
+static void scanLogicalVolumes(int fd, off64_t extended_start_LBA,
+			       PedPartition *partition)
+{
+	off64_t ebr_LBA = extended_start_LBA;
+	struct Masterbootrecord ebr;
+	int lognum = 5;
 
-	for (uint8_t j = 0; j < 4; j++) {
-		uint8_t t = next_ebr.parttable[j].partition_type;
-		if (t == 0) {
+	/*
+	 * The first entry of an EBR describes a logical partition, the second
+	 * one links to the next EBR, the others are unused. As the chain may
+	 * be corrupted or even contain loops, follow at most as many EBRs as
+	 * there are logical partition numbers that Linux supports.
+	 */
+	for (int ebrs = 0; ebrs <= MAX_PARTITION_NUM - 5; ebrs++) {
+		VERBOSE(stdout, "Seeking to LBA %llu\n",
+			(unsigned long long)ebr_LBA);
+		off64_t res = lseek64(fd, ebr_LBA * LB_SIZE, SEEK_SET);
+		if (res == -1) {
+			VERBOSE(stderr, "(%s)\n", strerror(errno));
 			return;
 		}
-		if (t == MBR_TYPE_EXTENDED || t == MBR_TYPE_EXTENDED_LBA) {
-			VERBOSE(stdout, "Next EBR found.\n");
-			scanLogicalVolumes(fd, extended_start_LBA, &next_ebr, j,
-					   partition, lognum + 1);
-			continue;
+		VERBOSE(stdout, "Seek returned %lld\n", (signed long long)res);
+		if (read(fd, &ebr, sizeof(ebr)) != sizeof(ebr)) {
+			VERBOSE(stderr, "Error reading next EBR (%s)\n",
+				strerror(errno));
+			return;
 		}
-		partition->next = calloc(1, sizeof(PedPartition));
-		if (!partition->next) {
-			goto scl_out_of_mem;
+		if (ebr.mbrsignature != 0xaa55) {
+			VERBOSE(stderr,
+				"Wrong signature of extended boot record.\n");
+			return;
 		}
-		partition = partition->next;
-		partition->num = lognum;
-		partition->fs_type = type_to_fstype(t);
+
+		uint8_t t = ebr.parttable[0].partition_type;
+		if (t != 0 && !is_extended_type(t)) {
+			partition->next = calloc(1, sizeof(PedPartition));
+			if (!partition->next) {
+				VERBOSE(stderr, "Out of memory\n");
+				return;
+			}
+			partition = partition->next;
+			partition->num = lognum++;
+			partition->fs_type = type_to_fstype(t);
+		}
+
+		const struct MBRentry *link = &ebr.parttable[1];
+		if (!is_extended_type(link->partition_type)) {
+			return;
+		}
+		VERBOSE(stdout, "Next EBR found.\n");
+		ebr_LBA = extended_start_LBA + link->start_LBA;
 	}
-	return;
-scl_out_of_mem:
-	VERBOSE(stderr, "Out of memory\n");
-	free(partition->next);
+	VERBOSE(stderr, "Too many extended boot records, ignoring the rest\n");
 }
 
 static bool check_partition_table(PedDevice *dev)
@@ -333,7 +341,7 @@ static bool check_partition_table(PedDevice *dev)
 
 		if (t == MBR_TYPE_EXTENDED || t == MBR_TYPE_EXTENDED_LBA) {
 			tmp->fs_type = FS_TYPE_EXTENDED;
-			scanLogicalVolumes(fd, 0, &mbr, i, tmp, 5);
+			scanLogicalVolumes(fd, mbr.parttable[i].start_LBA, tmp);
 			/* Could be we still have MBR entries after
 			 * logical volumes */
 			while (*list_end) {
