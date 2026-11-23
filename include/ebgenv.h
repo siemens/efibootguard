@@ -146,7 +146,7 @@ uint16_t ebg_env_getglobalstate(void *reserved);
  *         state is set to a non-zero value.
  *  @param e A pointer to an ebgenv_t context.
  *  @param ustate The global ustate value to set.
- *  @return errno on error, 0 if okay.
+ *  @return -errno on error, 0 if okay.
  */
 int ebg_env_setglobalstate(ebgenv_t *e, uint16_t ustate);
 
