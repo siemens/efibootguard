@@ -403,3 +403,33 @@ KERNELARGS=$args" ]]
     [ "$status" -eq 1 ]
     cmp "$envfile" "$envfile.orig"
 }
+
+@test "bg_setenv reports errors while updating the environment" {
+    local envfile
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
+
+    # negative revisions pass the option parser but fail on update
+    run bg_setenv -f "$envfile" -r -5
+    [ "$status" -eq 1 ]
+    [[ "$output" = "Error setting variable revision: Invalid argument" ]]
+    [ ! -e "$envfile" ]
+
+    create_sample_bgenv "$envfile"
+    cp "$envfile" "$envfile.orig"
+
+    # also the valid changes must not be written
+    run bg_setenv -f "$envfile" -P -k C:BOOTNEW:kernel.efi -r -5
+    [ "$status" -eq 1 ]
+    [[ "$output" = "Error setting variable revision: Invalid argument" ]]
+    cmp "$envfile" "$envfile.orig"
+
+    local uservars_size
+    uservars_size=$(awk '/ ENV_MEM_USERVARS / { print $3 }' config.h)
+
+    # a uservar that cannot fit into the uservar space
+    run bg_setenv -f "$envfile" -P \
+        -x "big=$(repeat_char x $((uservars_size - 16)))"
+    [ "$status" -eq 1 ]
+    [[ "$output" = "Error setting variable big: Cannot allocate memory" ]]
+    cmp "$envfile" "$envfile.orig"
+}
