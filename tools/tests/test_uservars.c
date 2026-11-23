@@ -43,15 +43,17 @@ START_TEST(bgenv_get_from_manipulated)
 				  value_len);
 		/* get position of payload size */
 		char *var_key = (char *)bgenv_find_uservar(data.userdata, key);
-		uint32_t *payload_size =
-			(uint32_t *)(var_key + strlen(var_key) + 1);
+		void *payload_size = var_key + strlen(var_key) + 1;
+		uint32_t payload_val;
+		memcpy(&payload_val, payload_size, sizeof(payload_val));
 		/* sanity check */
-		ck_assert_int_eq(*payload_size, sizeof(uint32_t) +
-							sizeof(uint64_t) +
-							value_len);
+		ck_assert_int_eq(payload_val, sizeof(uint32_t) +
+					      sizeof(uint64_t) +
+					      value_len);
 
 		/* manipulate payload_size */
-		*payload_size = UINT32_MAX;
+		payload_val = UINT32_MAX;
+		memcpy(payload_size, &payload_val, sizeof(payload_val));
 		/* fix checksum */
 		data.crc32 =
 			bgenv_crc32(0, &data,
