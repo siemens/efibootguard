@@ -22,6 +22,8 @@
 
 DEFINE_FFF_GLOBALS;
 
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
 static char *devpath = "/dev/nobrain";
 
 Suite *ebg_test_suite(void);
@@ -487,6 +489,66 @@ START_TEST(ebgenv_api_internal_bgenv_string_length)
 }
 END_TEST
 
+START_TEST(ebgenv_api_internal_bgenv_set_datalen)
+{
+	static const struct {
+		const char *key;
+		const char *value;
+	} vars[] = {
+		{ "kernelfile", "vmlinuz" },
+		{ "kernelparams", "root=/dev/sda" },
+		{ "revision", "10301" },
+		{ "ustate", "2" },
+		{ "in_progress", "1" },
+		{ "watchdog_timeout_sec", "311" },
+	};
+	char buffer[ENV_STRING_LENGTH + 1];
+	BG_ENVDATA *data, *snapshot;
+	BGENV env = { 0 };
+	char *value;
+	int res;
+
+	data = calloc(1, sizeof(*data));
+	snapshot = malloc(sizeof(*snapshot));
+	ck_assert_ptr_nonnull(data);
+	ck_assert_ptr_nonnull(snapshot);
+	env.data = data;
+
+	for (unsigned int i = 0; i < ARRAY_SIZE(vars); i++) {
+		size_t len = strlen(vars[i].value);
+
+		/* sized exactly, so that reading beyond it is detectable */
+		value = malloc(len);
+		ck_assert_ptr_nonnull(value);
+		memcpy(value, vars[i].value, len);
+
+		memcpy(snapshot, data, sizeof(*data));
+		res = bgenv_set(&env, vars[i].key, 0, value, len);
+		ck_assert_int_eq(res, -EINVAL);
+		ck_assert_mem_eq(data, snapshot, sizeof(*data));
+		free(value);
+
+		/* terminator present but not covered by datalen */
+		res = bgenv_set(&env, vars[i].key, 0, vars[i].value, len);
+		ck_assert_int_eq(res, -EINVAL);
+		ck_assert_mem_eq(data, snapshot, sizeof(*data));
+
+		res = bgenv_set(&env, vars[i].key, 0, vars[i].value, len + 1);
+		ck_assert_int_eq(res, 0);
+	}
+
+	for (unsigned int i = 0; i < ARRAY_SIZE(vars); i++) {
+		res = bgenv_get(&env, vars[i].key, NULL, buffer,
+				sizeof(buffer));
+		ck_assert_int_eq(res, 0);
+		ck_assert_str_eq(buffer, vars[i].value);
+	}
+
+	free(snapshot);
+	free(data);
+}
+END_TEST
+
 START_TEST(ebgenv_api_internal_uservars)
 {
 	RESET_FAKE(write_env);
@@ -559,6 +621,7 @@ Suite *ebg_test_suite(void)
 	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_get);
 	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_set);
 	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_string_length);
+	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_set_datalen);
 	tcase_add_test(tc_core, ebgenv_api_internal_uservars);
 
 	suite_add_tcase(s, tc_core);

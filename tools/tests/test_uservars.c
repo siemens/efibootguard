@@ -154,6 +154,56 @@ START_TEST(bgenv_set_uservar_type_size)
 }
 END_TEST
 
+START_TEST(bgenv_set_uservar_string_termination)
+{
+	uint8_t *udata;
+	char *value;
+	char out[8];
+	int res;
+
+	udata = calloc(1, ENV_MEM_USERVARS);
+	ck_assert_ptr_nonnull(udata);
+
+	/* sized exactly, so that reading beyond it is detectable */
+	value = malloc(3);
+	ck_assert_ptr_nonnull(value);
+	memcpy(value, "xyz", 3);
+
+	for (unsigned int j = 0; j < ARRAY_SIZE(user_bits); j++) {
+		uint64_t type = USERVAR_TYPE_STRING_ASCII | user_bits[j];
+
+		res = bgenv_set_uservar(udata, "str", type, value, 3);
+		ck_assert_int_eq(res, -EINVAL);
+		ck_assert_ptr_null(bgenv_find_uservar(udata, "str"));
+
+		/* terminator present but not covered by datalen */
+		res = bgenv_set_uservar(udata, "str", type, "abc", 3);
+		ck_assert_int_eq(res, -EINVAL);
+		ck_assert_ptr_null(bgenv_find_uservar(udata, "str"));
+
+		res = bgenv_set_uservar(udata, "str", type, "abc", 4);
+		ck_assert_int_eq(res, 0);
+
+		/* a rejected update must preserve the existing value */
+		res = bgenv_set_uservar(udata, "str", type, value, 3);
+		ck_assert_int_eq(res, -EINVAL);
+		res = bgenv_get_uservar(udata, "str", NULL, out, sizeof(out));
+		ck_assert_int_eq(res, 0);
+		ck_assert_str_eq(out, "abc");
+
+		bgenv_set_uservar(udata, "str", USERVAR_TYPE_DELETED, NULL, 0);
+	}
+
+	/* values of types without a standard part are not interpreted */
+	res = bgenv_set_uservar(udata, "custom", 1ULL << 36, value, 3);
+	ck_assert_int_eq(res, 0);
+	ck_assert(bgenv_validate_uservars(udata));
+
+	free(value);
+	free(udata);
+}
+END_TEST
+
 START_TEST(bgenv_get_from_manipulated)
 {
 	const char *key = "mykey";
@@ -236,6 +286,7 @@ Suite *ebg_test_suite(void)
 	tcase_add_test(tc_core, bgenv_get_from_manipulated);
 	tcase_add_test(tc_core, bgenv_validate_uservars_type_size);
 	tcase_add_test(tc_core, bgenv_set_uservar_type_size);
+	tcase_add_test(tc_core, bgenv_set_uservar_string_termination);
 
 	suite_add_tcase(s, tc_core);
 
