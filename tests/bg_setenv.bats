@@ -315,3 +315,41 @@ baz = qux" ]]
     [[ "$output" = "foo=bar
 baz=qux" ]]
 }
+
+@test "bg_printenv rejects uservars that are too small for their type" {
+    local envfile
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
+
+    # UINT64 with only 2 bytes
+    create_bgenv_with_uservars "$envfile" \
+        "$(uservar_record foo 32 'bar\x00')$(uservar_record num 5 '\x01\x02')"
+
+    run bg_printenv -f "$envfile" --output user --raw
+    [ "$status" -eq 1 ]
+    [[ "$output" = "Error reading environment file." ]]
+
+    create_bgenv_with_uservars "$envfile" \
+        "$(uservar_record foo 32 'bar\x00')$(uservar_record num 5 \
+          '\x01\x02\x00\x00\x00\x00\x00\x00')"
+
+    run bg_printenv -f "$envfile" --output user --raw
+    [[ "$output" = "foo=bar
+num=513" ]]
+
+    # the same with user-defined bits in the type
+    create_bgenv_with_uservars "$envfile" \
+        "$(uservar_record foo 32 'bar\x00')$(uservar_record num \
+          $(((1 << 32) | 5)) '\x01\x02')"
+
+    run bg_printenv -f "$envfile" --output user --raw
+    [ "$status" -eq 1 ]
+    [[ "$output" = "Error reading environment file." ]]
+
+    create_bgenv_with_uservars "$envfile" \
+        "$(uservar_record foo 32 'bar\x00')$(uservar_record num \
+          $(((1 << 32) | 5)) '\x01\x02\x00\x00\x00\x00\x00\x00')"
+
+    run bg_printenv -f "$envfile" --output user --raw
+    [[ "$output" = "foo=bar
+num=513" ]]
+}
