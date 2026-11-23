@@ -71,6 +71,48 @@ START_TEST(ebgenv_api_internal_strXtoY)
 }
 END_TEST
 
+START_TEST(ebgenv_api_internal_strXtoY_bounds)
+{
+	const char16_t src16[] = { 'a', 'b', 'c', 0 };
+	char16_t *unterminated16;
+	char16_t bufferw[4];
+	char buffer[4];
+
+	/* string and terminator have to fit into the buffer */
+	ck_assert(str8to16(bufferw, "abc", sizeof(bufferw)));
+	ck_assert(memcmp(bufferw, src16, sizeof(src16)) == 0);
+
+	memset(bufferw, 0xff, sizeof(bufferw));
+	ck_assert(!str8to16(bufferw, "abcd", sizeof(bufferw)));
+	/* the size is in bytes, an odd one must not cause an overflow */
+	ck_assert(!str8to16(bufferw, "abc", sizeof(bufferw) - 1));
+	ck_assert(!str8to16(bufferw, "", 1));
+	for (int i = 0; i < 4; i++) {
+		ck_assert_uint_eq(bufferw[i], 0xffff);
+	}
+
+	ck_assert(str16to8(buffer, src16, sizeof(buffer)));
+	ck_assert_str_eq(buffer, "abc");
+
+	memset(buffer, 0x55, sizeof(buffer));
+	ck_assert(!str16to8(buffer, src16, sizeof(buffer) - 1));
+	ck_assert(!str16to8(buffer, src16, 0));
+
+	/* the source must not be read beyond the buffer size */
+	unterminated16 = malloc(sizeof(buffer) * sizeof(char16_t));
+	ck_assert_ptr_nonnull(unterminated16);
+	for (unsigned int i = 0; i < sizeof(buffer); i++) {
+		unterminated16[i] = 'w' + i;
+	}
+	ck_assert(!str16to8(buffer, unterminated16, sizeof(buffer)));
+	free(unterminated16);
+
+	for (int i = 0; i < 4; i++) {
+		ck_assert_uint_eq((uint8_t)buffer[i], 0x55);
+	}
+}
+END_TEST
+
 START_TEST(ebgenv_api_internal_bgenv_str2enum)
 {
 	EBGENVKEY e;
@@ -392,6 +434,59 @@ START_TEST(ebgenv_api_internal_bgenv_set)
 }
 END_TEST
 
+START_TEST(ebgenv_api_internal_bgenv_string_length)
+{
+	const char *keys[] = { "kernelfile", "kernelparams" };
+	char too_long[ENV_STRING_LENGTH + 1];
+	char buffer[ENV_STRING_LENGTH + 1];
+	char longest[ENV_STRING_LENGTH];
+	BG_ENVDATA *data, *snapshot;
+	BGENV env = { 0 };
+	int res;
+
+	data = calloc(1, sizeof(*data));
+	snapshot = malloc(sizeof(*snapshot));
+	ck_assert_ptr_nonnull(data);
+	ck_assert_ptr_nonnull(snapshot);
+	env.data = data;
+
+	memset(longest, 'a', sizeof(longest) - 1);
+	longest[sizeof(longest) - 1] = 0;
+	memset(too_long, 'b', sizeof(too_long) - 1);
+	too_long[sizeof(too_long) - 1] = 0;
+
+	for (int i = 0; i < 2; i++) {
+		/* the longest string that fits including its terminator */
+		res = bgenv_set(&env, keys[i], 0, longest, sizeof(longest));
+		ck_assert_int_eq(res, 0);
+
+		res = bgenv_get(&env, keys[i], NULL, NULL, sizeof(buffer));
+		ck_assert_int_eq(res, sizeof(longest));
+		res = bgenv_get(&env, keys[i], NULL, buffer, sizeof(buffer));
+		ck_assert_int_eq(res, 0);
+		ck_assert_str_eq(buffer, longest);
+
+		/* too long strings must be rejected without any changes */
+		memcpy(snapshot, data, sizeof(*data));
+		res = bgenv_set(&env, keys[i], 0, too_long, sizeof(too_long));
+		ck_assert_int_eq(res, -EINVAL);
+		ck_assert_mem_eq(data, snapshot, sizeof(*data));
+	}
+
+	/* stored strings without terminator cannot be retrieved */
+	for (int i = 0; i < ENV_STRING_LENGTH; i++) {
+		data->kernelfile[i] = 'k';
+	}
+	res = bgenv_get(&env, "kernelfile", NULL, NULL, sizeof(buffer));
+	ck_assert_int_eq(res, -EINVAL);
+	res = bgenv_get(&env, "kernelfile", NULL, buffer, sizeof(buffer));
+	ck_assert_int_eq(res, -EINVAL);
+
+	free(snapshot);
+	free(data);
+}
+END_TEST
+
 START_TEST(ebgenv_api_internal_uservars)
 {
 	RESET_FAKE(write_env);
@@ -453,6 +548,7 @@ Suite *ebg_test_suite(void)
 	tc_core = tcase_create("Core");
 
 	tcase_add_test(tc_core, ebgenv_api_internal_strXtoY);
+	tcase_add_test(tc_core, ebgenv_api_internal_strXtoY_bounds);
 	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_str2enum);
 	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_open_by_index);
 	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_open_oldest);
@@ -462,6 +558,7 @@ Suite *ebg_test_suite(void)
 	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_create_new);
 	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_get);
 	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_set);
+	tcase_add_test(tc_core, ebgenv_api_internal_bgenv_string_length);
 	tcase_add_test(tc_core, ebgenv_api_internal_uservars);
 
 	suite_add_tcase(s, tc_core);
