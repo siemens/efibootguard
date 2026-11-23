@@ -35,7 +35,7 @@ EFI_STATUS set_bg_interface_vars(const BG_INTERFACE_PARAMS *params)
 			    &readsize, NULL) == EFI_NOT_FOUND) {
 		status = RT->SetVariable(
 			L"LoaderDevicePartUUID", &vendor_guid, attribs,
-			StrLen(params->loader_device_part_uuid) *
+			(StrLen(params->loader_device_part_uuid) + 1) *
 				sizeof(UINT16),
 			params->loader_device_part_uuid);
 	}

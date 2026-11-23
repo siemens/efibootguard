@@ -50,7 +50,9 @@ static char *get_rootdev_from_efi(void)
 	}
 	const size_t readnb = fread(buffer.aswchar, sizeof(*buffer.aswchar),
 				    ARRAY_SIZE(buffer.aswchar), f);
-	if (readnb != GUID_LEN_CHARS + EFI_ATTR_LEN_IN_WCHAR) {
+	if (readnb != GUID_LEN_CHARS + EFI_ATTR_LEN_IN_WCHAR &&
+	    (readnb != GUID_LEN_CHARS + EFI_ATTR_LEN_IN_WCHAR + 1 ||
+	     buffer.aswchar[GUID_LEN_CHARS + EFI_ATTR_LEN_IN_WCHAR] != 0)) {
 		VERBOSE(stderr, "Data in LoaderDevicePartUUID not valid\n");
 		fclose(f);
 		return NULL;
