@@ -102,6 +102,55 @@ resize_envfile() {
     verify_envfile "$envfile"
 }
 
+# Print a value as little-endian 32-bit word, in printf %b escape notation
+le32() {
+    printf '\\x%02x\\x%02x\\x%02x\\x%02x' $(($1 & 0xff)) \
+        $((($1 >> 8) & 0xff)) $((($1 >> 16) & 0xff)) $((($1 >> 24) & 0xff))
+}
+
+# Print a raw uservar record in printf %b escape notation
+#   uservar_record <key> <type> <data in printf %b escape notation>
+uservar_record() {
+    local key=$1 ; shift
+    local type=$1 ; shift
+    local data=$1 ; shift
+
+    local datalen
+    datalen=$(printf "%b" "$data" | wc -c)
+
+    printf '%s\\x00' "$key"
+    le32 $((4 + 8 + datalen))
+    le32 $((type & 0xffffffff))
+    le32 $((type >> 32))
+    printf '%s' "$data"
+}
+
+# Create an environment with the given raw uservar records, bypassing all
+# checks bg_setenv would apply
+create_bgenv_with_uservars() {
+    local envfile=$1 ; shift
+    local uservars=$1 ; shift
+
+    local uservars_size
+    uservars_size=$(awk '/ ENV_MEM_USERVARS / { print $3 }' config.h) &&
+            [ -n "$uservars_size" ] || {
+        echo Expected to find ENV_MEM_USERVARS in $PWD/config.h >&2
+        exit 1
+    }
+
+    # kernelfile, kernelparams, in_progress, ustate, watchdog_timeout_sec
+    # and revision come first, all zero
+    head -c 1028 /dev/zero > "$envfile"
+    printf "%b" "$uservars" >> "$envfile"
+    truncate -s $((1028 + uservars_size)) "$envfile"
+
+    local computed
+    computed=$(( 0x$(crc32 "$envfile") ))
+    printf "%b" "$(le32 $computed)" >> "$envfile"
+
+    verify_envfile "$envfile"
+}
+
 @test "ensure BGENV.DAT backwards compatbility" {
     local envfile
     envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
@@ -236,4 +285,33 @@ ustate:           0 (OK)" ]]
     [[ "$output" = "KERNEL=C:BOOT:kernel.efi
 KERNELARGS=root=/dev/sda
 USTATE=0" ]]
+}
+
+@test "bg_printenv respects the size of string uservars" {
+    local envfile
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
+
+    # unterminated string, directly followed by the next uservar
+    create_bgenv_with_uservars "$envfile" \
+        "$(uservar_record foo 32 'bar')$(uservar_record baz 32 'qux\x00')"
+
+    run bg_printenv -f "$envfile" --output user --raw
+    [[ "$output" = "foo=bar
+baz=qux" ]]
+
+    run bg_printenv -f "$envfile" --output user
+    [[ "$output" = "Values:
+
+user variables:
+foo = bar
+baz = qux" ]]
+
+    # the same with user-defined bits in the type
+    create_bgenv_with_uservars "$envfile" \
+        "$(uservar_record foo $(((1 << 32) | 32)) 'bar')$(uservar_record \
+          baz $(((0x1ffff << 32) | 32)) 'qux\x00')"
+
+    run bg_printenv -f "$envfile" --output user --raw
+    [[ "$output" = "foo=bar
+baz=qux" ]]
 }
