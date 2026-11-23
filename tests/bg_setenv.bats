@@ -151,6 +151,14 @@ create_bgenv_with_uservars() {
     verify_envfile "$envfile"
 }
 
+# Print a string of the given length
+repeat_char() {
+    local char=$1 ; shift
+    local count=$1 ; shift
+
+    head -c "$count" /dev/zero | tr '\0' "$char"
+}
+
 @test "ensure BGENV.DAT backwards compatbility" {
     local envfile
     envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
@@ -352,4 +360,46 @@ num=513" ]]
     run bg_printenv -f "$envfile" --output user --raw
     [[ "$output" = "foo=bar
 num=513" ]]
+}
+
+@test "bg_setenv accepts kernel file and arguments of up to 254 characters" {
+    local envfile
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
+
+    local kernel args
+    kernel=$(repeat_char k 254)
+    args=$(repeat_char a 254)
+
+    run bg_setenv -f "$envfile" -k "$kernel" -a "$args"
+    [ "$status" -eq 0 ]
+
+    run bg_printenv -f "$envfile" --output kernel,kernelargs --raw
+    [[ "$output" = "KERNEL=$kernel
+KERNELARGS=$args" ]]
+}
+
+@test "bg_setenv rejects kernel file and arguments of more than 254 characters" {
+    local envfile
+    envfile="$BATS_TEST_TMPDIR/BGENV.DAT"
+
+    run bg_setenv -f "$envfile" -k "$(repeat_char k 255)"
+    [ "$status" -eq 1 ]
+    [[ "$output" = "Error, kernel filename is too long. Maximum of 254 characters permitted." ]]
+    [ ! -e "$envfile" ]
+
+    run bg_setenv -f "$envfile" -a "$(repeat_char a 255)"
+    [ "$status" -eq 1 ]
+    [[ "$output" = "Error, kernel arguments string is too long. Maximum of 254 characters permitted." ]]
+    [ ! -e "$envfile" ]
+
+    create_sample_bgenv "$envfile"
+    cp "$envfile" "$envfile.orig"
+
+    run bg_setenv -f "$envfile" -P -k "$(repeat_char k 255)"
+    [ "$status" -eq 1 ]
+    cmp "$envfile" "$envfile.orig"
+
+    run bg_setenv -f "$envfile" -P -a "$(repeat_char a 255)"
+    [ "$status" -eq 1 ]
+    cmp "$envfile" "$envfile.orig"
 }
