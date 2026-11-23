@@ -86,6 +86,10 @@ static char *get_rootdev_from_efi(void)
 
 	// resolve to e.g. /sys/devices/pci0000:00/0000:00:1f.2/<...>/block/sda
 	char *blockpath = realpath(buffer.aschar, NULL);
+	if (!blockpath) {
+		VERBOSE(stderr, "Error resolving path %s\n", buffer.aschar);
+		return NULL;
+	}
 	const char *_blockdev = strrchr(blockpath, '/') + 1;
 	char *blockdev = strdup(_blockdev);
 	free(blockpath);
