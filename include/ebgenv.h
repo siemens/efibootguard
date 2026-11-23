@@ -102,8 +102,7 @@ int ebg_env_get(ebgenv_t *e, const char *key, char* buffer);
  *  @param e A pointer to an ebgenv_t context.
  *  @param key name of the environment variable to set
  *  @param value a string to be stored into the variable
- *  @return 0 on success, -errno on failure. If buffer is NULL,
- *	    the required buffer size is returned.
+ *  @return 0 on success, -errno on failure.
  */
 int ebg_env_set(ebgenv_t *e, const char *key, const char *value);
 
