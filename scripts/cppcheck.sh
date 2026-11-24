@@ -79,7 +79,7 @@ build_tmp=$(mktemp -d)
 # Exit code '1' is returned if arguments are not valid or if no input
 # files are provided. Compare 'cppcheck --help'.
 cppcheck -f -q --error-exitcode=2 \
-    -j $(ncpus) --cppcheck-build-dir="$build_tmp" \
+    -j $(nproc) --cppcheck-build-dir="$build_tmp" \
     $enable $suppress $ignore $cpp_conf $includes $path "$@" \
     2>&1 | tee "$build_tmp/output.log"
 res=$?
